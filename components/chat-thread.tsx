@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
 import { markConversationSeen, sendMessage } from "@/lib/chat/actions";
+import { formatEgyptTime } from "@/lib/date/egypt";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -145,12 +146,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
                       mine ? "text-white/80 dark:text-zinc-600" : "text-zinc-500"
                     }`}
                   >
-                    <time dateTime={m.created_at}>
-                      {new Date(m.created_at).toLocaleTimeString("ar-EG", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </time>
+                    <time dateTime={m.created_at}>{formatEgyptTime(m.created_at)}</time>
                     {mine && receipt ? <MessageDeliveryTicks status={receipt} /> : null}
                   </div>
                 </div>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { getAdminChatThread } from "@/lib/admin/moderation-queries";
+import { formatEgyptDateTime } from "@/lib/date/egypt";
 import { requireAdmin } from "@/lib/auth/admin";
 
 type PageProps = {
@@ -70,7 +71,7 @@ export default async function AdminModerationChatThreadPage({ params }: PageProp
                     className="text-xs tabular-nums text-zinc-500 dark:text-zinc-500"
                     dateTime={m.created_at}
                   >
-                    {new Date(m.created_at).toLocaleString("ar-EG")}
+                    {formatEgyptDateTime(m.created_at)}
                   </time>
                 </div>
                 <p className="mt-2 whitespace-pre-wrap break-words text-zinc-800 dark:text-zinc-200">
