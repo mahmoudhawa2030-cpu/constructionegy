@@ -55,7 +55,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
     .from("messages")
     .select("*")
     .eq("chat_id", chatId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (msgErr) {
     return (
