@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { sendMessage } from "@/lib/chat/actions";
+import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
+import { markConversationSeen, sendMessage } from "@/lib/chat/actions";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -20,6 +21,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const markSeenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToBottom = useCallback(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,6 +30,25 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  const scheduleMarkSeen = useCallback(() => {
+    if (markSeenTimer.current) clearTimeout(markSeenTimer.current);
+    markSeenTimer.current = setTimeout(() => {
+      void markConversationSeen(chatId);
+    }, 400);
+  }, [chatId]);
+
+  useEffect(() => {
+    scheduleMarkSeen();
+    const onVis = () => {
+      if (document.visibilityState === "visible") scheduleMarkSeen();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      if (markSeenTimer.current) clearTimeout(markSeenTimer.current);
+    };
+  }, [chatId, scheduleMarkSeen, messages.length]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -49,6 +70,24 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
               (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
             );
           });
+          if (row.sender_id !== currentUserId) {
+            scheduleMarkSeen();
+          }
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `chat_id=eq.${chatId}`,
+        },
+        (payload) => {
+          const row = payload.new as MessageRow;
+          setMessages((prev) =>
+            prev.map((m) => (m.id === row.id ? { ...m, ...row } : m)),
+          );
         },
       )
       .subscribe();
@@ -56,7 +95,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId]);
+  }, [chatId, currentUserId, scheduleMarkSeen]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,6 +109,12 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
       setError(result.message);
       return;
     }
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === result.message.id)) return prev;
+      return [...prev, result.message].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    });
     setText("");
   }
 
@@ -81,6 +126,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
         ) : (
           messages.map((m) => {
             const mine = m.sender_id === currentUserId;
+            const receipt = mine ? messageReceiptStatus(m) : null;
             return (
               <li
                 key={m.id}
@@ -94,14 +140,19 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
                   }`}
                 >
                   <p className="whitespace-pre-wrap break-words">{m.content}</p>
-                  <p
-                    className={`mt-1 text-[10px] opacity-70 ${mine ? "text-white/80" : "text-zinc-500"}`}
+                  <div
+                    className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] ${
+                      mine ? "text-white/80 dark:text-zinc-600" : "text-zinc-500"
+                    }`}
                   >
-                    {new Date(m.created_at).toLocaleTimeString("ar-EG", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </p>
+                    <time dateTime={m.created_at}>
+                      {new Date(m.created_at).toLocaleTimeString("ar-EG", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </time>
+                    {mine && receipt ? <MessageDeliveryTicks status={receipt} /> : null}
+                  </div>
                 </div>
               </li>
             );

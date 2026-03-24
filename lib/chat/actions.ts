@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/database.types";
+
+type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 
 function sortParticipantIds(a: string, b: string): [string, string] {
   return a < b ? [a, b] : [b, a];
@@ -72,7 +75,9 @@ export async function getOrCreateChatForListing(listingId: string): Promise<Star
   }
 }
 
-export type SendMessageResult = { ok: true } | { ok: false; message: string };
+export type SendMessageResult =
+  | { ok: true; message: MessageRow }
+  | { ok: false; message: string };
 
 export async function sendMessage(chatId: string, content: string): Promise<SendMessageResult> {
   const trimmed = content.trim();
@@ -91,17 +96,61 @@ export async function sendMessage(chatId: string, content: string): Promise<Send
     return { ok: false, message: "يجب تسجيل الدخول." };
   }
 
-  const { error } = await supabase.from("messages").insert({
-    chat_id: chatId,
-    sender_id: user.id,
-    content: trimmed,
-  });
+  const { data: row, error } = await supabase
+    .from("messages")
+    .insert({
+      chat_id: chatId,
+      sender_id: user.id,
+      content: trimmed,
+    })
+    .select()
+    .single();
 
-  if (error) {
-    return { ok: false, message: error.message };
+  if (error || !row) {
+    return { ok: false, message: error?.message ?? "فشل الإرسال." };
   }
 
   revalidatePath("/messages");
   revalidatePath(`/messages/${chatId}`);
+  return { ok: true, message: row };
+}
+
+/**
+ * Recipient: mark incoming messages as delivered, then read (WhatsApp-style ✓ / ✓✓ for the sender).
+ * Safe to call repeatedly; only fills null timestamps.
+ */
+export async function markConversationSeen(chatId: string): Promise<{ ok: true } | { ok: false; message: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "يجب تسجيل الدخول." };
+  }
+
+  const now = new Date().toISOString();
+
+  const { error: e1 } = await supabase
+    .from("messages")
+    .update({ delivered_at: now })
+    .eq("chat_id", chatId)
+    .neq("sender_id", user.id)
+    .is("delivered_at", null);
+
+  if (e1) {
+    return { ok: false, message: e1.message };
+  }
+
+  const { error: e2 } = await supabase
+    .from("messages")
+    .update({ read_at: now })
+    .eq("chat_id", chatId)
+    .neq("sender_id", user.id)
+    .is("read_at", null);
+
+  if (e2) {
+    return { ok: false, message: e2.message };
+  }
+
   return { ok: true };
 }
