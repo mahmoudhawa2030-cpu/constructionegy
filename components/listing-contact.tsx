@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { getOrCreateChatForListing } from "@/lib/chat/actions";
@@ -14,7 +13,6 @@ type Props = {
 };
 
 export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [phoneRevealLoading, setPhoneRevealLoading] = useState(false);
@@ -23,22 +21,31 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
   async function startChat() {
     setError(null);
     setLoading(true);
-    const result = await getOrCreateChatForListing(listingId);
-    setLoading(false);
-    if (result.ok) {
-      router.push(`/messages/${result.chatId}`);
-      router.refresh();
-      return;
+    try {
+      const result = await getOrCreateChatForListing(listingId);
+      if (result.ok) {
+        // Full navigation is more reliable than client router after server actions
+        // (Firefox + Vercel sometimes fail to apply router.push before paint).
+        window.location.assign(`/messages/${result.chatId}`);
+        return;
+      }
+      if (result.reason === "login") {
+        window.location.assign(
+          `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
+        );
+        return;
+      }
+      if (result.reason === "own_listing") {
+        setError("لا يمكنك مراسلة نفسك لإعلانك.");
+        return;
+      }
+      setError(result.message ?? "تعذر بدء المحادثة.");
+    } catch (e) {
+      console.error(e);
+      setError(e instanceof Error ? e.message : "تعذر بدء المحادثة.");
+    } finally {
+      setLoading(false);
     }
-    if (result.reason === "login") {
-      router.push(`/login?next=/listings/${listingId}`);
-      return;
-    }
-    if (result.reason === "own_listing") {
-      setError("لا يمكنك مراسلة نفسك لإعلانك.");
-      return;
-    }
-    setError(result.message ?? "تعذر بدء المحادثة.");
   }
 
   async function revealPhone() {
@@ -51,7 +58,9 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
       return;
     }
     if (result.reason === "login") {
-      router.push(`/login?next=/listings/${listingId}`);
+      window.location.assign(
+        `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
+      );
       return;
     }
     if (result.reason === "own_listing") {

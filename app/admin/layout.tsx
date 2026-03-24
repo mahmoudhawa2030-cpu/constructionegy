@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { requireAdmin } from "@/lib/auth/admin";
@@ -31,7 +32,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-full flex-col bg-zinc-50 dark:bg-zinc-950">
       <header className="border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mx-auto flex w-full max-w-[72.8rem] flex-wrap items-center justify-between gap-3">
+        <div className="mx-auto flex w-full max-w-[94.64rem] flex-wrap items-center justify-between gap-3">
           <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">لوحة الإدارة</span>
           <div className="flex flex-wrap items-center gap-3">
             <ThemeToggle compact />
@@ -71,7 +72,8 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full min-w-0 max-w-[72.8rem] flex-1 overflow-x-hidden px-4 py-6">
+      <main className="mx-auto w-full min-w-0 max-w-[94.64rem] flex-1 overflow-x-hidden px-4 py-6">
+        {user ? <PresenceHeartbeat /> : null}
         {children}
       </main>
     </div>

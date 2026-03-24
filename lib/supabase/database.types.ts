@@ -270,6 +270,8 @@ export type Database = {
           id: string
           is_admin: boolean
           is_banned: boolean
+          last_active_at: string | null
+          last_seen_at: string | null
           location: string | null
           phone_number: string | null
           user_type: Database["public"]["Enums"]["user_type"]
@@ -282,6 +284,8 @@ export type Database = {
           id: string
           is_admin?: boolean
           is_banned?: boolean
+          last_active_at?: string | null
+          last_seen_at?: string | null
           location?: string | null
           phone_number?: string | null
           user_type: Database["public"]["Enums"]["user_type"]
@@ -294,6 +298,8 @@ export type Database = {
           id?: string
           is_admin?: boolean
           is_banned?: boolean
+          last_active_at?: string | null
+          last_seen_at?: string | null
           location?: string | null
           phone_number?: string | null
           user_type?: Database["public"]["Enums"]["user_type"]
