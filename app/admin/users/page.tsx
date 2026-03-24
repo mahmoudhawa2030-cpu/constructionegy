@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { AdminUsersPhoneSearch } from "@/components/admin-users-phone-search";
 import { AdminUsersPresenceFilter } from "@/components/admin-users-presence-filter";
 import { AdminUserActions } from "@/components/admin-user-actions";
 import {
@@ -19,13 +20,19 @@ const USER_TYPE_LABELS: Record<UserType, string> = {
   supplier: "مورد",
 };
 
+/** Escape `%` and `_` for PostgreSQL ILIKE pattern literals. */
+function escapeIlikePattern(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+}
+
 type PageProps = {
-  searchParams: Promise<{ presence?: string }>;
+  searchParams: Promise<{ presence?: string; phone?: string }>;
 };
 
 export default async function AdminUsersPage({ searchParams }: PageProps) {
-  const { presence: presenceRaw } = await searchParams;
+  const { presence: presenceRaw, phone: phoneRaw } = await searchParams;
   const presence = parsePresenceFilter(presenceRaw);
+  const phoneSearch = typeof phoneRaw === "string" ? phoneRaw.trim() : "";
 
   const supabase = await createClient();
   const {
@@ -46,6 +53,11 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
     if (since) {
       query = query.gte("last_active_at", since);
     }
+  }
+
+  if (phoneSearch) {
+    const pattern = `%${escapeIlikePattern(phoneSearch)}%`;
+    query = query.ilike("phone_number", pattern);
   }
 
   const { data: profiles, error } = await query;
@@ -75,10 +87,16 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       <div className="flex flex-wrap items-end gap-4">
         <Suspense
           fallback={
-            <div className="h-[4.25rem] min-w-[12rem] animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+            <div className="flex flex-wrap gap-4">
+              <div className="h-[4.25rem] min-w-[14rem] flex-1 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+              <div className="h-[4.25rem] min-w-[12rem] animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+            </div>
           }
         >
-          <AdminUsersPresenceFilter value={presence} />
+          <div className="flex flex-wrap items-end gap-4">
+            <AdminUsersPhoneSearch />
+            <AdminUsersPresenceFilter value={presence} />
+          </div>
         </Suspense>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
           العدد:{" "}
@@ -227,7 +245,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">لا يوجد مستخدمون يطابقون التصفية.</p>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          لا يوجد مستخدمون يطابقون التصفية
+          {phoneSearch ? ` (بحث الهاتف: ${phoneSearch})` : ""}.
+        </p>
       ) : null}
     </div>
   );
