@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { revokeOtherSessions } from "@/lib/supabase/revoke-other-sessions";
 
 export function LoginForm() {
   const router = useRouter();
@@ -25,11 +26,16 @@ export function LoginForm() {
       email,
       password,
     });
-    setLoading(false);
     if (signInError) {
+      setLoading(false);
       setError(signInError.message);
       return;
     }
+    const { error: revokeError } = await revokeOtherSessions(supabase);
+    if (revokeError) {
+      console.error("[auth] revoke other sessions:", revokeError);
+    }
+    setLoading(false);
     router.refresh();
     router.push(next.startsWith("/") ? next : "/profile");
   }

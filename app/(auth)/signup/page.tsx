@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { revokeOtherSessions } from "@/lib/supabase/revoke-other-sessions";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -39,6 +40,10 @@ export default function SignupPage() {
       return;
     }
     if (data.session) {
+      const { error: revokeError } = await revokeOtherSessions(supabase);
+      if (revokeError) {
+        console.error("[auth] revoke other sessions:", revokeError);
+      }
       router.refresh();
       router.push("/profile");
       return;
