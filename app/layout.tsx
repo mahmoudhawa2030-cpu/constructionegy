@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Arabic } from "next/font/google";
 
+import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 
 import "./globals.css";
@@ -41,10 +42,13 @@ export default function RootLayout({
       className={`${notoSansArabic.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       dir="rtl"
       lang="ar"
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col font-sans">
-        <CapacitorBridge />
-        {children}
+        <AppThemeProvider>
+          <CapacitorBridge />
+          {children}
+        </AppThemeProvider>
       </body>
     </html>
   );

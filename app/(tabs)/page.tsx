@@ -37,9 +37,9 @@ export default function HomePage() {
           </Link>
           <Link
             className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 text-zinc-900 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 md:w-auto"
-            href="/protected"
+            href="/gallery"
           >
-            صفحة محمية
+            المعرض
           </Link>
         </nav>
       </main>

@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const router = useRouter();
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -25,11 +26,12 @@ export default function SignupPage() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: origin
-        ? {
-            emailRedirectTo: `${origin}/login`,
-          }
-        : undefined,
+      options: {
+        data: {
+          full_name: fullName.trim() || undefined,
+        },
+        ...(origin ? { emailRedirectTo: `${origin}/login` } : {}),
+      },
     });
     setLoading(false);
     if (signUpError) {
@@ -38,7 +40,7 @@ export default function SignupPage() {
     }
     if (data.session) {
       router.refresh();
-      router.push("/protected");
+      router.push("/profile");
       return;
     }
     setMessage(
@@ -56,6 +58,18 @@ export default function SignupPage() {
           سجّل بريداً وكلمة مرور لبدء الاستخدام
         </p>
         <form className="mt-8 flex flex-col gap-4" onSubmit={handleSubmit}>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">الاسم الظاهر</span>
+            <input
+              autoComplete="name"
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+              name="full_name"
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="مثال: أحمد محمد"
+              type="text"
+              value={fullName}
+            />
+          </label>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">البريد الإلكتروني</span>
             <input
