@@ -1,12 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { UserPresenceBadge } from "@/components/user-presence-badge";
+
 type Props = {
   userId: string;
   fullName: string | null;
   avatarUrl: string | null;
   /** ISO date string from profiles.created_at */
   createdAt: string | null;
+  /** For online / offline dot (profiles.last_seen_at). */
+  lastSeenAt: string | null;
   isOwner: boolean;
 };
 
@@ -24,7 +28,14 @@ function memberSinceLabel(createdAt: string | null): string | null {
   }
 }
 
-export function ListingSellerCard({ userId, fullName, avatarUrl, createdAt, isOwner }: Props) {
+export function ListingSellerCard({
+  userId,
+  fullName,
+  avatarUrl,
+  createdAt,
+  lastSeenAt,
+  isOwner,
+}: Props) {
   const displayName =
     fullName?.trim() || (isOwner ? "حسابك" : "مستخدم");
   const initial = displayName.charAt(0).toUpperCase();
@@ -59,6 +70,11 @@ export function ListingSellerCard({ userId, fullName, avatarUrl, createdAt, isOw
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{displayName}</p>
+          {!isOwner ? (
+            <div className="mt-1">
+              <UserPresenceBadge compact lastSeenAt={lastSeenAt} />
+            </div>
+          ) : null}
           {since ? (
             <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">عضو منذ {since}</p>
           ) : null}

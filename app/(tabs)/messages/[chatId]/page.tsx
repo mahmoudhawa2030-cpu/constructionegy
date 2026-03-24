@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ChatThread } from "@/components/chat-thread";
+import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +47,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
     chat.participant1_id === user.id ? chat.participant2_id : chat.participant1_id;
   const { data: otherProfile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, last_seen_at")
     .eq("id", otherId)
     .maybeSingle();
 
@@ -76,15 +77,18 @@ export default async function ChatThreadPage({ params }: PageProps) {
         <h1 className="text-lg font-semibold tracking-tight text-zinc-900 sm:text-xl dark:text-zinc-50">
           {listingTitle}
         </h1>
-        <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-          مع{" "}
-          <Link
-            className="font-medium text-zinc-800 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950 dark:text-zinc-200 dark:decoration-zinc-500 dark:hover:text-zinc-50"
-            href={`/profile/${otherId}`}
-          >
-            {otherProfile?.full_name ?? "مستخدم"}
-          </Link>
-        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
+          <span>
+            مع{" "}
+            <Link
+              className="font-medium text-zinc-800 underline decoration-zinc-400 underline-offset-2 hover:text-zinc-950 dark:text-zinc-200 dark:decoration-zinc-500 dark:hover:text-zinc-50"
+              href={`/profile/${otherId}`}
+            >
+              {otherProfile?.full_name ?? "مستخدم"}
+            </Link>
+          </span>
+          <UserPresenceBadge compact lastSeenAt={otherProfile?.last_seen_at ?? null} />
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">

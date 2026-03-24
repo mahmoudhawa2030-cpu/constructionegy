@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { ProfileListingsGrid } from "@/components/profile-listings-grid";
+import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
@@ -36,7 +37,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, full_name, user_type, location, avatar_url, created_at")
+    .select("id, full_name, user_type, location, avatar_url, created_at, last_seen_at")
     .eq("id", id)
     .maybeSingle();
 
@@ -86,7 +87,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
         </div>
         <div className="w-full text-center">
           <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+          <div className="mt-2 flex justify-center">
+            <UserPresenceBadge lastSeenAt={profile.last_seen_at} />
+          </div>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
             {USER_TYPE_LABELS[profile.user_type]}
           </p>
           {profile.location ? (

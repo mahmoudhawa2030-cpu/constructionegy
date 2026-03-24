@@ -37,7 +37,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
   const { data: sellerProfile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url, created_at")
+    .select("full_name, avatar_url, created_at, last_seen_at")
     .eq("id", listing.user_id)
     .maybeSingle();
 
@@ -61,6 +61,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
         createdAt={sellerProfile?.created_at ?? null}
         fullName={sellerProfile?.full_name ?? null}
         isOwner={isOwner}
+        lastSeenAt={sellerProfile?.last_seen_at ?? null}
         userId={listing.user_id}
       />
       <ListingContact
