@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Noto_Sans_Arabic } from "next/font/google";
 
 import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
+import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 
 import "./globals.css";
 
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col font-sans">
         <AppThemeProvider>
           <CapacitorBridge />
+          <PresenceHeartbeat />
           {children}
         </AppThemeProvider>
       </body>

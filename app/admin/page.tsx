@@ -53,6 +53,12 @@ export default async function AdminDashboardPage() {
         </Link>
         <Link
           className="inline-flex w-fit rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+          href="/admin/messages"
+        >
+          مراقبة المحادثات
+        </Link>
+        <Link
+          className="inline-flex w-fit rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
           href="/admin/categories"
         >
           التصنيفات

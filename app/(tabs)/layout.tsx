@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 
 import { MobileTabBar } from "@/components/mobile-tab-bar";
-import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { createClient } from "@/lib/supabase/server";
@@ -38,7 +37,6 @@ export default async function TabsLayout({
         {user ? <SignOutButton compact /> : null}
       </header>
       <div className="flex min-h-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-        {user ? <PresenceHeartbeat /> : null}
         {children}
       </div>
       <MobileTabBar />
