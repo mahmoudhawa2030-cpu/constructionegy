@@ -44,16 +44,18 @@ export function ListingImageGallery({ images, title }: Props) {
   const current = images[safeIndex] ?? "";
 
   const goPrev = useCallback(() => {
-    setIndex((i) => (i <= 0 ? n - 1 : i - 1));
+    setIndex((i) => {
+      const clamped = n > 0 ? Math.min(i, n - 1) : 0;
+      return clamped <= 0 ? n - 1 : clamped - 1;
+    });
   }, [n]);
 
   const goNext = useCallback(() => {
-    setIndex((i) => (i >= n - 1 ? 0 : i + 1));
+    setIndex((i) => {
+      const clamped = n > 0 ? Math.min(i, n - 1) : 0;
+      return clamped >= n - 1 ? 0 : clamped + 1;
+    });
   }, [n]);
-
-  useEffect(() => {
-    if (index >= n && n > 0) setIndex(n - 1);
-  }, [index, n]);
 
   useEffect(() => {
     if (!lightbox) return;

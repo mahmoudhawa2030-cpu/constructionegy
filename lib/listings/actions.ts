@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { categorySlugExists, isActiveCategorySlug } from "@/lib/categories/queries";
+import { categorySlugExists } from "@/lib/categories/queries";
 import { createListingSchema, updateListingSchema } from "@/lib/listings/schema";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
