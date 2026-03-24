@@ -16,21 +16,27 @@ type Props = {
   initialMessages: MessageRow[];
 };
 
+function sortNewestFirst(rows: MessageRow[]): MessageRow[] {
+  return [...rows].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+}
+
 export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
-  const [messages, setMessages] = useState<MessageRow[]>(initialMessages);
+  const [messages, setMessages] = useState<MessageRow[]>(() => sortNewestFirst(initialMessages));
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const markSeenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const scrollToBottom = useCallback(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToNewest = useCallback(() => {
+    listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    scrollToNewest();
+  }, [messages.length, scrollToNewest]);
 
   const scheduleMarkSeen = useCallback(() => {
     if (markSeenTimer.current) clearTimeout(markSeenTimer.current);
@@ -67,9 +73,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
           const row = payload.new as MessageRow;
           setMessages((prev) => {
             if (prev.some((m) => m.id === row.id)) return prev;
-            return [...prev, row].sort(
-              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-            );
+            return sortNewestFirst([...prev, row]);
           });
           if (row.sender_id !== currentUserId) {
             scheduleMarkSeen();
@@ -112,16 +116,17 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     }
     setMessages((prev) => {
       if (prev.some((m) => m.id === result.message.id)) return prev;
-      return [...prev, result.message].sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-      );
+      return sortNewestFirst([...prev, result.message]);
     });
     setText("");
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+      <ul
+        ref={listRef}
+        className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 dark:border-zinc-800 dark:bg-zinc-900/50"
+      >
         {messages.length === 0 ? (
           <li className="text-center text-sm text-zinc-500 dark:text-zinc-400">لا رسائل بعد. اكتب أدناه.</li>
         ) : (
@@ -154,7 +159,6 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
             );
           })
         )}
-        <div ref={bottomRef} />
       </ul>
 
       <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
