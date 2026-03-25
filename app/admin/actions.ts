@@ -24,7 +24,7 @@ export async function updateListingStatusFromForm(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("listings")
-    .update({ status: status as ListingStatus, status_before_pause: null })
+    .update({ status: status as ListingStatus })
     .eq("id", listingId);
   if (error) {
     throw new Error(error.message);

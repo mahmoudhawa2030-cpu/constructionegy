@@ -102,7 +102,6 @@ export type Database = {
           price: number
           price_unit: string
           status: Database["public"]["Enums"]["listing_status"]
-          status_before_pause: Database["public"]["Enums"]["listing_status"] | null
           title: string
           type: Database["public"]["Enums"]["listing_type"]
           updated_at: string
@@ -120,7 +119,6 @@ export type Database = {
           price: number
           price_unit?: string
           status?: Database["public"]["Enums"]["listing_status"]
-          status_before_pause?: Database["public"]["Enums"]["listing_status"] | null
           title: string
           type: Database["public"]["Enums"]["listing_type"]
           updated_at?: string
@@ -138,7 +136,6 @@ export type Database = {
           price?: number
           price_unit?: string
           status?: Database["public"]["Enums"]["listing_status"]
-          status_before_pause?: Database["public"]["Enums"]["listing_status"] | null
           title?: string
           type?: Database["public"]["Enums"]["listing_type"]
           updated_at?: string

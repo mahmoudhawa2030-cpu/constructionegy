@@ -16,7 +16,7 @@ export function UserAdsListingActions({ listing }: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  const canPause = listing.status === "active" || listing.status === "pending";
+  const canPause = listing.status === "active";
   const isPaused = listing.status === "paused";
 
   function run(result: Promise<{ ok: true; id: string } | { ok: false; message: string }>) {

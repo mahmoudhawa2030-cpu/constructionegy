@@ -161,7 +161,7 @@ function revalidateListingPaths(params: { listingId: string; ownerId: string }) 
   revalidatePath("/admin/listings");
 }
 
-/** Hide from public (gallery) but keep for owner on /users/…/ads. Restores via resumeListing. */
+/** Hide from public (gallery) but keep for owner on /users/…/ads. Only for published (active) ads. */
 export async function pauseListing(listingId: string): Promise<CreateListingResult> {
   const supabase = await createClient();
   const {
@@ -183,21 +183,24 @@ export async function pauseListing(listingId: string): Promise<CreateListingResu
   if (row.user_id !== user.id) {
     return { ok: false, message: "لا يمكنك تعديل هذا الإعلان." };
   }
-  if (row.status !== "active" && row.status !== "pending") {
-    return { ok: false, message: "لا يمكن إيقاف هذا الإعلان في وضعه الحالي." };
+  if (row.status !== "active") {
+    return {
+      ok: false,
+      message: "الإيقاف المؤقت متاح للإعلانات المعتمدة (المنشورة) فقط.",
+    };
   }
 
   const { error } = await supabase
     .from("listings")
-    .update({
-      status: "paused",
-      status_before_pause: row.status,
-    })
+    .update({ status: "paused" })
     .eq("id", listingId)
     .eq("user_id", user.id);
 
   if (error) {
-    return { ok: false, message: error.message };
+    return {
+      ok: false,
+      message: friendlyListingActionError(error.message),
+    };
   }
 
   revalidateListingPaths({ listingId, ownerId: user.id });
@@ -215,7 +218,7 @@ export async function resumeListing(listingId: string): Promise<CreateListingRes
 
   const { data: row, error: fetchErr } = await supabase
     .from("listings")
-    .select("id, user_id, status, status_before_pause")
+    .select("id, user_id, status")
     .eq("id", listingId)
     .maybeSingle();
 
@@ -229,26 +232,29 @@ export async function resumeListing(listingId: string): Promise<CreateListingRes
     return { ok: false, message: "الإعلان ليس متوقفاً مؤقتاً." };
   }
 
-  const nextStatus = row.status_before_pause ?? "active";
-  if (nextStatus === "paused") {
-    return { ok: false, message: "حالة غير صالحة لاستئناف الإعلان." };
-  }
-
   const { error } = await supabase
     .from("listings")
-    .update({
-      status: nextStatus,
-      status_before_pause: null,
-    })
+    .update({ status: "active" })
     .eq("id", listingId)
     .eq("user_id", user.id);
 
   if (error) {
-    return { ok: false, message: error.message };
+    return {
+      ok: false,
+      message: friendlyListingActionError(error.message),
+    };
   }
 
   revalidateListingPaths({ listingId, ownerId: user.id });
   return { ok: true, id: listingId };
+}
+
+function friendlyListingActionError(raw: string): string {
+  const t = raw.toLowerCase();
+  if (t.includes("paused") && (t.includes("enum") || t.includes("invalid input"))) {
+    return "يجب تشغيل ترقية قاعدة البيانات: أضف قيمة paused إلى نوع حالة الإعلان في Supabase (ملف الترحيل listing_paused_status.sql).";
+  }
+  return raw;
 }
 
 export async function deleteListing(listingId: string): Promise<CreateListingResult> {
@@ -276,7 +282,7 @@ export async function deleteListing(listingId: string): Promise<CreateListingRes
   const { error } = await supabase.from("listings").delete().eq("id", listingId).eq("user_id", user.id);
 
   if (error) {
-    return { ok: false, message: error.message };
+    return { ok: false, message: friendlyListingActionError(error.message) };
   }
 
   revalidateListingPaths({ listingId, ownerId: user.id });
