@@ -95,93 +95,105 @@ export default async function ListingDetailPage({ params }: PageProps) {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 py-7 sm:py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 max-sm:pt-0">
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
-      <div className="flex flex-col gap-3">
-        <Breadcrumb
-          items={[
-            { label: "المعرض", href: "/gallery" },
-            {
-              label: categoryLabel,
-              href: `/gallery?category=${encodeURIComponent(listing.category)}`,
-            },
-            { label: listing.title },
-          ]}
-        />
-        {user?.id === listing.user_id ? (
-          <Link
-            className="w-fit text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
-            href={`/listings/${listing.id}/edit`}
-          >
-            تعديل الإعلان
-          </Link>
-        ) : null}
-      </div>
-
-      {listing.status === "pending" ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-          هذا الإعلان <strong>قيد المراجعة</strong>. لن يظهر في المعرض العام حتى تعتمد الإدارة
-          حالته إلى «منشور».
-        </div>
-      ) : null}
-
-      {listing.status === "paused" ? (
-        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
-          هذا الإعلان <strong>متوقف مؤقتاً</strong> ولا يظهر في المعرض. لإعادة الظهور استخدم «إعادة النشر» في
-          صفحة{" "}
-          <Link className="font-semibold underline" href={`/users/${listing.user_id}/ads`}>
-            جميع إعلاناتك
-          </Link>
-          .
-        </div>
-      ) : null}
-
-      <div className="flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
-            {listing.title}
-          </h1>
-          <div className="flex shrink-0 flex-row items-center gap-2" dir="ltr">
-            <ListingFavoriteHeart
-              initialFavorited={isFavorited}
-              isLoggedIn={Boolean(user)}
-              listingId={listing.id}
-            />
-            <ListingShareButton title={listing.title} url={shareUrl} />
-          </div>
-        </div>
-        <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
-          {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
-          {listing.status === "pending" ? " · قيد المراجعة" : null}
-          {" · "}
-          <span className="tabular-nums">{viewsFmt} مشاهدة</span>
-        </p>
-        <p className="text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
-          {priceFmt} {listing.price_unit}
-        </p>
-        {listing.location ? (
-          <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
-            📍 {listing.location}
-          </p>
-        ) : null}
-      </div>
 
       {hasImages ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:items-start lg:gap-8">
-          {sellerAside}
-          <div className="order-1 min-w-0 lg:order-2">
-            <ListingImageGallery images={listing.images!} title={listing.title} />
-          </div>
+        <div className="w-full max-sm:order-1 sm:hidden">
+          <ListingImageGallery images={listing.images!} title={listing.title} />
         </div>
-      ) : (
-        sellerAside
-      )}
+      ) : null}
 
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-        <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50">الوصف</h2>
-        <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
-          {listing.description || "لا يوجد وصف."}
-        </p>
+      <div className="flex max-sm:order-2 max-sm:flex-col max-sm:gap-6 max-sm:px-4 max-sm:pb-7 sm:contents sm:gap-0 sm:px-0 sm:pb-0">
+        <div className="flex flex-col gap-3">
+          <Breadcrumb
+            items={[
+              { label: "المعرض", href: "/gallery" },
+              {
+                label: categoryLabel,
+                href: `/gallery?category=${encodeURIComponent(listing.category)}`,
+              },
+              { label: listing.title },
+            ]}
+          />
+          {user?.id === listing.user_id ? (
+            <Link
+              className="w-fit text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
+              href={`/listings/${listing.id}/edit`}
+            >
+              تعديل الإعلان
+            </Link>
+          ) : null}
+        </div>
+
+        {listing.status === "pending" ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            هذا الإعلان <strong>قيد المراجعة</strong>. لن يظهر في المعرض العام حتى تعتمد الإدارة
+            حالته إلى «منشور».
+          </div>
+        ) : null}
+
+        {listing.status === "paused" ? (
+          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
+            هذا الإعلان <strong>متوقف مؤقتاً</strong> ولا يظهر في المعرض. لإعادة الظهور استخدم «إعادة النشر» في
+            صفحة{" "}
+            <Link className="font-semibold underline" href={`/users/${listing.user_id}/ads`}>
+              جميع إعلاناتك
+            </Link>
+            .
+          </div>
+        ) : null}
+
+        <div className="flex flex-col gap-2.5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
+              {listing.title}
+            </h1>
+            <div className="flex shrink-0 flex-row items-center gap-2" dir="ltr">
+              <ListingFavoriteHeart
+                initialFavorited={isFavorited}
+                isLoggedIn={Boolean(user)}
+                listingId={listing.id}
+              />
+              <ListingShareButton title={listing.title} url={shareUrl} />
+            </div>
+          </div>
+          <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
+            {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
+            {listing.status === "pending" ? " · قيد المراجعة" : null}
+            {" · "}
+            <span className="tabular-nums">{viewsFmt} مشاهدة</span>
+          </p>
+          <p className="text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
+            {priceFmt} {listing.price_unit}
+          </p>
+          {listing.location ? (
+            <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
+              📍 {listing.location}
+            </p>
+          ) : null}
+        </div>
+
+        {hasImages ? (
+          <>
+            <div className="hidden grid-cols-1 gap-6 sm:grid lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:items-start lg:gap-8">
+              {sellerAside}
+              <div className="order-1 min-w-0 lg:order-2">
+                <ListingImageGallery images={listing.images!} title={listing.title} />
+              </div>
+            </div>
+            <div className="sm:hidden">{sellerAside}</div>
+          </>
+        ) : (
+          sellerAside
+        )}
+
+        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
+          <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50">الوصف</h2>
+          <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {listing.description || "لا يوجد وصف."}
+          </p>
+        </div>
       </div>
     </div>
   );
