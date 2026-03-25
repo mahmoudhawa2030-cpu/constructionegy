@@ -95,7 +95,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 max-sm:pt-0">
+    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 max-sm:pt-[env(safe-area-inset-top)]">
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
       {hasImages ? (
