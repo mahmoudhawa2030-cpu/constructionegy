@@ -82,11 +82,11 @@ export default async function UserAdsPage({ params }: PageProps) {
       </div>
 
       {listings.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-zinc-600 bg-zinc-900/40 px-4 py-10 text-center text-sm text-zinc-400">
+        <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/80 px-4 py-10 text-center text-sm text-zinc-500 dark:border-zinc-600 dark:bg-zinc-900/30 dark:text-zinc-400">
           {isOwner ? (
             <>
               لا إعلانات بعد.{" "}
-              <Link className="font-medium text-zinc-100 underline" href="/listings/new">
+              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
                 أضف إعلاناً
               </Link>
             </>

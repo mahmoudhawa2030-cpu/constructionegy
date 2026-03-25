@@ -17,11 +17,11 @@ const STATUS_BADGE: Record<ListingStatus, { className: string; label: string }> 
     label: "نشط",
   },
   sold: {
-    className: "bg-zinc-600 text-zinc-100",
+    className: "bg-zinc-200 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-100",
     label: "مباع",
   },
   rented: {
-    className: "bg-zinc-600 text-zinc-100",
+    className: "bg-zinc-200 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-100",
     label: "مؤجر",
   },
 };
@@ -110,20 +110,22 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
 
   return (
     <article
-      className="overflow-hidden rounded-2xl border border-zinc-700/90 bg-zinc-900 text-zinc-100 shadow-md"
+      className="overflow-hidden rounded-2xl border border-zinc-200 bg-white text-zinc-900 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-50"
       dir="rtl"
     >
       <div className="flex gap-3 p-3">
         {/* Thumbnail — small square (reference: icon-sized image) */}
         <Link
-          className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-800"
+          className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900"
           href={`/listings/${listing.id}`}
           prefetch={false}
         >
           {thumb ? (
             <Image alt="" className="object-cover" fill sizes="64px" src={thumb} unoptimized />
           ) : (
-            <div className="flex h-full items-center justify-center text-[10px] text-zinc-500">لا صورة</div>
+            <div className="flex h-full items-center justify-center text-[10px] text-zinc-400 dark:text-zinc-500">
+              لا صورة
+            </div>
           )}
         </Link>
 
@@ -131,16 +133,18 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <Link className="block" href={`/listings/${listing.id}`} prefetch={false}>
-                <h2 className="line-clamp-2 text-sm font-bold leading-snug text-white">{listing.title}</h2>
+                <h2 className="line-clamp-2 text-sm font-bold leading-snug text-zinc-900 dark:text-zinc-50">
+                  {listing.title}
+                </h2>
               </Link>
-              <p className="mt-0.5 text-sm font-medium text-zinc-100">
+              <p className="mt-0.5 text-sm font-medium text-zinc-900 dark:text-zinc-50">
                 {priceFmt} {listing.price_unit}
               </p>
-              <p className="mt-0.5 line-clamp-1 text-xs text-zinc-400">{categoryLabel}</p>
+              <p className="mt-0.5 line-clamp-1 text-xs text-zinc-500 dark:text-zinc-400">{categoryLabel}</p>
             </div>
             {isOwner ? (
               <span
-                className="shrink-0 rounded-lg p-1 text-zinc-400"
+                className="shrink-0 rounded-lg p-1 text-zinc-400 dark:text-zinc-500"
                 title="قريباً"
                 aria-hidden
               >
@@ -151,17 +155,17 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
         </div>
       </div>
 
-      <div className="border-t border-zinc-700/80 px-3 pb-3 pt-2">
-        <p className="text-xs text-zinc-400">
+      <div className="border-t border-zinc-200 px-3 pb-3 pt-2 dark:border-zinc-800">
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">
           نشط من {from} إلى {to}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-300">
-            <IconEye className="h-4 w-4 text-zinc-500" />
+          <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+            <IconEye className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
             {viewsFmt} مشاهدة
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-300">
-            <IconLead className="h-4 w-4 text-zinc-500" />
+          <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+            <IconLead className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
             0 مهتم
           </span>
           <span
@@ -174,12 +178,13 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
         {isOwner ? (
           <div className="mt-3 sm:flex sm:w-full sm:justify-start sm:[direction:ltr]">
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-fit sm:origin-left sm:scale-[0.8] sm:gap-4">
-              <span
-                className="flex cursor-default items-center justify-center rounded-xl border border-zinc-600 bg-zinc-800 py-2.5 text-center text-sm font-medium text-zinc-100 sm:min-w-[13rem] sm:py-4 sm:text-base sm:rounded-2xl"
-                title="واجهة فقط"
+              <Link
+                className="flex items-center justify-center rounded-xl border border-zinc-200 bg-zinc-50 py-2.5 text-center text-sm font-medium text-zinc-900 transition-colors hover:border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-800 sm:min-w-[13rem] sm:py-4 sm:text-base sm:rounded-2xl"
+                href={`/listings/${listing.id}/edit`}
+                prefetch={false}
               >
                 تعديل
-              </span>
+              </Link>
               <span
                 className="flex cursor-default items-center justify-center rounded-xl bg-red-500 py-2.5 text-center text-sm font-semibold text-white opacity-90 sm:min-w-[13rem] sm:py-4 sm:text-base sm:rounded-2xl"
                 title="واجهة فقط"
