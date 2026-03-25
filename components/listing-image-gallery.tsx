@@ -134,15 +134,9 @@ export function ListingImageGallery({ images, title }: Props) {
           ) : null}
         </div>
 
-        {n > 1 ? (
-          <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-            اضغط على الصورة للتكبير
-          </p>
-        ) : (
-          <p className="text-center text-xs text-zinc-500 dark:text-zinc-400">
-            اضغط على الصورة للتكبير
-          </p>
-        )}
+        <p className="hidden text-center text-xs text-zinc-500 sm:block dark:text-zinc-400">
+          اضغط على الصورة للتكبير
+        </p>
       </div>
 
       {lightbox ? (

@@ -117,16 +117,18 @@ export default async function ListingDetailPage({ params }: PageProps) {
 
       <div className="flex max-sm:order-2 max-sm:flex-col max-sm:gap-6 max-sm:px-4 max-sm:pb-7 sm:contents sm:gap-0 sm:px-0 sm:pb-0">
         <div className="flex flex-col gap-3">
-          <Breadcrumb
-            items={[
-              { label: "المعرض", href: "/gallery" },
-              {
-                label: categoryLabel,
-                href: `/gallery?category=${encodeURIComponent(listing.category)}`,
-              },
-              { label: listing.title },
-            ]}
-          />
+          <div className="hidden sm:block">
+            <Breadcrumb
+              items={[
+                { label: "المعرض", href: "/gallery" },
+                {
+                  label: categoryLabel,
+                  href: `/gallery?category=${encodeURIComponent(listing.category)}`,
+                },
+                { label: listing.title },
+              ]}
+            />
+          </div>
           {user?.id === listing.user_id ? (
             <Link
               className="w-fit text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
