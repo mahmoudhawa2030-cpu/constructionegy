@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { ProfileListingsGrid } from "@/components/profile-listings-grid";
+import { UserAdsCompactCard } from "@/components/user-ads-compact-card";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 
@@ -81,22 +81,32 @@ export default async function UserAdsPage({ params }: PageProps) {
         </p>
       </div>
 
-      <ProfileListingsGrid
-        categoryLabelMap={categoryLabelMap}
-        empty={
-          isOwner ? (
+      {listings.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-zinc-600 bg-zinc-900/40 px-4 py-10 text-center text-sm text-zinc-400">
+          {isOwner ? (
             <>
               لا إعلانات بعد.{" "}
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
+              <Link className="font-medium text-zinc-100 underline" href="/listings/new">
                 أضف إعلاناً
               </Link>
             </>
           ) : (
             "لا توجد إعلانات منشورة من هذا المستخدم حالياً."
-          )
-        }
-        listings={listings}
-      />
+          )}
+        </div>
+      ) : (
+        <ul className="flex max-w-lg flex-col gap-3 sm:max-w-none">
+          {listings.map((row) => (
+            <li key={row.id}>
+              <UserAdsCompactCard
+                categoryLabelMap={categoryLabelMap}
+                isOwner={isOwner}
+                listing={row}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
