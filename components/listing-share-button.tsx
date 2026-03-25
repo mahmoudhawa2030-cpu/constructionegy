@@ -5,7 +5,12 @@ import { useCallback, useState } from "react";
 type Props = {
   url: string;
   title: string;
+  /** Icon-only control for toolbars (parent controls breakpoints). */
+  compact?: boolean;
 };
+
+const compactBtnClass =
+  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200/90 bg-white/95 text-zinc-700 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-90 disabled:opacity-50 dark:border-zinc-600/90 dark:bg-zinc-900/95 dark:text-zinc-200";
 
 function ShareIcon({ className }: { className?: string }) {
   return (
@@ -19,7 +24,7 @@ function ShareIcon({ className }: { className?: string }) {
   );
 }
 
-export function ListingShareButton({ url, title }: Props) {
+export function ListingShareButton({ url, title, compact = false }: Props) {
   const [busy, setBusy] = useState(false);
 
   const share = useCallback(async () => {
@@ -51,6 +56,21 @@ export function ListingShareButton({ url, title }: Props) {
       setBusy(false);
     }
   }, [title, url]);
+
+  if (compact) {
+    return (
+      <button
+        aria-label="مشاركة الإعلان"
+        className={compactBtnClass}
+        disabled={busy}
+        title="مشاركة"
+        type="button"
+        onClick={() => void share()}
+      >
+        <ShareIcon className="h-5 w-5" />
+      </button>
+    );
+  }
 
   return (
     <button

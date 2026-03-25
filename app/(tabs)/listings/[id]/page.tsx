@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingContact } from "@/components/listing-contact";
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
+import { ListingGalleryStickyBar } from "@/components/listing-gallery-sticky-bar";
 import { ListingShareButton } from "@/components/listing-share-button";
 import { ListingImageGallery } from "@/components/listing-image-gallery";
 import { ListingSellerCard } from "@/components/listing-seller-card";
@@ -95,11 +96,21 @@ export default async function ListingDetailPage({ params }: PageProps) {
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 max-sm:pt-[env(safe-area-inset-top)]">
+    <div
+      className={`mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 ${hasImages ? "max-sm:pt-0" : "max-sm:pt-[env(safe-area-inset-top)]"}`}
+    >
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
       {hasImages ? (
         <div className="w-full max-sm:order-1 sm:hidden">
+          <ListingGalleryStickyBar
+            initialFavorited={isFavorited}
+            isLoggedIn={Boolean(user)}
+            listingId={listing.id}
+            priceLine={`${priceFmt} ${listing.price_unit}`}
+            shareUrl={shareUrl}
+            title={listing.title}
+          />
           <ListingImageGallery images={listing.images!} title={listing.title} />
         </div>
       ) : null}
@@ -145,7 +156,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
         ) : null}
 
         <div className="flex flex-col gap-2.5">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div
+            className={`flex flex-wrap items-start justify-between gap-3${hasImages ? " max-sm:hidden" : ""}`}
+          >
             <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
               {listing.title}
             </h1>
@@ -164,7 +177,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
             {" · "}
             <span className="tabular-nums">{viewsFmt} مشاهدة</span>
           </p>
-          <p className="text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
+          <p
+            className={`text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50${hasImages ? " max-sm:hidden" : ""}`}
+          >
             {priceFmt} {listing.price_unit}
           </p>
           {listing.location ? (
