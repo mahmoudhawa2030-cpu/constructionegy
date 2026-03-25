@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { MobileTabBar } from "@/components/mobile-tab-bar";
@@ -34,7 +35,18 @@ export default async function TabsLayout({
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
       >
         <ThemeToggle compact />
-        {user ? <SignOutButton compact /> : null}
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+          {user ? (
+            <Link
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+              href="/favorites"
+              prefetch={true}
+            >
+              المفضلة
+            </Link>
+          ) : null}
+          {user ? <SignOutButton compact /> : null}
+        </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
         {children}

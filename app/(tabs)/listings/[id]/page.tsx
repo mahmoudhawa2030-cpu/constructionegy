@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingContact } from "@/components/listing-contact";
+import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { ListingImageGallery } from "@/components/listing-image-gallery";
 import { ListingSellerCard } from "@/components/listing-seller-card";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
@@ -53,6 +54,17 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const isOwner = Boolean(user?.id === listing.user_id);
 
   const hasImages = Boolean(listing.images && listing.images.length > 0);
+
+  let isFavorited = false;
+  if (user) {
+    const { data: favRow } = await supabase
+      .from("listing_favorites")
+      .select("listing_id")
+      .eq("user_id", user.id)
+      .eq("listing_id", listing.id)
+      .maybeSingle();
+    isFavorited = Boolean(favRow);
+  }
 
   const sellerAside = (
     <aside className={`flex flex-col gap-4 ${hasImages ? "order-2 lg:order-1" : ""}`}>
@@ -115,9 +127,16 @@ export default async function ListingDetailPage({ params }: PageProps) {
       ) : null}
 
       <div className="flex flex-col gap-2.5">
-        <h1 className="text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
-          {listing.title}
-        </h1>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
+            {listing.title}
+          </h1>
+          <ListingFavoriteHeart
+            initialFavorited={isFavorited}
+            isLoggedIn={Boolean(user)}
+            listingId={listing.id}
+          />
+        </div>
         <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
           {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
           {listing.status === "pending" ? " · قيد المراجعة" : null}
