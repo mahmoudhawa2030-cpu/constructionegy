@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingContact } from "@/components/listing-contact";
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
+import { ListingShareButton } from "@/components/listing-share-button";
 import { ListingImageGallery } from "@/components/listing-image-gallery";
 import { ListingSellerCard } from "@/components/listing-seller-card";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
@@ -65,6 +67,14 @@ export default async function ListingDetailPage({ params }: PageProps) {
       .maybeSingle();
     isFavorited = Boolean(favRow);
   }
+
+  const headerList = await headers();
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "https";
+  const envBase = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "").trim();
+  const shareOrigin =
+    envBase && envBase.length > 0 ? envBase : host ? `${proto}://${host}` : "";
+  const shareUrl = shareOrigin ? `${shareOrigin}/listings/${listing.id}` : "";
 
   const sellerAside = (
     <aside className={`flex flex-col gap-4 ${hasImages ? "order-2 lg:order-1" : ""}`}>
@@ -131,11 +141,14 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
             {listing.title}
           </h1>
-          <ListingFavoriteHeart
-            initialFavorited={isFavorited}
-            isLoggedIn={Boolean(user)}
-            listingId={listing.id}
-          />
+          <div className="flex shrink-0 flex-row items-center gap-2" dir="ltr">
+            <ListingFavoriteHeart
+              initialFavorited={isFavorited}
+              isLoggedIn={Boolean(user)}
+              listingId={listing.id}
+            />
+            <ListingShareButton title={listing.title} url={shareUrl} />
+          </div>
         </div>
         <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
           {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
