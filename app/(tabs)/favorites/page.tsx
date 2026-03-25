@@ -67,13 +67,22 @@ export default async function FavoritesPage() {
           <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/gallery">
             تصفح الإعلانات
           </Link>{" "}
-          واضغط القلب الأحمر على صفحة الإعلان.
+          واضغط القلب الأحمر في المعرض أو على صفحة الإعلان.
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
           {listings.map((row) => (
             <li key={row.id}>
-              <ListingCard categoryLabelMap={categoryLabelMap} listing={row} showViewCount />
+              <ListingCard
+                categoryLabelMap={categoryLabelMap}
+                favorite={{
+                  initialFavorited: true,
+                  isLoggedIn: true,
+                  loginReturnTo: "/favorites",
+                }}
+                listing={row}
+                showViewCount
+              />
             </li>
           ))}
         </ul>

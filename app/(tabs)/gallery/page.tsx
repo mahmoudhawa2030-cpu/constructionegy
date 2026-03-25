@@ -35,7 +35,27 @@ export default async function GalleryPage({ searchParams }: PageProps) {
 
   const { data: listings, error } = await query;
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const favoritedIds = new Set<string>();
+  if (user && listings && listings.length > 0) {
+    const ids = listings.map((l) => l.id);
+    const { data: favRows } = await supabase
+      .from("listing_favorites")
+      .select("listing_id")
+      .eq("user_id", user.id)
+      .in("listing_id", ids);
+    for (const r of favRows ?? []) {
+      favoritedIds.add(r.listing_id);
+    }
+  }
+
   const categoryLabelMap = await getCategoryLabelMap();
+  const favoriteLoginReturnTo = categorySlug
+    ? `/gallery?category=${encodeURIComponent(categorySlug)}`
+    : "/gallery";
   const filteredLabel = categorySlug ? (categoryLabelMap[categorySlug] ?? categorySlug) : null;
 
   return (
@@ -108,7 +128,16 @@ export default async function GalleryPage({ searchParams }: PageProps) {
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
           {listings.map((row) => (
             <li key={row.id}>
-              <ListingCard categoryLabelMap={categoryLabelMap} listing={row} showViewCount />
+              <ListingCard
+                categoryLabelMap={categoryLabelMap}
+                favorite={{
+                  initialFavorited: favoritedIds.has(row.id),
+                  isLoggedIn: Boolean(user),
+                  loginReturnTo: favoriteLoginReturnTo,
+                }}
+                listing={row}
+                showViewCount
+              />
             </li>
           ))}
         </ul>

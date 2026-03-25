@@ -10,6 +10,13 @@ type Props = {
   listingId: string;
   initialFavorited: boolean;
   isLoggedIn: boolean;
+  /** Icon-only overlay for listing cards (gallery, favorites, …). */
+  variant?: "full" | "card";
+  /**
+   * `next` after login when `variant="card"` and user is logged out.
+   * Defaults to `/listings/{listingId}`.
+   */
+  loginReturnTo?: string;
 };
 
 function HeartIcon({ filled, className }: { filled: boolean; className?: string }) {
@@ -31,21 +38,73 @@ function HeartIcon({ filled, className }: { filled: boolean; className?: string 
   );
 }
 
-export function ListingFavoriteHeart({ listingId, initialFavorited, isLoggedIn }: Props) {
+const cardControlClass =
+  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200/90 bg-white/95 text-red-600 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-90 disabled:opacity-50 dark:border-zinc-600/90 dark:bg-zinc-900/95 dark:text-red-400";
+
+export function ListingFavoriteHeart({
+  listingId,
+  initialFavorited,
+  isLoggedIn,
+  variant = "full",
+  loginReturnTo,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [favorited, setFavorited] = useState(initialFavorited);
+  const loginNext = loginReturnTo ?? `/listings/${listingId}`;
 
   useEffect(() => {
     setFavorited(initialFavorited);
   }, [initialFavorited]);
+
+  const runToggle = () => {
+    startTransition(async () => {
+      const prev = favorited;
+      setFavorited(!prev);
+      const r = await toggleListingFavorite(listingId);
+      if (!r.ok) {
+        setFavorited(prev);
+        alert(r.message);
+        return;
+      }
+      setFavorited(r.favorited);
+      router.refresh();
+    });
+  };
+
+  if (variant === "card") {
+    if (!isLoggedIn) {
+      return (
+        <Link
+          aria-label="تسجيل الدخول لإضافة للمفضلة"
+          className={cardControlClass}
+          href={`/login?next=${encodeURIComponent(loginNext)}`}
+          title="تسجيل الدخول لإضافة للمفضلة"
+        >
+          <HeartIcon className="h-5 w-5" filled={false} />
+        </Link>
+      );
+    }
+    return (
+      <button
+        aria-label={favorited ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+        className={cardControlClass}
+        disabled={pending}
+        title={favorited ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+        type="button"
+        onClick={runToggle}
+      >
+        <HeartIcon className="h-5 w-5" filled={favorited} />
+      </button>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
       <div className="flex flex-wrap items-center gap-3">
         <Link
           className="inline-flex items-center gap-1.5 rounded-lg px-1 py-1 text-red-600 transition-opacity hover:opacity-80 dark:text-red-500"
-          href={`/login?next=${encodeURIComponent(`/listings/${listingId}`)}`}
+          href={`/login?next=${encodeURIComponent(loginNext)}`}
           title="تسجيل الدخول لإضافة للمفضلة"
         >
           <HeartIcon className="h-7 w-7" filled={false} />
@@ -65,20 +124,7 @@ export function ListingFavoriteHeart({ listingId, initialFavorited, isLoggedIn }
         disabled={pending}
         type="button"
         title={favorited ? "إزالة من المفضلة" : "إضافة للمفضلة"}
-        onClick={() => {
-          startTransition(async () => {
-            const prev = favorited;
-            setFavorited(!prev);
-            const r = await toggleListingFavorite(listingId);
-            if (!r.ok) {
-              setFavorited(prev);
-              alert(r.message);
-              return;
-            }
-            setFavorited(r.favorited);
-            router.refresh();
-          });
-        }}
+        onClick={runToggle}
       >
         <HeartIcon className="h-7 w-7" filled={favorited} />
         <span className="text-sm font-medium">{favorited ? "في المفضلة" : "إضافة للمفضلة"}</span>

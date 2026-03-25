@@ -39,6 +39,7 @@ export async function toggleListingFavorite(listingId: string): Promise<Favorite
       return { ok: false, message: delErr.message };
     }
     revalidatePath("/favorites");
+    revalidatePath("/gallery");
     revalidatePath(`/listings/${listingId}`);
     return { ok: true, favorited: false };
   }
@@ -53,6 +54,7 @@ export async function toggleListingFavorite(listingId: string): Promise<Favorite
   }
 
   revalidatePath("/favorites");
+  revalidatePath("/gallery");
   revalidatePath(`/listings/${listingId}`);
   return { ok: true, favorited: true };
 }

@@ -1,16 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { labelForCategorySlug } from "@/lib/listings/categories";
 import type { Database } from "@/lib/supabase/database.types";
 
 type ListingRow = Database["public"]["Tables"]["listings"]["Row"];
+
+export type ListingCardFavoriteProps = {
+  initialFavorited: boolean;
+  isLoggedIn: boolean;
+  /** Login `next` for the card heart when logged out (e.g. `/gallery?category=…`). */
+  loginReturnTo?: string;
+};
 
 type Props = {
   listing: ListingRow;
   categoryLabelMap?: Record<string, string>;
   /** When true, show view count from `view_count` (defaults false). */
   showViewCount?: boolean;
+  /** When set, shows compact favorite control on the image. */
+  favorite?: ListingCardFavoriteProps;
 };
 
 const typeLabels: Record<ListingRow["type"], string> = {
@@ -23,7 +33,7 @@ const conditionLabels: Record<ListingRow["condition"], string> = {
   used: "مستعمل",
 };
 
-export function ListingCard({ listing, categoryLabelMap, showViewCount }: Props) {
+export function ListingCard({ listing, categoryLabelMap, showViewCount, favorite }: Props) {
   const thumb = listing.images?.[0];
   const priceFmt = new Intl.NumberFormat("ar-EG", {
     maximumFractionDigits: 0,
@@ -34,27 +44,28 @@ export function ListingCard({ listing, categoryLabelMap, showViewCount }: Props)
       : null;
 
   return (
-    <Link
-      className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
-      href={`/listings/${listing.id}`}
-    >
-      <div className="relative aspect-[5/4] w-full bg-zinc-100 sm:aspect-[3/2] dark:bg-zinc-900">
-        {thumb ? (
-          <Image
-            alt=""
-            className="object-cover"
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            src={thumb}
-            unoptimized
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs text-zinc-400">
-            لا صورة
-          </div>
-        )}
-      </div>
-      <div className="flex flex-1 flex-col gap-0.5 p-2.5 text-start sm:p-3">
+    <div className="relative">
+      <Link
+        className="flex flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+        href={`/listings/${listing.id}`}
+      >
+        <div className="relative aspect-[5/4] w-full bg-zinc-100 sm:aspect-[3/2] dark:bg-zinc-900">
+          {thumb ? (
+            <Image
+              alt=""
+              className="object-cover"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              src={thumb}
+              unoptimized
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-xs text-zinc-400">
+              لا صورة
+            </div>
+          )}
+        </div>
+        <div className="flex flex-1 flex-col gap-0.5 p-2.5 text-start sm:p-3">
         <p className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
           {listing.title}
         </p>
@@ -77,7 +88,19 @@ export function ListingCard({ listing, categoryLabelMap, showViewCount }: Props)
             </p>
           ) : null}
         </div>
-      </div>
-    </Link>
+        </div>
+      </Link>
+      {favorite ? (
+        <div className="pointer-events-auto absolute end-2 top-2 z-10">
+          <ListingFavoriteHeart
+            initialFavorited={favorite.initialFavorited}
+            isLoggedIn={favorite.isLoggedIn}
+            listingId={listing.id}
+            loginReturnTo={favorite.loginReturnTo}
+            variant="card"
+          />
+        </div>
+      ) : null}
+    </div>
   );
 }
