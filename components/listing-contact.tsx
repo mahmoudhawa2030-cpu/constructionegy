@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { getOrCreateChatForListing } from "@/lib/chat/actions";
+import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
 
 type Props = {
@@ -22,7 +22,18 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
     setError(null);
     setLoading(true);
     try {
-      const result = await getOrCreateChatForListing(listingId);
+      const res = await fetch("/api/chat/for-listing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId }),
+        credentials: "same-origin",
+      });
+      const raw: unknown = await res.json().catch(() => null);
+      if (!raw || typeof raw !== "object" || !("ok" in raw)) {
+        setError("تعذر بدء المحادثة.");
+        return;
+      }
+      const result = raw as StartChatResult;
       if (result.ok) {
         // Full navigation is more reliable than client router after server actions
         // (Firefox + Vercel sometimes fail to apply router.push before paint).
