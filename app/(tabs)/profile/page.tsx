@@ -140,6 +140,7 @@ export default async function ProfilePage() {
       {user ? (
         <ProfileListingsGrid
           categoryLabelMap={categoryLabelMap}
+          viewerUserId={user.id}
           empty={
             <>
               لا إعلانات بعد.{" "}

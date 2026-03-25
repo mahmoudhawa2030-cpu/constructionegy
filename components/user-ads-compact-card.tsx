@@ -165,10 +165,12 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
           نشط من {from} إلى {to}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
-            <IconEye className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
-            {viewsFmt} مشاهدة
-          </span>
+          {isOwner ? (
+            <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+              <IconEye className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+              {viewsFmt} مشاهدة
+            </span>
+          ) : null}
           <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
             <IconLead className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
             0 مهتم

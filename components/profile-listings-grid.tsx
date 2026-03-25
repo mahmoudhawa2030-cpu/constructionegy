@@ -11,7 +11,8 @@ type Props = {
   listings: ListingRow[];
   empty: ReactNode;
   categoryLabelMap: Record<string, string>;
-  showViewCount?: boolean;
+  /** Logged-in viewer id; view counts show only when it matches each listing’s seller. */
+  viewerUserId?: string | null;
 };
 
 export function ProfileListingsGrid({
@@ -19,7 +20,7 @@ export function ProfileListingsGrid({
   listings,
   empty,
   categoryLabelMap,
-  showViewCount = true,
+  viewerUserId = null,
 }: Props) {
   if (listings.length === 0) {
     return (
@@ -42,11 +43,7 @@ export function ProfileListingsGrid({
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
         {listings.map((row) => (
           <li key={row.id}>
-            <ListingCard
-              categoryLabelMap={categoryLabelMap}
-              listing={row}
-              showViewCount={showViewCount}
-            />
+            <ListingCard categoryLabelMap={categoryLabelMap} listing={row} viewerUserId={viewerUserId} />
           </li>
         ))}
       </ul>

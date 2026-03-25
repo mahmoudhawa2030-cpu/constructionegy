@@ -176,8 +176,12 @@ export default async function ListingDetailPage({ params }: PageProps) {
           <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
             {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
             {listing.status === "pending" ? " · قيد المراجعة" : null}
-            {" · "}
-            <span className="tabular-nums">{viewsFmt} مشاهدة</span>
+            {isOwner ? (
+              <>
+                {" · "}
+                <span className="tabular-nums">{viewsFmt} مشاهدة</span>
+              </>
+            ) : null}
           </p>
           <p
             className={`text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50${hasImages ? " max-sm:hidden" : ""}`}

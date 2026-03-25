@@ -81,7 +81,7 @@ export default async function FavoritesPage() {
                   loginReturnTo: "/favorites",
                 }}
                 listing={row}
-                showViewCount
+                viewerUserId={user.id}
               />
             </li>
           ))}

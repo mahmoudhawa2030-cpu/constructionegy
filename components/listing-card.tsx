@@ -17,8 +17,8 @@ export type ListingCardFavoriteProps = {
 type Props = {
   listing: ListingRow;
   categoryLabelMap?: Record<string, string>;
-  /** When true, show view count from `view_count` (defaults false). */
-  showViewCount?: boolean;
+  /** When it matches `listing.user_id`, view count is shown (owner only). */
+  viewerUserId?: string | null;
   /** When set, shows compact favorite control on the image. */
   favorite?: ListingCardFavoriteProps;
 };
@@ -59,15 +59,15 @@ function listingRelativeAge(iso: string): string {
   return rtf.format(-Math.max(1, diffMo), "month");
 }
 
-export function ListingCard({ listing, categoryLabelMap, showViewCount, favorite }: Props) {
+export function ListingCard({ listing, categoryLabelMap, viewerUserId, favorite }: Props) {
   const thumb = listing.images?.[0];
   const priceFmt = new Intl.NumberFormat("ar-EG", {
     maximumFractionDigits: 0,
   }).format(Number(listing.price));
-  const viewsFmt =
-    showViewCount === true
-      ? new Intl.NumberFormat("ar-EG").format(listing.view_count ?? 0)
-      : null;
+  const showViews = Boolean(viewerUserId && viewerUserId === listing.user_id);
+  const viewsFmt = showViews
+    ? new Intl.NumberFormat("ar-EG").format(listing.view_count ?? 0)
+    : null;
 
   return (
     <div className="relative">

@@ -113,6 +113,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
         empty="لا توجد إعلانات منشورة من هذا المستخدم حالياً."
         listings={listings}
         title={`إعلانات ${profile.full_name}`}
+        viewerUserId={user.id}
       />
     </div>
   );

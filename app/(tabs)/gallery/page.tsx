@@ -136,7 +136,7 @@ export default async function GalleryPage({ searchParams }: PageProps) {
                   loginReturnTo: favoriteLoginReturnTo,
                 }}
                 listing={row}
-                showViewCount
+                viewerUserId={user?.id ?? null}
               />
             </li>
           ))}
