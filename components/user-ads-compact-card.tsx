@@ -173,15 +173,15 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
 
         {isOwner ? (
           <div className="mt-3 sm:flex sm:w-full sm:justify-start sm:[direction:ltr]">
-            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-fit sm:origin-left sm:scale-[0.6] sm:gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-fit sm:gap-4">
               <span
-                className="flex cursor-default items-center justify-center rounded-xl border border-zinc-600 bg-zinc-800 py-2.5 text-center text-sm font-medium text-zinc-100 sm:min-w-[6.5rem] sm:py-2 sm:text-xs"
+                className="flex cursor-default items-center justify-center rounded-xl border border-zinc-600 bg-zinc-800 py-2.5 text-center text-sm font-medium text-zinc-100 sm:min-w-[13rem] sm:py-4 sm:text-base sm:rounded-2xl"
                 title="واجهة فقط"
               >
                 تعديل
               </span>
               <span
-                className="flex cursor-default items-center justify-center rounded-xl bg-red-500 py-2.5 text-center text-sm font-semibold text-white opacity-90 sm:min-w-[6.5rem] sm:py-2 sm:text-xs"
+                className="flex cursor-default items-center justify-center rounded-xl bg-red-500 py-2.5 text-center text-sm font-semibold text-white opacity-90 sm:min-w-[13rem] sm:py-4 sm:text-base sm:rounded-2xl"
                 title="واجهة فقط"
               >
                 عرّض أسرع
