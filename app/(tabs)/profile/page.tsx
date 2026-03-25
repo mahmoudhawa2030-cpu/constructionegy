@@ -106,6 +106,14 @@ export default async function ProfilePage() {
         {user ? (
           <Link
             className="inline-flex w-full justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            href={`/users/${user.id}/ads`}
+          >
+            صفحة إعلاناتي (للمشاركة)
+          </Link>
+        ) : null}
+        {user ? (
+          <Link
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
             href="/listings/new"
           >
             إضافة إعلان

@@ -78,12 +78,20 @@ export function ListingSellerCard({
           {since ? (
             <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">عضو منذ {since}</p>
           ) : null}
-          <Link
-            className="mt-1 text-sm font-medium text-zinc-900 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-200"
-            href={profileHref}
-          >
-            عرض الملف الشخصي
-          </Link>
+          <div className="mt-1 flex flex-col gap-1">
+            <Link
+              className="text-sm font-medium text-zinc-900 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-200"
+              href={profileHref}
+            >
+              عرض الملف الشخصي
+            </Link>
+            <Link
+              className="text-sm font-medium text-zinc-900 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-200"
+              href={`/users/${userId}/ads`}
+            >
+              {isOwner ? "جميع إعلاناتي" : "جميع إعلاناته"}
+            </Link>
+          </div>
         </div>
       </div>
     </section>

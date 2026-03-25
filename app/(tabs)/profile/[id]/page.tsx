@@ -59,12 +59,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-lg flex-col gap-2">
-        <Link
-          className="w-fit text-sm text-zinc-600 underline dark:text-zinc-400"
-          href="/gallery"
-        >
-          عرض المعرض
-        </Link>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <Link className="text-zinc-600 underline dark:text-zinc-400" href="/gallery">
+            عرض المعرض
+          </Link>
+          <Link className="text-zinc-600 underline dark:text-zinc-400" href={`/users/${id}/ads`}>
+            كل الإعلانات (الأحدث أولاً)
+          </Link>
+        </div>
         <h1 className="text-xl font-semibold text-zinc-900 sm:text-2xl dark:text-zinc-50">ملف مستخدم</h1>
       </div>
 
