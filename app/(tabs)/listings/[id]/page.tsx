@@ -103,6 +103,17 @@ export default async function ListingDetailPage({ params }: PageProps) {
         </div>
       ) : null}
 
+      {listing.status === "paused" ? (
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
+          هذا الإعلان <strong>متوقف مؤقتاً</strong> ولا يظهر في المعرض. لإعادة الظهور استخدم «إعادة النشر» في
+          صفحة{" "}
+          <Link className="font-semibold underline" href={`/users/${listing.user_id}/ads`}>
+            جميع إعلاناتك
+          </Link>
+          .
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-2.5">
         <h1 className="text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
           {listing.title}

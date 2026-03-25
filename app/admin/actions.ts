@@ -8,7 +8,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
-const STATUSES: ListingStatus[] = ["pending", "active", "sold", "rented"];
+const STATUSES: ListingStatus[] = ["pending", "active", "sold", "rented", "paused"];
 
 export async function updateListingStatusFromForm(formData: FormData) {
   await requireAdmin();
@@ -24,7 +24,7 @@ export async function updateListingStatusFromForm(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("listings")
-    .update({ status: status as ListingStatus })
+    .update({ status: status as ListingStatus, status_before_pause: null })
     .eq("id", listingId);
   if (error) {
     throw new Error(error.message);

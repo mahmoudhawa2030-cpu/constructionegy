@@ -148,3 +148,137 @@ export async function updateListing(
 
   return { ok: true, id: listingId };
 }
+
+function revalidateListingPaths(params: { listingId: string; ownerId: string }) {
+  const { listingId, ownerId } = params;
+  revalidatePath("/gallery");
+  revalidatePath(`/listings/${listingId}`);
+  revalidatePath(`/listings/${listingId}/edit`);
+  revalidatePath(`/users/${ownerId}/ads`);
+  revalidatePath("/profile");
+  revalidatePath(`/profile/${ownerId}`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+}
+
+/** Hide from public (gallery) but keep for owner on /users/…/ads. Restores via resumeListing. */
+export async function pauseListing(listingId: string): Promise<CreateListingResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "يجب تسجيل الدخول أولاً." };
+  }
+
+  const { data: row, error: fetchErr } = await supabase
+    .from("listings")
+    .select("id, user_id, status")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (fetchErr || !row) {
+    return { ok: false, message: "الإعلان غير موجود." };
+  }
+  if (row.user_id !== user.id) {
+    return { ok: false, message: "لا يمكنك تعديل هذا الإعلان." };
+  }
+  if (row.status !== "active" && row.status !== "pending") {
+    return { ok: false, message: "لا يمكن إيقاف هذا الإعلان في وضعه الحالي." };
+  }
+
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      status: "paused",
+      status_before_pause: row.status,
+    })
+    .eq("id", listingId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidateListingPaths({ listingId, ownerId: user.id });
+  return { ok: true, id: listingId };
+}
+
+export async function resumeListing(listingId: string): Promise<CreateListingResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "يجب تسجيل الدخول أولاً." };
+  }
+
+  const { data: row, error: fetchErr } = await supabase
+    .from("listings")
+    .select("id, user_id, status, status_before_pause")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (fetchErr || !row) {
+    return { ok: false, message: "الإعلان غير موجود." };
+  }
+  if (row.user_id !== user.id) {
+    return { ok: false, message: "لا يمكنك تعديل هذا الإعلان." };
+  }
+  if (row.status !== "paused") {
+    return { ok: false, message: "الإعلان ليس متوقفاً مؤقتاً." };
+  }
+
+  const nextStatus = row.status_before_pause ?? "active";
+  if (nextStatus === "paused") {
+    return { ok: false, message: "حالة غير صالحة لاستئناف الإعلان." };
+  }
+
+  const { error } = await supabase
+    .from("listings")
+    .update({
+      status: nextStatus,
+      status_before_pause: null,
+    })
+    .eq("id", listingId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidateListingPaths({ listingId, ownerId: user.id });
+  return { ok: true, id: listingId };
+}
+
+export async function deleteListing(listingId: string): Promise<CreateListingResult> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: "يجب تسجيل الدخول أولاً." };
+  }
+
+  const { data: row, error: fetchErr } = await supabase
+    .from("listings")
+    .select("id, user_id")
+    .eq("id", listingId)
+    .maybeSingle();
+
+  if (fetchErr || !row) {
+    return { ok: false, message: "الإعلان غير موجود." };
+  }
+  if (row.user_id !== user.id) {
+    return { ok: false, message: "لا يمكنك حذف هذا الإعلان." };
+  }
+
+  const { error } = await supabase.from("listings").delete().eq("id", listingId).eq("user_id", user.id);
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidateListingPaths({ listingId, ownerId: user.id });
+  return { ok: true, id: listingId };
+}

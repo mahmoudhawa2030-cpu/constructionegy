@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { UserAdsListingActions } from "@/components/user-ads-listing-actions";
 import { labelForCategorySlug } from "@/lib/listings/categories";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -23,6 +24,10 @@ const STATUS_BADGE: Record<ListingStatus, { className: string; label: string }> 
   rented: {
     className: "bg-zinc-200 text-zinc-800 dark:bg-zinc-600 dark:text-zinc-100",
     label: "مؤجر",
+  },
+  paused: {
+    className: "bg-sky-200 text-sky-950 dark:bg-sky-800 dark:text-sky-100",
+    label: "متوقف مؤقتاً",
   },
 };
 
@@ -194,6 +199,7 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
             </div>
           </div>
         ) : null}
+        {isOwner ? <UserAdsListingActions listing={listing} /> : null}
       </div>
     </article>
   );

@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<ListingStatus, string> = {
   active: "منشور (معتمد)",
   sold: "مباع",
   rented: "مؤجر",
+  paused: "متوقف (المستخدم)",
 };
 
 export default async function AdminListingsPage() {
@@ -21,7 +22,7 @@ export default async function AdminListingsPage() {
     .order("created_at", { ascending: false });
 
   const listings = [...(listingsRaw ?? [])].sort((a, b) => {
-    const pri = (s: string) => (s === "pending" ? 0 : 1);
+    const pri = (s: string) => (s === "pending" ? 0 : s === "paused" ? 1 : 2);
     const c = pri(a.status) - pri(b.status);
     if (c !== 0) return c;
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
