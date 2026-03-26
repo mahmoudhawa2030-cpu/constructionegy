@@ -23,12 +23,16 @@ export default async function AdminDashboardPage() {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">نظرة عامة</h1>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 dark:border-amber-800 dark:bg-amber-950/40">
+          <Link
+            className="block rounded-2xl border border-amber-200 bg-amber-50 p-5 transition-colors hover:border-amber-300 hover:bg-amber-100/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:border-amber-800 dark:bg-amber-950/40 dark:hover:border-amber-700 dark:hover:bg-amber-950/70"
+            href="/admin/listings"
+            prefetch={true}
+          >
             <p className="text-sm text-amber-800 dark:text-amber-200">بانتظار الموافقة</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-950 dark:text-amber-50">
               {pendingListings}
             </p>
-          </div>
+          </Link>
           <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">إجمالي الإعلانات</p>
             <p className="mt-1 text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">

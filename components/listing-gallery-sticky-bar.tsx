@@ -14,6 +14,15 @@ type Props = {
   shareUrl: string;
 };
 
+const STICKY_TITLE_MAX_CHARS = 33;
+
+function stickyTitleForDisplay(raw: string): string {
+  if ([...raw].length <= STICKY_TITLE_MAX_CHARS) {
+    return raw;
+  }
+  return `${[...raw].slice(0, STICKY_TITLE_MAX_CHARS).join("")}...`;
+}
+
 function BackChevronIcon({ className }: { className?: string }) {
   return (
     <svg aria-hidden className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -31,6 +40,7 @@ export function ListingGalleryStickyBar({
   shareUrl,
 }: Props) {
   const router = useRouter();
+  const titleSticky = stickyTitleForDisplay(title);
 
   function goBack() {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -54,7 +64,10 @@ export function ListingGalleryStickyBar({
         <BackChevronIcon className="h-7 w-7 rtl:scale-x-[-1]" />
       </button>
       <div className="min-w-0 flex-1 text-start">
-        <h1 className="line-clamp-1 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50">{title}</h1>
+        <h1 className="text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50" title={title}>
+          <span className="sr-only">{title}</span>
+          <span aria-hidden="true">{titleSticky}</span>
+        </h1>
         <p className="mt-0.5 text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-50">{priceLine}</p>
       </div>
       <div className="flex shrink-0 flex-row items-center gap-1.5" dir="ltr">
