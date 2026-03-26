@@ -401,6 +401,142 @@ export type Database = {
           },
         ]
       }
+      rfq_attachments: {
+        Row: {
+          byte_size: number
+          content_hash: string | null
+          content_type: string | null
+          created_at: string
+          draft_id: string
+          id: string
+          original_filename: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          byte_size: number
+          content_hash?: string | null
+          content_type?: string | null
+          created_at?: string
+          draft_id: string
+          id?: string
+          original_filename: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          byte_size?: number
+          content_hash?: string | null
+          content_type?: string | null
+          created_at?: string
+          draft_id?: string
+          id?: string
+          original_filename?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_attachments_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_drafts: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_drafts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfq_items: {
+        Row: {
+          created_at: string
+          description: string
+          draft_id: string
+          id: string
+          notes: string | null
+          quantity: number | null
+          raw: Json | null
+          row_index: number
+          unit: string | null
+          validation_errors: Json | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          draft_id: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          raw?: Json | null
+          row_index: number
+          unit?: string | null
+          validation_errors?: Json | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          draft_id?: string
+          id?: string
+          notes?: string | null
+          quantity?: number | null
+          raw?: Json | null
+          row_index?: number
+          unit?: string | null
+          validation_errors?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_items_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_drafts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
