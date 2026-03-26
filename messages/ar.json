@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "title": "construction-egy",
+    "description": "تطبيق ويب ومتجر إنشاءات مع Supabase"
+  },
+  "localeSwitcher": {
+    "ariaLabel": "اختيار اللغة",
+    "current": "اللغة الحالية"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "gallery": "المعرض",
+    "messages": "الرسائل",
+    "profile": "حسابي",
+    "favorites": "المفضلة"
+  },
+  "home": {
+    "title": "construction-egy",
+    "intro": "تطبيق ويب ومتجر للسقالات: صور، حجوزات، ووصول آمن عبر Supabase. استخدم التبويبات بالأسفل أو الروابط للمصادقة.",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "gallery": "المعرض"
+  },
+  "auth": {
+    "loginTitle": "تسجيل الدخول",
+    "loginSubtitle": "أدخل البريد وكلمة المرور للمتابعة",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "submit": "دخول",
+    "submitting": "جاري الدخول…",
+    "noAccount": "ليس لديك حساب؟",
+    "createAccount": "إنشاء حساب",
+    "loading": "جاري التحميل…"
+  },
+  "signup": {
+    "title": "إنشاء حساب",
+    "subtitle": "سجّل بريداً وكلمة مرور لبدء الاستخدام",
+    "displayName": "الاسم الظاهر",
+    "displayNamePlaceholder": "مثال: أحمد محمد",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "submit": "إنشاء الحساب",
+    "submitting": "جاري الإنشاء…",
+    "hasAccount": "لديك حساب بالفعل؟",
+    "loginLink": "تسجيل الدخول",
+    "otpTitle": "تأكيد البريد",
+    "otpSentTo": "أدخل الرمز المرسل إلى",
+    "otpLabel": "رمز التحقق",
+    "otpPlaceholder": "••••••",
+    "otpHint": "أدخل رمز التحقق المكوّن من {count} أرقام المرسل إلى بريدك. إن لم يظهر خلال دقيقتين، راجع البريد المزعج، أو جرّب «إعادة إرسال الرمز».",
+    "otpLengthError": "الرمز يجب أن يكون {count} أرقاماً.",
+    "confirm": "تأكيد",
+    "verifying": "جاري التحقق…",
+    "resend": "إعادة إرسال الرمز",
+    "resendDone": "أُعيد إرسال الرمز إلى بريدك.",
+    "backToDetails": "← العودة لتعديل البيانات",
+    "verifyFailed": "لم يكتمل تسجيل الدخول. حاول مرة أخرى.",
+    "checkEmail": "تحقق من بريدك أو إعدادات المشروع في Supabase."
+  },
+  "accountSuspended": {
+    "title": "تم تعليق حسابك",
+    "body": "تم إنهاء جلستك. إذا اعتقدت أن هذا خطأ، تواصل مع الإدارة.",
+    "login": "الذهاب لتسجيل الدخول"
+  },
+  "gallery": {
+    "titleAll": "المعرض — الإعلانات",
+    "titleFiltered": "المعرض — <muted>{category}</muted>",
+    "activeInCategory": "إعلانات نشطة في هذا التصنيف.",
+    "showAll": "عرض كل الإعلانات",
+    "browseActive": "تصفح الإعلانات النشطة.",
+    "toAdd": "لإضافة إعلان",
+    "addListingLink": "افتح صفحة «إضافة إعلان»",
+    "requiresLogin": "(يتطلب تسجيل الدخول).",
+    "loadError": "تعذر تحميل الإعلانات. تأكد من تطبيق migration العلنية على Supabase (ملف 20260323140000_listings_public_read_anon.sql) ثم أعد المحاولة.",
+    "emptyFiltered": "لا توجد إعلانات في «{category}» حالياً.",
+    "browseAllCategories": "تصفح كل التصنيفات",
+    "empty": "لا توجد إعلانات بعد.",
+    "loginThen": "سجّل الدخول",
+    "then": "ثم",
+    "addListing": "أضف إعلاناً"
+  },
+  "favorites": {
+    "loadError": "تعذر تحميل المفضلة: {message}",
+    "migrationHint": "إذا ظهر خطأ عن الجدول: نفّذ ترحيل قاعدة البيانات `listing_favorites` من مجلد supabase/migrations.",
+    "title": "المفضلة",
+    "subtitle": "إعلانات حفظتها للمراجعة لاحقاً.",
+    "browseGallery": "تصفح المعرض",
+    "emptyLead": "لا توجد عناصر في المفضلة بعد.",
+    "browseListings": "تصفح الإعلانات",
+    "emptyHint": "واضغط القلب الأحمر في المعرض أو على صفحة الإعلان."
+  },
+  "profile": {
+    "title": "حسابي",
+    "subtitleLoggedIn": "الملف الشخصي والإعدادات السريعة.",
+    "subtitleGuest": "الإعدادات والملف الشخصي — سجّل الدخول للمزيد.",
+    "greeting": "مرحباً،",
+    "noProfileRecord": "لم يُعثر على سجل ملف شخصي. املأ الحقول أدناه ثم احفظ لإنشاء الملف.",
+    "login": "تسجيل الدخول",
+    "messages": "الرسائل",
+    "myListingsLink": "جميع إعلاناتي",
+    "addListing": "إضافة إعلان",
+    "addListingLogin": "إضافة إعلان (تسجيل الدخول)",
+    "adminPanel": "لوحة الإدارة",
+    "emptyMyListings": "لا إعلانات بعد.",
+    "addListingCta": "أضف إعلاناً",
+    "myListingsTitle": "إعلاناتي",
+    "defaultDisplayName": "مستخدم"
+  },
+  "admin": {
+    "panel": "لوحة الإدارة",
+    "overview": "نظرة عامة",
+    "listings": "الإعلانات",
+    "users": "المستخدمون",
+    "chats": "مراقبة المحادثات",
+    "categories": "التصنيفات",
+    "site": "الموقع"
+  },
+  "signOut": {
+    "label": "تسجيل الخروج"
+  },
+  "listingCard": {
+    "noImage": "لا صورة",
+    "rent": "إيجار",
+    "sell": "بيع",
+    "new": "جديد",
+    "used": "مستعمل",
+    "views": "مشاهدة"
+  },
+  "common": {
+    "brandAlt": "Next.js logo"
+  }
+}

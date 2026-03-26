@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { ListingCard } from "@/components/listing-card";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
@@ -58,44 +59,44 @@ export default async function GalleryPage({ searchParams }: PageProps) {
     : "/gallery";
   const filteredLabel = categorySlug ? (categoryLabelMap[categorySlug] ?? categorySlug) : null;
 
+  const t = await getTranslations("gallery");
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 px-3 py-5 sm:gap-4 sm:px-4 sm:py-6">
       <div className="flex flex-col gap-0.5">
         <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl dark:text-zinc-50">
-          {filteredLabel ? (
-            <>
-              المعرض — <span className="text-zinc-700 dark:text-zinc-300">{filteredLabel}</span>
-            </>
-          ) : (
-            "المعرض — الإعلانات"
-          )}
+          {filteredLabel
+            ? t.rich("titleFiltered", {
+                category: filteredLabel,
+                muted: (chunks) => (
+                  <span className="text-zinc-700 dark:text-zinc-300">{chunks}</span>
+                ),
+              })
+            : t("titleAll")}
         </h1>
         <p className="text-xs leading-relaxed text-zinc-600 sm:text-sm dark:text-zinc-400">
           {filteredLabel ? (
             <>
-              إعلانات نشطة في هذا التصنيف.{" "}
+              {t("activeInCategory")}{" "}
               <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/gallery">
-                عرض كل الإعلانات
+                {t("showAll")}
               </Link>
               {" · "}
             </>
           ) : (
-            <>
-              تصفح الإعلانات النشطة.{" "}
-            </>
+            <>{t("browseActive")} </>
           )}
-          لإضافة إعلان{" "}
+          {t("toAdd")}{" "}
           <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
-            افتح صفحة «إضافة إعلان»
+            {t("addListingLink")}
           </Link>{" "}
-          (يتطلب تسجيل الدخول).
+          {t("requiresLogin")}
         </p>
       </div>
 
       {error ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
-          تعذر تحميل الإعلانات. تأكد من تطبيق migration العلنية على Supabase (ملف
-          20260323140000_listings_public_read_anon.sql) ثم أعد المحاولة.
+          {t("loadError")}
         </p>
       ) : null}
 
@@ -103,20 +104,20 @@ export default async function GalleryPage({ searchParams }: PageProps) {
         <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
           {filteredLabel ? (
             <>
-              لا توجد إعلانات في «{filteredLabel}» حالياً.{" "}
+              {t("emptyFiltered", { category: filteredLabel })}{" "}
               <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/gallery">
-                تصفح كل التصنيفات
+                {t("browseAllCategories")}
               </Link>
             </>
           ) : (
             <>
-              لا توجد إعلانات بعد.{" "}
+              {t("empty")}{" "}
               <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/login?next=/listings/new">
-                سجّل الدخول
+                {t("loginThen")}
               </Link>{" "}
-              ثم{" "}
+              {t("then")}{" "}
               <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
-                أضف إعلاناً
+                {t("addListing")}
               </Link>
               .
             </>

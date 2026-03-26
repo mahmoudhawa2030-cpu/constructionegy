@@ -1,0 +1,132 @@
+{
+  "meta": {
+    "title": "construction-egy",
+    "description": "Web marketplace for construction with Supabase"
+  },
+  "localeSwitcher": {
+    "ariaLabel": "Choose language",
+    "current": "Current language"
+  },
+  "nav": {
+    "home": "Home",
+    "gallery": "Gallery",
+    "messages": "Messages",
+    "profile": "My account",
+    "favorites": "Favorites"
+  },
+  "home": {
+    "title": "construction-egy",
+    "intro": "A web app and marketplace for scaffolding: photos, bookings, and secure access with Supabase. Use the tabs below or the links to sign in.",
+    "login": "Log in",
+    "signup": "Create account",
+    "gallery": "Gallery"
+  },
+  "auth": {
+    "loginTitle": "Log in",
+    "loginSubtitle": "Enter your email and password to continue",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "Don’t have an account?",
+    "createAccount": "Create account",
+    "loading": "Loading…"
+  },
+  "signup": {
+    "title": "Create account",
+    "subtitle": "Register with email and password to get started",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "e.g. Ahmed Mohamed",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Create account",
+    "submitting": "Creating…",
+    "hasAccount": "Already have an account?",
+    "loginLink": "Log in",
+    "otpTitle": "Confirm email",
+    "otpSentTo": "Enter the code sent to",
+    "otpLabel": "Verification code",
+    "otpPlaceholder": "••••••",
+    "otpHint": "Enter the {count}-digit code sent to your inbox. If it doesn’t arrive within two minutes, check spam or tap “Resend code”.",
+    "otpLengthError": "The code must be {count} digits.",
+    "confirm": "Confirm",
+    "verifying": "Verifying…",
+    "resend": "Resend code",
+    "resendDone": "Code resent to your email.",
+    "backToDetails": "← Back to edit details",
+    "verifyFailed": "Sign-in did not complete. Try again.",
+    "checkEmail": "Check your email or your Supabase project settings."
+  },
+  "accountSuspended": {
+    "title": "Your account is suspended",
+    "body": "Your session has been ended. If you think this is a mistake, contact support.",
+    "login": "Go to log in"
+  },
+  "gallery": {
+    "titleAll": "Gallery — listings",
+    "titleFiltered": "Gallery — <muted>{category}</muted>",
+    "activeInCategory": "Active listings in this category.",
+    "showAll": "Show all listings",
+    "browseActive": "Browse active listings.",
+    "toAdd": "To add a listing",
+    "addListingLink": "open the “Add listing” page",
+    "requiresLogin": "(requires sign-in).",
+    "loadError": "Could not load listings. Ensure the public listings migration is applied on Supabase (file 20260323140000_listings_public_read_anon.sql), then try again.",
+    "emptyFiltered": "No listings in “{category}” right now.",
+    "browseAllCategories": "Browse all categories",
+    "empty": "No listings yet.",
+    "loginThen": "Sign in",
+    "then": "then",
+    "addListing": "add a listing"
+  },
+  "favorites": {
+    "loadError": "Could not load favorites: {message}",
+    "migrationHint": "If you see a table error, run the `listing_favorites` database migration from the supabase/migrations folder.",
+    "title": "Favorites",
+    "subtitle": "Listings you saved to review later.",
+    "browseGallery": "Browse gallery",
+    "emptyLead": "No favorites yet.",
+    "browseListings": "Browse listings",
+    "emptyHint": "Tap the red heart in the gallery or on a listing page."
+  },
+  "profile": {
+    "title": "My account",
+    "subtitleLoggedIn": "Profile and quick settings.",
+    "subtitleGuest": "Profile and settings — sign in for more.",
+    "greeting": "Hello,",
+    "noProfileRecord": "No profile record was found. Fill in the fields below and save to create one.",
+    "login": "Log in",
+    "messages": "Messages",
+    "myListingsLink": "All my listings",
+    "addListing": "Add listing",
+    "addListingLogin": "Add listing (sign in)",
+    "adminPanel": "Admin",
+    "emptyMyListings": "No listings yet.",
+    "addListingCta": "Add a listing",
+    "myListingsTitle": "My listings",
+    "defaultDisplayName": "User"
+  },
+  "admin": {
+    "panel": "Admin",
+    "overview": "Overview",
+    "listings": "Listings",
+    "users": "Users",
+    "chats": "Chat moderation",
+    "categories": "Categories",
+    "site": "Site"
+  },
+  "signOut": {
+    "label": "Sign out"
+  },
+  "listingCard": {
+    "noImage": "No image",
+    "rent": "Rent",
+    "sell": "Sell",
+    "new": "New",
+    "used": "Used",
+    "views": "views"
+  },
+  "common": {
+    "brandAlt": "Next.js logo"
+  }
+}

@@ -20,8 +20,14 @@
 # production
 /build
 
+# IDE
+.idea/
+**/.idea/
+
 # misc
-.cursor/
+# Cursor — ignore local editor state; commit shared rules
+.cursor/*
+!.cursor/rules/
 .DS_Store
 *.pem
 

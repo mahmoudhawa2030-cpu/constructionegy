@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/client";
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function SignOutButton({ compact }: Props = {}) {
+  const t = useTranslations("signOut");
   const router = useRouter();
 
   return (
@@ -27,7 +29,7 @@ export function SignOutButton({ compact }: Props = {}) {
         router.push("/login");
       }}
     >
-      تسجيل الخروج
+      {t("label")}
     </button>
   );
 }

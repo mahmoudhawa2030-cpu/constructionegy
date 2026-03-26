@@ -1,0 +1,77 @@
+---
+description: Construction-egy marketplace — stack, Supabase, RTL, Capacitor, DB
+alwaysApply: true
+---
+
+# Construction-egy (Cursor rules)
+
+## Product
+- Marketplace for construction materials in Egypt (OLX + Amazon style): listings, profiles, internal realtime chat, phone/WhatsApp contact, similar items.
+- Main domains: سقالات (إيجار/بيع), خرسانة, أسمنت, رمل, معدات, خشب, etc.
+- **Bilingual UI:** Arabic + English with **persistent locale** (cookie). Root HTML uses **`lang`** and **`dir`** from active locale (`rtl` for `ar`, `ltr` for `en`). Layouts stay mobile-safe.
+- **One codebase:** Next.js on **Vercel** + **Capacitor** (iOS/Android WebView loading the same app).
+
+## Bilingual UI (Arabic + English) — mandatory default
+
+- All **user-visible UI** (labels, buttons, headings, errors, empty states, **`aria-label`s** where meaningful, toasts/alerts) must be **bilingual**: Arabic and English. **Do not hard-code copy** in components.
+- Use the existing **`next-intl`** setup: add or update keys in **`messages/ar.json`** and **`messages/en.json`** (**same structure** in both files).
+- Prefer **namespaced keys** (e.g. `rfq`, `listings`) and reuse shared keys under **`common`** when appropriate.
+- **`app/layout.tsx`** (or equivalent) must keep correct **`lang`** and **`dir`** (`rtl` for `ar`, `ltr` for `en`) from the active locale.
+- Language is chosen via the existing **persistent locale** mechanism (cookie / **`i18n/request.ts`**); **do not** introduce a second, conflicting i18n system.
+- For **dynamic** strings (names, counts), use **ICU** placeholders (`{name}`, `{count}`) and **`t.rich`** only when markup is required.
+- **Do not** ship a feature with strings in only one language unless the user **explicitly** asks for a single-locale exception.
+
+## Stack (do not contradict)
+- **Next.js 16+ App Router only** (no Pages Router). Prefer **Server Components**; `"use client"` for interactivity, browser APIs, Supabase Realtime subscriptions, forms, Capacitor.
+- **Tailwind CSS v4** for styling. **shadcn/ui** is optional—add when needed; do not assume it is installed.
+- **Supabase:** `@supabase/supabase-js` + **`@supabase/ssr` only** (no `@supabase/auth-helpers-nextjs`). Use **`createBrowserClient` / `createServerClient`** with the **`cookies: { getAll, setAll }`** API.
+- **Session refresh:** root **`proxy.ts`** (Next.js 16 “Proxy”, not deprecated `middleware.ts`) calling **`auth.getClaims()`**—never rely on **`getSession()`** alone for server authorization.
+- **Capacitor 8:** safe areas, StatusBar, bottom tabs in **`app/(tabs)/`** — tabs: **الرئيسية** (`/`), **المعرض** (`/gallery`), **الحجوزات** (`/bookings`), **حسابي** (`/profile`). Auth routes stay outside `(tabs)` unless we explicitly change that.
+- **TypeScript strict.** Types from **`@/lib/supabase/database.types`** (not `lib/database.types.ts`).
+
+## Database & Supabase
+- **Public schema tables:** `profiles`, `listings`, `chats`, `messages`, `orders`, `reviews` (see `supabase/migrations/`).
+- **`listings`** is core: `user_id`, `title`, `category`, `type` (rent/sell), `condition`, `images[]`, `price`, `price_unit`, `status`, etc.
+- Any schema change: **new SQL migration** under `supabase/migrations/` **and** update **`lib/supabase/database.types.ts`** (or regenerate via `npm run gen:types` with project ref).
+- **RLS:** all queries must respect policies—users only mutate **their** listings; **chats/messages** only for participants. Do not bypass with service role in client code.
+- **Images:** **Supabase Storage** (public bucket or signed URLs)—not huge base64 in DB.
+- **Secrets:** only `NEXT_PUBLIC_*` for URL/anon or publishable key in client; **never** commit service role or secrets.
+
+## UI & UX patterns to aim for
+- **Mobile-first**; listing detail should eventually include **phone**, **WhatsApp** (deep link `https://wa.me/...`), **internal chat** entry, and **منتجات مشابهة** at bottom—implement when building those pages.
+- **Profile:** show seller’s listings (query `listings` by `user_id`).
+- **New mutations:** prefer **Server Actions** + **Zod** validation when adding forms (signup/listing/chat flows).
+- **Realtime:** chat/notifications via Supabase Realtime on the **client** after auth—not in RSC.
+
+## Additional safeguards
+- **`lib/supabase/proxy.ts` → `updateSession`:** always **`await supabase.auth.getClaims()`** before returning from the Proxy so sessions refresh; do not treat cookie session alone as proof for secure decisions elsewhere—**Server Components / protected routes** should still use **`getClaims()`** (or equivalent) when gating data.
+- **Realtime (`chats` / `messages`):** subscribe **only in Client Components**, and **only after** you know the user is authenticated (e.g. post-login or after client auth check)—never subscribe in RSC or blindly on first paint without auth context.
+- **Mutations (listings, orders, etc.):** prefer **Server Actions** with **Zod** schemas; validate inputs server-side. When adding **Zod**, note install: `npm install zod`.
+- **Image uploads:** **Supabase Storage** only—**public bucket** or **signed URLs**; **never** persist large base64 blobs in Postgres columns.
+- **Errors:** wrap Supabase calls in **`try/catch`** where failure is expected; surface **user-friendly Arabic** messages (toast/inline), not raw error strings to end users.
+
+## When suggesting code
+- **All new UI:** bilingual per **Bilingual UI (mandatory)** above—`next-intl`, message files, correct **`dir`** from locale. Use logical spacing / RTL-safe patterns; match existing layout and tab chrome.
+- **Capacitor / mobile:** always account for **`env(safe-area-inset-top)`** and **`env(safe-area-inset-bottom)`** on fixed headers and bottom tab bars.
+- **New dependencies:** state **why** they are needed and the **install command** (e.g. `npm install zod` for validation, `npx shadcn@latest add …` only if we adopt shadcn).
+
+## Code style
+- Components **PascalCase**; colocate small pieces; shared under **`components/`**, routes under **`app/`** (route groups `(tabs)`, `(auth)`, etc.).
+- Avoid **`any`**; use `unknown` + narrowing when needed.
+- Avoid **`console.log`** in production paths; use dev-only logging if needed.
+- **Performance:** paginate or infinite scroll for listing feeds; index-friendly filters (`category`, `price`, `location`).
+
+## Arabic / locale
+- Product is **Arabic-first** for tone and **English** for full parity; both live in **`messages/*.json`**, not inline.
+- Phone numbers: **Egypt +20** format when displaying/storage is agreed (normalize in one place).
+
+## Workflow
+- **Large features / refactors / schema changes:** start from a **plan**, then implement (align with user’s Plan Mode preference).
+
+## Never
+- Legacy Supabase cookie APIs (`get`/`set`/`remove` only) instead of **`getAll`/`setAll`** where the guide requires it.
+- Trust **`getSession()`** for secure server-side decisions (prefer **`getClaims()`** where documented).
+- Hardcode product **categories** long-term—use constants module or DB later; don’t scatter magic strings.
+- Ignore **safe areas** on native (tab bar + `env(safe-area-inset-*)`).
+
+Follow these rules for all AI-assisted code and reviews in this repository.

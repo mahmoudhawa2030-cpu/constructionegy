@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { labelForCategorySlug } from "@/lib/listings/categories";
@@ -23,19 +24,9 @@ type Props = {
   favorite?: ListingCardFavoriteProps;
 };
 
-const typeLabels: Record<ListingRow["type"], string> = {
-  rent: "إيجار",
-  sell: "بيع",
-};
-
-const conditionLabels: Record<ListingRow["condition"], string> = {
-  new: "جديد",
-  used: "مستعمل",
-};
-
-function listingRelativeAge(iso: string): string {
+function listingRelativeAge(iso: string, locale: string): string {
   const diffSec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  const rtf = new Intl.RelativeTimeFormat("ar", { numeric: "auto" });
+  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar" : "en", { numeric: "auto" });
   if (diffSec < 60) {
     return rtf.format(-diffSec, "second");
   }
@@ -59,14 +50,28 @@ function listingRelativeAge(iso: string): string {
   return rtf.format(-Math.max(1, diffMo), "month");
 }
 
-export function ListingCard({ listing, categoryLabelMap, viewerUserId, favorite }: Props) {
+export async function ListingCard({ listing, categoryLabelMap, viewerUserId, favorite }: Props) {
+  const locale = await getLocale();
+  const t = await getTranslations("listingCard");
+  const numberLocale = locale === "ar" ? "ar-EG" : "en-US";
+
+  const typeLabels: Record<ListingRow["type"], string> = {
+    rent: t("rent"),
+    sell: t("sell"),
+  };
+
+  const conditionLabels: Record<ListingRow["condition"], string> = {
+    new: t("new"),
+    used: t("used"),
+  };
+
   const thumb = listing.images?.[0];
-  const priceFmt = new Intl.NumberFormat("ar-EG", {
+  const priceFmt = new Intl.NumberFormat(numberLocale, {
     maximumFractionDigits: 0,
   }).format(Number(listing.price));
   const showViews = Boolean(viewerUserId && viewerUserId === listing.user_id);
   const viewsFmt = showViews
-    ? new Intl.NumberFormat("ar-EG").format(listing.view_count ?? 0)
+    ? new Intl.NumberFormat(numberLocale).format(listing.view_count ?? 0)
     : null;
 
   return (
@@ -88,7 +93,7 @@ export function ListingCard({ listing, categoryLabelMap, viewerUserId, favorite 
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-zinc-400">
-                لا صورة
+                {t("noImage")}
               </div>
             )}
           </span>
@@ -116,13 +121,18 @@ export function ListingCard({ listing, categoryLabelMap, viewerUserId, favorite 
               </span>
               {viewsFmt !== null ? (
                 <span className="text-[11px] tabular-nums text-zinc-500 sm:text-xs dark:text-zinc-400">
-                  {viewsFmt} مشاهدة
+                  {viewsFmt} {t("views")}
                 </span>
               ) : null}
             </span>
             <span className="text-[11px] tabular-nums text-zinc-500 sm:hidden dark:text-zinc-400">
-              {listingRelativeAge(listing.created_at)}
-              {viewsFmt !== null ? <span> · {viewsFmt} مشاهدة</span> : null}
+              {listingRelativeAge(listing.created_at, locale)}
+              {viewsFmt !== null ? (
+                <span>
+                  {" "}
+                  · {viewsFmt} {t("views")}
+                </span>
+              ) : null}
             </span>
           </span>
         </span>

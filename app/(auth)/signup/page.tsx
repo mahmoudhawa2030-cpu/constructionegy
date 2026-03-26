@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -16,6 +17,7 @@ function getEmailRedirectTo(): string {
 }
 
 export default function SignupPage() {
+  const t = useTranslations("signup");
   const otpLength = getEmailOtpLength();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
@@ -63,12 +65,10 @@ export default function SignupPage() {
       setPassword("");
       setOtp("");
       setStep("otp");
-      setMessage(
-        `أدخل رمز التحقق المكوّن من ${otpLength} أرقام المرسل إلى بريدك. إن لم يظهر خلال دقيقتين، راجع البريد المزعج، أو جرّب «إعادة إرسال الرمز».`,
-      );
+      setMessage(t("otpHint", { count: otpLength }));
       return;
     }
-    setMessage("تحقق من بريدك أو إعدادات المشروع في Supabase.");
+    setMessage(t("checkEmail"));
   }
 
   async function handleVerifyOtp(e: React.FormEvent) {
@@ -77,7 +77,7 @@ export default function SignupPage() {
     setMessage(null);
     const token = otp.replace(/\D/g, "");
     if (token.length !== otpLength) {
-      setError(`الرمز يجب أن يكون ${otpLength} أرقاماً.`);
+      setError(t("otpLengthError", { count: otpLength }));
       return;
     }
     setLoading(true);
@@ -101,7 +101,7 @@ export default function SignupPage() {
       router.push("/profile");
       return;
     }
-    setError("لم يكتمل تسجيل الدخول. حاول مرة أخرى.");
+    setError(t("verifyFailed"));
   }
 
   async function handleResendOtp() {
@@ -118,7 +118,7 @@ export default function SignupPage() {
       setError(formatAuthErrorMessage(resendError));
       return;
     }
-    setMessage("أُعيد إرسال الرمز إلى بريدك.");
+    setMessage(t("resendDone"));
   }
 
   function goBackToDetails() {
@@ -133,16 +133,16 @@ export default function SignupPage() {
     return (
       <div className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-16">
         <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">تأكيد البريد</h1>
+          <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("otpTitle")}</h1>
           <p className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
-            أدخل الرمز المرسل إلى{" "}
+            {t("otpSentTo")}{" "}
             <span className="font-medium text-zinc-800 dark:text-zinc-200" dir="ltr">
               {pendingEmail}
             </span>
           </p>
           <form className="mt-8 flex flex-col gap-4" onSubmit={handleVerifyOtp}>
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">رمز التحقق</span>
+              <span className="text-zinc-700 dark:text-zinc-300">{t("otpLabel")}</span>
               <input
                 autoComplete="one-time-code"
                 className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-center font-mono text-base tracking-[0.2em] text-zinc-900 outline-none ring-zinc-400 focus:ring-2 sm:text-lg sm:tracking-[0.25em] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
@@ -171,7 +171,7 @@ export default function SignupPage() {
               disabled={loading}
               type="submit"
             >
-              {loading ? "جاري التحقق…" : "تأكيد"}
+              {loading ? t("verifying") : t("confirm")}
             </button>
           </form>
           <div className="mt-4 flex flex-col gap-2 text-center text-sm">
@@ -181,7 +181,7 @@ export default function SignupPage() {
               type="button"
               onClick={() => void handleResendOtp()}
             >
-              إعادة إرسال الرمز
+              {t("resend")}
             </button>
             <button
               className="text-zinc-500 dark:text-zinc-500"
@@ -189,7 +189,7 @@ export default function SignupPage() {
               type="button"
               onClick={goBackToDetails}
             >
-              ← العودة لتعديل البيانات
+              {t("backToDetails")}
             </button>
           </div>
         </div>
@@ -200,25 +200,25 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-full flex-1 flex-col items-center justify-center px-4 py-16">
       <div className="w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">إنشاء حساب</h1>
+        <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
         <p className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
-          سجّل بريداً وكلمة مرور لبدء الاستخدام
+          {t("subtitle")}
         </p>
         <form className="mt-8 flex flex-col gap-4" onSubmit={handleSignUp}>
           <label className="flex flex-col gap-1.5 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">الاسم الظاهر</span>
+            <span className="text-zinc-700 dark:text-zinc-300">{t("displayName")}</span>
             <input
               autoComplete="name"
               className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               name="full_name"
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="مثال: أحمد محمد"
+              placeholder={t("displayNamePlaceholder")}
               type="text"
               value={fullName}
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">البريد الإلكتروني</span>
+            <span className="text-zinc-700 dark:text-zinc-300">{t("email")}</span>
             <input
               autoComplete="email"
               className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
@@ -230,7 +230,7 @@ export default function SignupPage() {
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
-            <span className="text-zinc-700 dark:text-zinc-300">كلمة المرور</span>
+            <span className="text-zinc-700 dark:text-zinc-300">{t("password")}</span>
             <input
               autoComplete="new-password"
               className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
@@ -257,13 +257,13 @@ export default function SignupPage() {
             disabled={loading}
             type="submit"
           >
-            {loading ? "جاري الإنشاء…" : "إنشاء الحساب"}
+            {loading ? t("submitting") : t("submit")}
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-zinc-600 dark:text-zinc-400">
-          لديك حساب بالفعل؟{" "}
+          {t("hasAccount")}{" "}
           <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/login">
-            تسجيل الدخول
+            {t("loginLink")}
           </Link>
         </p>
       </div>

@@ -1,8 +1,10 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -21,6 +23,7 @@ type Props = {
 
 export function TabsChrome({ hasUser, children }: Props) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
   const minimal = isListingDetailPath(pathname);
 
   if (minimal) {
@@ -37,7 +40,10 @@ export function TabsChrome({ hasUser, children }: Props) {
         className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95"
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
       >
-        <ThemeToggle compact />
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle compact />
+          <LocaleSwitcher />
+        </div>
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           {hasUser ? (
             <Link
@@ -45,7 +51,7 @@ export function TabsChrome({ hasUser, children }: Props) {
               href="/favorites"
               prefetch={true}
             >
-              المفضلة
+              {t("favorites")}
             </Link>
           ) : null}
           {hasUser ? <SignOutButton compact /> : null}

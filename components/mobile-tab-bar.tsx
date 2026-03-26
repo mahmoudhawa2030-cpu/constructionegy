@@ -1,13 +1,18 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const SECONDARY_TABS = [
-  { href: "/gallery", label: "المعرض" },
-  { href: "/messages", label: "الرسائل" },
-  { href: "/profile", label: "حسابي" },
-] as const;
+function useTabDefs(homeHref: string) {
+  const t = useTranslations("nav");
+  return [
+    { href: homeHref, label: t("home") },
+    { href: "/gallery", label: t("gallery") },
+    { href: "/messages", label: t("messages") },
+    { href: "/profile", label: t("profile") },
+  ] as const;
+}
 
 type Props = {
   /** Landing for guests is `/`; signed-in users use `/users/myads` for “الرئيسية”. */
@@ -16,7 +21,7 @@ type Props = {
 
 export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
-  const tabs = [{ href: homeHref, label: "الرئيسية" as const }, ...SECONDARY_TABS];
+  const tabs = useTabDefs(homeHref);
 
   return (
     <nav
