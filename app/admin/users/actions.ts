@@ -141,7 +141,7 @@ export async function deleteUserFromForm(
     return {
       ok: false,
       message:
-        "حذف الحساب يتطلب مفتاح الخادم. أضف SUPABASE_SERVICE_ROLE_KEY إلى ملف .env.local (من لوحة Supabase → Settings → API).",
+        "حذف الحساب يتطلب مفتاح الخادم (service_role). أضف SUPABASE_SERVICE_ROLE_KEY: محلياً في .env.local، وعلى Vercel من Project → Settings → Environment Variables (من Supabase → Settings → API → service_role).",
     };
   }
 

@@ -226,6 +226,12 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# Confirm signup: OTP-first email (no confirmation link). For hosted Supabase, paste the same
+# HTML into Dashboard → Authentication → Email templates → Confirm sign up, or sync auth config carefully.
+[auth.email.template.confirmation]
+subject = "رمز التحقق — Your signup code"
+content_path = "./templates/confirm_signup.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
