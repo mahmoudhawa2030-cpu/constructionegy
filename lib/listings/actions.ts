@@ -68,6 +68,8 @@ export async function createListing(input: unknown): Promise<CreateListingResult
   }
 
   revalidatePath("/gallery");
+  revalidatePath("/");
+  revalidatePath(`/users/${user.id}/ads`);
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/admin/categories");
@@ -142,6 +144,8 @@ export async function updateListing(
   revalidatePath("/gallery");
   revalidatePath(`/listings/${listingId}`);
   revalidatePath(`/listings/${listingId}/edit`);
+  revalidatePath("/");
+  revalidatePath(`/users/${user.id}/ads`);
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
   revalidatePath("/admin/categories");
@@ -154,6 +158,7 @@ function revalidateListingPaths(params: { listingId: string; ownerId: string }) 
   revalidatePath("/gallery");
   revalidatePath(`/listings/${listingId}`);
   revalidatePath(`/listings/${listingId}/edit`);
+  revalidatePath("/");
   revalidatePath(`/users/${ownerId}/ads`);
   revalidatePath("/profile");
   revalidatePath(`/profile/${ownerId}`);
@@ -161,7 +166,7 @@ function revalidateListingPaths(params: { listingId: string; ownerId: string }) 
   revalidatePath("/admin/listings");
 }
 
-/** Hide from public (gallery) but keep for owner on /users/…/ads. Only for published (active) ads. */
+/** Hide from public (gallery) but keep for owner on `/` (and `/users/…/ads` for others). Only for published (active) ads. */
 export async function pauseListing(listingId: string): Promise<CreateListingResult> {
   const supabase = await createClient();
   const {

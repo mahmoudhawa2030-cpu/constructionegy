@@ -1,7 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 
-export default function HomePage() {
+import { UserAdsList } from "@/components/user-ads-list";
+import { createClient } from "@/lib/supabase/server";
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    return <UserAdsList profileUserId={user.id} />;
+  }
+
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
@@ -18,8 +32,8 @@ export default function HomePage() {
             construction-egy
           </h1>
           <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            تطبيق ويب ومتجر للسقالات: صور، حجوزات، ووصول آمن عبر Supabase. استخدم
-            التبويبات بالأسفل أو الروابط للمصادقة.
+            تطبيق ويب ومتجر للسقالات: صور، حجوزات، ووصول آمن عبر Supabase. استخدم التبويبات بالأسفل أو
+            الروابط للمصادقة.
           </p>
         </div>
         <nav className="flex flex-col gap-3 text-base font-medium sm:flex-row sm:flex-wrap sm:gap-4">
