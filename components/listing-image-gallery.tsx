@@ -83,7 +83,7 @@ export function ListingImageGallery({ images, title }: Props) {
         <div className="relative w-full min-w-0 flex-1">
           <button
             aria-label="تكبير الصورة"
-            className="relative block h-[27.3rem] w-full min-h-0 cursor-zoom-in overflow-hidden rounded-lg bg-zinc-100 sm:h-[29.25rem] dark:bg-zinc-900"
+            className="relative block h-[21.84rem] w-full min-h-0 cursor-zoom-in overflow-hidden rounded-lg bg-zinc-100 sm:h-[29.25rem] dark:bg-zinc-900"
             type="button"
             onClick={() => setLightbox(true)}
           >
