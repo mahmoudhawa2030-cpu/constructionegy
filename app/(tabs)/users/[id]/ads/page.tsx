@@ -23,7 +23,7 @@ export default async function UserAdsPage({ params }: PageProps) {
   } = await supabase.auth.getUser();
 
   if (user?.id === id) {
-    redirect("/");
+    redirect("/users/myads");
   }
 
   return <UserAdsList profileUserId={id} />;

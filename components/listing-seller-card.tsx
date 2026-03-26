@@ -87,7 +87,7 @@ export function ListingSellerCard({
             </Link>
             <Link
               className="text-sm font-medium text-zinc-900 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-100 dark:hover:text-zinc-200"
-              href={isOwner ? "/" : `/users/${userId}/ads`}
+              href={isOwner ? "/users/myads" : `/users/${userId}/ads`}
             >
               {isOwner ? "جميع إعلاناتي" : "جميع إعلاناته"}
             </Link>

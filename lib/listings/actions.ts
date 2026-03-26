@@ -69,6 +69,7 @@ export async function createListing(input: unknown): Promise<CreateListingResult
 
   revalidatePath("/gallery");
   revalidatePath("/");
+  revalidatePath("/users/myads");
   revalidatePath(`/users/${user.id}/ads`);
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
@@ -145,6 +146,7 @@ export async function updateListing(
   revalidatePath(`/listings/${listingId}`);
   revalidatePath(`/listings/${listingId}/edit`);
   revalidatePath("/");
+  revalidatePath("/users/myads");
   revalidatePath(`/users/${user.id}/ads`);
   revalidatePath("/admin");
   revalidatePath("/admin/listings");
@@ -159,6 +161,7 @@ function revalidateListingPaths(params: { listingId: string; ownerId: string }) 
   revalidatePath(`/listings/${listingId}`);
   revalidatePath(`/listings/${listingId}/edit`);
   revalidatePath("/");
+  revalidatePath("/users/myads");
   revalidatePath(`/users/${ownerId}/ads`);
   revalidatePath("/profile");
   revalidatePath(`/profile/${ownerId}`);

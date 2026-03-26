@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { UserAdsList } from "@/components/user-ads-list";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    return <UserAdsList profileUserId={user.id} />;
+    redirect("/users/myads");
   }
 
   return (

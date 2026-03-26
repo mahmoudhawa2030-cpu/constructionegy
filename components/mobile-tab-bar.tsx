@@ -3,15 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const tabs = [
-  { href: "/", label: "الرئيسية" },
+const SECONDARY_TABS = [
   { href: "/gallery", label: "المعرض" },
   { href: "/messages", label: "الرسائل" },
   { href: "/profile", label: "حسابي" },
 ] as const;
 
-export function MobileTabBar() {
+type Props = {
+  /** Landing for guests is `/`; signed-in users use `/users/myads` for “الرئيسية”. */
+  homeHref?: string;
+};
+
+export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
+  const tabs = [{ href: homeHref, label: "الرئيسية" as const }, ...SECONDARY_TABS];
 
   return (
     <nav
@@ -22,8 +27,8 @@ export function MobileTabBar() {
       <ul className="mx-auto flex max-w-lg items-stretch justify-around gap-1 px-2">
         {tabs.map(({ href, label }) => {
           const active =
-            href === "/"
-              ? pathname === "/"
+            href === homeHref
+              ? pathname === homeHref
               : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <li key={href} className="min-w-0 flex-1">
