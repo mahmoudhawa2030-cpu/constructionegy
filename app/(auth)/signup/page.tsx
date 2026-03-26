@@ -4,12 +4,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { getEmailOtpLength } from "@/lib/auth/email-otp-length";
+import { formatAuthErrorMessage } from "@/lib/supabase/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
 import { revokeOtherSessions } from "@/lib/supabase/revoke-other-sessions";
 
-const OTP_LENGTH = 6;
+/** Must match an entry under Supabase → Authentication → URL Configuration → Redirect URLs. */
+function getEmailRedirectTo(): string {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}/profile`;
+}
 
 export default function SignupPage() {
+  const otpLength = getEmailOtpLength();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +38,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
+        emailRedirectTo: getEmailRedirectTo(),
         data: {
           full_name: fullName.trim() || undefined,
         },
@@ -38,7 +46,7 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (signUpError) {
-      setError(signUpError.message);
+      setError(formatAuthErrorMessage(signUpError));
       return;
     }
     if (data.session) {
@@ -55,7 +63,9 @@ export default function SignupPage() {
       setPassword("");
       setOtp("");
       setStep("otp");
-      setMessage("أدخل رمز التحقق المكوّن من 6 أرقام المرسل إلى بريدك.");
+      setMessage(
+        `أدخل رمز التحقق المكوّن من ${otpLength} أرقام المرسل إلى بريدك. إن لم يظهر خلال دقيقتين، راجع البريد المزعج، أو جرّب «إعادة إرسال الرمز».`,
+      );
       return;
     }
     setMessage("تحقق من بريدك أو إعدادات المشروع في Supabase.");
@@ -66,8 +76,8 @@ export default function SignupPage() {
     setError(null);
     setMessage(null);
     const token = otp.replace(/\D/g, "");
-    if (token.length !== OTP_LENGTH) {
-      setError(`الرمز يجب أن يكون ${OTP_LENGTH} أرقاماً.`);
+    if (token.length !== otpLength) {
+      setError(`الرمز يجب أن يكون ${otpLength} أرقاماً.`);
       return;
     }
     setLoading(true);
@@ -79,7 +89,7 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (verifyError) {
-      setError(verifyError.message);
+      setError(formatAuthErrorMessage(verifyError));
       return;
     }
     if (data.session) {
@@ -105,7 +115,7 @@ export default function SignupPage() {
     });
     setLoading(false);
     if (resendError) {
-      setError(resendError.message);
+      setError(formatAuthErrorMessage(resendError));
       return;
     }
     setMessage("أُعيد إرسال الرمز إلى بريدك.");
@@ -135,13 +145,13 @@ export default function SignupPage() {
               <span className="text-zinc-700 dark:text-zinc-300">رمز التحقق</span>
               <input
                 autoComplete="one-time-code"
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-center font-mono text-lg tracking-[0.35em] text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-center font-mono text-base tracking-[0.2em] text-zinc-900 outline-none ring-zinc-400 focus:ring-2 sm:text-lg sm:tracking-[0.25em] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
                 dir="ltr"
                 inputMode="numeric"
-                maxLength={OTP_LENGTH}
+                maxLength={otpLength}
                 name="otp"
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, OTP_LENGTH))}
-                placeholder="••••••"
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, otpLength))}
+                placeholder={"•".repeat(otpLength)}
                 type="text"
                 value={otp}
               />
