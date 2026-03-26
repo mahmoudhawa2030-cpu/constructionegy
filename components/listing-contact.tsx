@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
+import { ListingPhoneLink } from "@/components/listing-phone-link";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
 
 type Props = {
@@ -118,13 +119,13 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
             {phoneRevealLoading ? "جاري التحميل…" : "إظهار رقم الهاتف"}
           </button>
         ) : revealedPhone ? (
-          <a
-            className="w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-950 tabular-nums dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
-            dir="ltr"
-            href={`tel:${revealedPhone.replace(/\s/g, "")}`}
+          <ListingPhoneLink
+            className="block w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-950 tabular-nums dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
+            listingId={listingId}
+            telHref={`tel:${revealedPhone.replace(/\s/g, "")}`}
           >
             {revealedPhone}
-          </a>
+          </ListingPhoneLink>
         ) : (
           <p className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
             لا يوجد رقم هاتف مُسجّل لدى البائع.

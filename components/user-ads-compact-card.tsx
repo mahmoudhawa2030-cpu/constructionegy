@@ -73,13 +73,13 @@ function IconEye({ className }: { className?: string }) {
   );
 }
 
-function IconLead({ className }: { className?: string }) {
+function IconPhone({ className }: { className?: string }) {
   return (
     <svg aria-hidden className={className} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
-        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+        d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
       />
     </svg>
   );
@@ -108,6 +108,7 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
     maximumFractionDigits: 0,
   }).format(Number(listing.price));
   const viewsFmt = new Intl.NumberFormat("ar-EG").format(listing.view_count ?? 0);
+  const phoneClicksFmt = new Intl.NumberFormat("ar-EG").format(listing.phone_click_count ?? 0);
   const categoryLabel = labelForCategorySlug(listing.category, categoryLabelMap);
   const badge = STATUS_BADGE[listing.status];
   const from = formatShortDate(listing.created_at);
@@ -171,10 +172,14 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
               {viewsFmt} مشاهدة
             </span>
           ) : null}
-          <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
-            <IconLead className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
-            0 مهتم
-          </span>
+          {isOwner ? (
+            <span className="inline-flex items-center gap-1 text-xs text-zinc-600 dark:text-zinc-300">
+              <IconPhone className="h-4 w-4 shrink-0 text-zinc-400 dark:text-zinc-500" />
+              <span>
+                الضغط على رقمك: <span className="tabular-nums font-medium">{phoneClicksFmt}</span>
+              </span>
+            </span>
+          ) : null}
           <span
             className={`ms-auto rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badge.className}`}
           >

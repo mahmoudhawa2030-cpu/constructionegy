@@ -107,6 +107,7 @@ export type Database = {
           updated_at: string
           user_id: string
           view_count: number
+          phone_click_count: number
         }
         Insert: {
           category: string
@@ -124,6 +125,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           view_count?: number
+          phone_click_count?: number
         }
         Update: {
           category?: string
@@ -141,6 +143,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           view_count?: number
+          phone_click_count?: number
         }
         Relationships: [
           {
@@ -403,6 +406,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_listing_phone_click: {
+        Args: { p_listing_id: string }
+        Returns: null
+      }
       increment_listing_view: {
         Args: { p_listing_id: string }
         Returns: boolean
