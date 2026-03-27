@@ -7,6 +7,10 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type ListingStatus = Database["public"]["Enums"]["listing_status"];
 
+type ListingWithOwner = Database["public"]["Tables"]["listings"]["Row"] & {
+  profiles: { full_name: string } | null;
+};
+
 const STATUS_LABELS: Record<ListingStatus, string> = {
   pending: "قيد المراجعة",
   active: "منشور (معتمد)",
@@ -19,10 +23,10 @@ export default async function AdminListingsPage() {
   const supabase = await createClient();
   const { data: listingsRaw, error } = await supabase
     .from("listings")
-    .select("id, title, status, price, price_unit, created_at, user_id, view_count, phone_click_count")
+    .select("id, title, status, price, price_unit, created_at, user_id, view_count, phone_click_count, profiles(full_name)")
     .order("created_at", { ascending: false });
 
-  const listings = [...(listingsRaw ?? [])].sort((a, b) => {
+  const listings = [...((listingsRaw ?? []) as ListingWithOwner[])].sort((a, b) => {
     const pri = (s: string) => (s === "pending" ? 0 : s === "paused" ? 1 : 2);
     const c = pri(a.status) - pri(b.status);
     if (c !== 0) return c;
@@ -53,6 +57,7 @@ export default async function AdminListingsPage() {
           <thead>
             <tr className={adminUi.theadRow}>
               <th className={adminUi.th}>العنوان</th>
+              <th className={adminUi.th}>المستخدم</th>
               <th className={adminUi.th}>السعر</th>
               <th className={adminUi.th}>مشاهدات</th>
               <th className={adminUi.th}>الضغط على رقمك</th>
@@ -72,6 +77,17 @@ export default async function AdminListingsPage() {
                   </Link>
                   <p className="mt-0.5 font-mono text-xs text-[var(--admin-text-secondary)]">
                     {row.id.slice(0, 8)}…
+                  </p>
+                </td>
+                <td className={`${adminUi.td} align-top`}>
+                  <Link
+                    className="font-semibold text-[var(--admin-brand)] hover:underline"
+                    href={`/profile/${row.user_id}`}
+                  >
+                    {row.profiles?.full_name?.trim() || "—"}
+                  </Link>
+                  <p className="mt-0.5 font-mono text-xs text-[var(--admin-text-secondary)]" dir="ltr" title={row.user_id}>
+                    {row.user_id.slice(0, 8)}…
                   </p>
                 </td>
                 <td className={`${adminUi.td} align-top tabular-nums`}>
