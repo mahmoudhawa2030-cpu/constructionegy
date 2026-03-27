@@ -78,9 +78,27 @@ function cmdCheck() {
   checks.push(["FIREBASE_SERVICE_ACCOUNT_JSON (valid JSON, optional)", fbOk || !env.FIREBASE_SERVICE_ACCOUNT_JSON]);
 
   const gs = path.join(ROOT, "android", "app", "google-services.json");
+  let gsPlaceholder = false;
+  let gsExists = fs.existsSync(gs);
+  if (gsExists) {
+    try {
+      const raw = fs.readFileSync(gs, "utf8");
+      const j = JSON.parse(raw);
+      const apiKey = j?.client?.[0]?.api_key?.[0]?.current_key;
+      const projectId = j?.project_info?.project_id;
+      const appId = j?.client?.[0]?.client_info?.mobilesdk_app_id;
+      gsPlaceholder =
+        String(apiKey ?? "").includes("placeholder") ||
+        String(projectId ?? "").includes("placeholder") ||
+        String(appId ?? "").includes("000000000000");
+    } catch {
+      gsPlaceholder = true;
+    }
+  }
+  checks.push(["android/app/google-services.json exists", gsExists]);
   checks.push([
-    "android/app/google-services.json (Android FCM; gitignored)",
-    fs.existsSync(gs),
+    "android/app/google-services.json is real Firebase (not repo placeholder)",
+    gsExists && !gsPlaceholder,
   ]);
 
   console.log("\n=== Push / messaging setup check ===\n");

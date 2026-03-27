@@ -51,3 +51,6 @@ next-env.d.ts
 # Capacitor — uncomment to stop tracking native projects (if you regenerate locally)
 # /ios
 # /android
+
+# Firebase Android (real file from console; never commit — use google-services.json.example)
+/android/app/google-services.json
