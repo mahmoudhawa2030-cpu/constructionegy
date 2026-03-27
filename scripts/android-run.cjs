@@ -20,6 +20,69 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const ANDROID = path.join(ROOT, "android");
 
+function javaBinPath(home) {
+  return path.join(home, "bin", process.platform === "win32" ? "java.exe" : "java");
+}
+
+function isJdkHome(home) {
+  return Boolean(home && fs.existsSync(javaBinPath(home)));
+}
+
+/**
+ * Gradle needs JAVA_HOME. If unset, try Android Studio’s bundled JBR (Windows common paths).
+ */
+function ensureJavaHomeForGradle() {
+  if (isJdkHome(process.env.JAVA_HOME)) {
+    console.log("→ JAVA_HOME:", process.env.JAVA_HOME);
+    return;
+  }
+
+  const candidates = [];
+  if (process.platform === "win32") {
+    const pf = process.env["ProgramFiles"] || "C:\\Program Files";
+    const pfx86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+    const local = process.env.LOCALAPPDATA || "";
+    candidates.push(
+      path.join(pf, "Android", "Android Studio", "jbr"),
+      path.join(pfx86, "Android", "Android Studio", "jbr"),
+      path.join(local, "Programs", "Android", "Android Studio", "jbr"),
+      "C:\\Program Files\\Android\\Android Studio\\jbr",
+    );
+  } else if (process.platform === "darwin") {
+    candidates.push(
+      "/Applications/Android Studio.app/Contents/jbr/Contents/Home",
+      "/Applications/Android Studio.app/Contents/jre/Contents/Home",
+    );
+  } else {
+    candidates.push("/opt/android-studio/jbr", "/usr/lib/jvm/java-17-openjdk-amd64");
+  }
+
+  for (const home of candidates) {
+    if (isJdkHome(home)) {
+      process.env.JAVA_HOME = home;
+      const sep = path.delimiter;
+      const binDir = path.join(home, "bin");
+      process.env.Path = `${binDir}${sep}${process.env.Path || ""}`;
+      console.log("→ JAVA_HOME not set; using:", home);
+      return;
+    }
+  }
+
+  console.error(`
+ERROR: JAVA_HOME is not set and no JDK was found.
+
+PowerShell (set Studio’s JDK first, then PATH — order matters):
+  $env:JAVA_HOME = "C:\\Program Files\\Android\\Android Studio\\jbr"
+  $env:Path = "$env:JAVA_HOME\\bin;$env:Path"
+  java -version
+
+If "java.exe" is still missing, check that folder exists in Explorer, or install JDK 17:
+  https://adoptium.net/temurin/releases/?version=17
+Then set JAVA_HOME to that folder (the one that contains bin\\java.exe).
+`);
+  process.exit(1);
+}
+
 function ensureRoot() {
   if (!fs.existsSync(path.join(ROOT, "package.json"))) {
     console.error("Could not find project root at:", ROOT);
@@ -87,6 +150,7 @@ if (cmd === "assemble-debug") {
     console.error("Missing Gradle wrapper in", ANDROID);
     process.exit(1);
   }
+  ensureJavaHomeForGradle();
   console.log("→ Building debug APK from:\n ", ANDROID + "\n");
   run(gradle, ["assembleDebug"], { cwd: ANDROID });
 }
