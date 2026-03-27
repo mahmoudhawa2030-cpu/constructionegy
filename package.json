@@ -22,11 +22,13 @@
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/camera": "^8.0.2",
     "@capacitor/cli": "^8.2.0",
     "@capacitor/core": "^8.2.0",
     "@capacitor/geolocation": "^8.1.0",
     "@capacitor/ios": "^8.2.0",
+    "@capacitor/local-notifications": "^8.0.2",
     "@capacitor/push-notifications": "^8.0.2",
     "@capacitor/status-bar": "^8.0.1",
     "@supabase/ssr": "^0.9.0",

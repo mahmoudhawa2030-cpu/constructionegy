@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import { useSupabaseResumeNonce } from "@/lib/capacitor/use-supabase-resume-nonce";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 import type { InboxItem } from "@/lib/messages/inbox";
@@ -18,6 +19,7 @@ type Props = {
 
 export function MessagesInboxList({ userId, items }: Props) {
   const pathname = usePathname();
+  const resumeNonce = useSupabaseResumeNonce();
   const t = useTranslations("messagesInbox");
   const [rows, setRows] = useState<InboxItem[]>(items);
 
@@ -75,7 +77,7 @@ export function MessagesInboxList({ userId, items }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, resumeNonce]);
 
   return (
     <ul className="flex flex-col gap-2">

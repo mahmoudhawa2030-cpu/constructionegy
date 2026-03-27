@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
+import { useSupabaseResumeNonce } from "@/lib/capacitor/use-supabase-resume-nonce";
 import { markConversationSeenWithClient } from "@/lib/chat/mark-conversation-seen-core";
 import { formatEgyptTime } from "@/lib/date/egypt";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +25,7 @@ function sortOldestFirst(rows: MessageRow[]): MessageRow[] {
 }
 
 export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
+  const resumeNonce = useSupabaseResumeNonce();
   const t = useTranslations("chatThread");
   const [messages, setMessages] = useState<MessageRow[]>(() => sortOldestFirst(initialMessages));
   const [text, setText] = useState("");
@@ -103,7 +105,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [chatId, currentUserId, scheduleMarkSeen]);
+  }, [chatId, currentUserId, scheduleMarkSeen, resumeNonce]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

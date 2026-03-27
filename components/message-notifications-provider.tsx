@@ -15,6 +15,7 @@ import {
 } from "react";
 import { useTranslations } from "next-intl";
 
+import { useSupabaseResumeNonce } from "@/lib/capacitor/use-supabase-resume-nonce";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -58,6 +59,7 @@ type ProviderProps = {
 
 export function MessageNotificationsProvider({ userId, initialUnreadTotal, children }: ProviderProps) {
   const pathname = usePathname();
+  const resumeNonce = useSupabaseResumeNonce();
   const pathnameRef = useRef(pathname);
   const t = useTranslations("messageNotifications");
   const [unreadTotal, setUnreadTotal] = useState(initialUnreadTotal);
@@ -152,7 +154,7 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
       if (toastTimer.current) clearTimeout(toastTimer.current);
       void supabase.removeChannel(channel);
     };
-  }, [userId, t]);
+  }, [userId, t, resumeNonce]);
 
   const ctxValue = useMemo(
     () => ({ unreadTotal, dismissToast }),
