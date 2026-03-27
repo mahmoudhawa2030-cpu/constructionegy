@@ -18,9 +18,9 @@ export function MessagesSplitLayout({ sidebar, children }: Props) {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col md:flex-row" dir="ltr">
-      <aside
+        <aside
         className={cn(
-          "flex min-h-0 w-full shrink-0 flex-col overflow-y-auto border-zinc-200 bg-zinc-50/80 md:w-[min(100%,400px)] md:border-e dark:border-zinc-800 dark:bg-zinc-900/40",
+          "flex min-h-0 w-full shrink-0 flex-col overflow-y-auto border-zinc-200 bg-[#f0f2f5] md:w-[min(100%,400px)] md:border-e dark:border-zinc-800 dark:bg-zinc-950",
           isMessagesHome ? "flex" : "hidden md:flex",
         )}
       >

@@ -24,7 +24,8 @@
     "empty": "No conversations yet. Open any listing and tap “Message the seller”.",
     "noMessagesYet": "No messages yet",
     "withUser": "With",
-    "unreadBadgeAria": "Unread messages: {count}"
+    "unreadBadgeAria": "Unread messages: {count}",
+    "openChatAria": "Open chat with {name} · {listing}"
   },
   "messageNotifications": {
     "toastTitle": "New message",

@@ -15,6 +15,8 @@ export type InboxItem = {
   otherId: string;
   otherName: string;
   lastPreview: string | null;
+  /** ISO timestamp of last message, or chat created_at if empty — for sort + time column */
+  lastMessageAt: string;
   unreadCount: number;
 };
 
@@ -91,12 +93,14 @@ export async function getInboxData(userId: string) {
     const listingTitle = Array.isArray(listingRel)
       ? (listingRel[0]?.title ?? "إعلان")
       : (listingRel?.title ?? "إعلان");
+    const lastAt = lastAtByChat.get(c.id);
     return {
       chatId: c.id,
       listingTitle,
       otherId,
       otherName: nameById.get(otherId) ?? "مستخدم",
       lastPreview: lastByChat.get(c.id) ?? null,
+      lastMessageAt: lastAt ?? c.created_at,
       unreadCount: unreadByChat.get(c.id) ?? 0,
     };
   });

@@ -24,7 +24,8 @@
     "empty": "لا محادثات بعد. افتح أي إعلان واضغط «مراسلة البائع».",
     "noMessagesYet": "لا رسائل بعد",
     "withUser": "مع",
-    "unreadBadgeAria": "رسائل غير مقروءة: {count}"
+    "unreadBadgeAria": "رسائل غير مقروءة: {count}",
+    "openChatAria": "فتح المحادثة مع {name} · {listing}"
   },
   "messageNotifications": {
     "toastTitle": "رسالة جديدة",
