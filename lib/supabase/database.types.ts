@@ -198,6 +198,7 @@ export type Database = {
       live_map_pins: {
         Row: {
           available_until: string
+          category_slug: string | null
           lat: number
           lng: number
           updated_at: string
@@ -205,6 +206,7 @@ export type Database = {
         }
         Insert: {
           available_until: string
+          category_slug?: string | null
           lat: number
           lng: number
           updated_at?: string
@@ -212,12 +214,20 @@ export type Database = {
         }
         Update: {
           available_until?: string
+          category_slug?: string | null
           lat?: number
           lng?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "live_map_pins_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
           {
             foreignKeyName: "live_map_pins_user_id_fkey"
             columns: ["user_id"]

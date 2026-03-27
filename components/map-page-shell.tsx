@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 
 import { MapLoadingFallback } from "@/components/map-loading-fallback";
+import type { CategoryOption } from "@/lib/categories/queries";
 
 const LiveMapClient = dynamic(
   () => import("@/components/live-map-client").then((m) => ({ default: m.LiveMapClient })),
@@ -14,8 +15,9 @@ const LiveMapClient = dynamic(
 
 type Props = {
   userId: string;
+  categories: CategoryOption[];
 };
 
-export function MapPageShell({ userId }: Props) {
-  return <LiveMapClient userId={userId} />;
+export function MapPageShell({ userId, categories }: Props) {
+  return <LiveMapClient categories={categories} userId={userId} />;
 }

@@ -205,6 +205,13 @@
   "mapPage": {
     "title": "الخريطة",
     "subtitle": "يظهر على الخريطة من فعّل «متاح الآن» فقط. الموقع يُشارك بالموقع الدقيق وGPS أثناء التفعيل.",
+    "filterAllCategories": "كل الخدمات",
+    "filterCategoryAria": "تصفية الخريطة حسب نوع الخدمة",
+    "liveCategoryAria": "الخدمة التي تقدمها على الخريطة",
+    "liveAsCategory": "متاح كـ: {category}",
+    "noCategories": "لا تصنيفات — تواصل مع الإدارة",
+    "noPinsInCategory": "لا أحد متاح الآن في هذا التصنيف.",
+    "errorCategoryRequired": "اختر تصنيف الخدمة التي تقدمها، ثم اضغط «متاح الآن».",
     "availableNow": "متاح الآن",
     "closeLive": "إغلاق الموقع المباشر",
     "myProfile": "حسابي",

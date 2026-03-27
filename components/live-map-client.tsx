@@ -3,9 +3,10 @@
 import { Capacitor } from "@capacitor/core";
 import type { Map as LeafletMap, LayerGroup } from "leaflet";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import type { CategoryOption } from "@/lib/categories/queries";
 import { tryOpenAndroidLocationSettings } from "@/lib/capacitor/try-open-location-settings";
 import { getPrecisePosition } from "@/lib/geolocation/precise-position";
 import { haversineKm } from "@/lib/map/haversine";
@@ -21,8 +22,15 @@ type PinRow = {
   lat: number;
   lng: number;
   available_until: string;
+  category_slug: string | null;
   profiles: { full_name: string; user_type: UserType } | null;
 };
+
+function categoryMenuLabel(c: CategoryOption, locale: string): string {
+  if (locale === "ar") return c.label_ar;
+  const s = c.slug.replace(/_/g, " ");
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : c.slug;
+}
 
 const LIVE_SESSION_MS = 2 * 60 * 60 * 1000;
 const HEARTBEAT_MS = 90_000;
@@ -52,10 +60,12 @@ function postgrestMessage(e: unknown): string | undefined {
 
 type Props = {
   userId: string;
+  categories: CategoryOption[];
 };
 
-export function LiveMapClient({ userId }: Props) {
+export function LiveMapClient({ userId, categories }: Props) {
   const t = useTranslations("mapPage");
+  const locale = useLocale();
   const supabase = useMemo(() => createClient(), []);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -70,8 +80,13 @@ export function LiveMapClient({ userId }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
   const [viewerPos, setViewerPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [filterCategorySlug, setFilterCategorySlug] = useState("");
+  const [liveCategorySlug, setLiveCategorySlug] = useState("");
+  const liveCategorySlugRef = useRef("");
+  liveCategorySlugRef.current = liveCategorySlug;
 
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const categoriesInitializedRef = useRef(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const stopHeartbeat = useCallback(() => {
@@ -81,19 +96,29 @@ export function LiveMapClient({ userId }: Props) {
     }
   }, []);
 
+  useEffect(() => {
+    if (categories.length === 0 || categoriesInitializedRef.current) return;
+    setLiveCategorySlug((prev) => prev || categories[0]!.slug);
+    categoriesInitializedRef.current = true;
+  }, [categories]);
+
   const fetchPins = useCallback(async () => {
     const nowIso = new Date().toISOString();
-    const { data, error: qErr } = await supabase
+    let q = supabase
       .from("live_map_pins")
-      .select("user_id, lat, lng, available_until, profiles(full_name, user_type)")
+      .select("user_id, lat, lng, available_until, category_slug, profiles(full_name, user_type)")
       .gt("available_until", nowIso);
+    if (filterCategorySlug) {
+      q = q.eq("category_slug", filterCategorySlug);
+    }
+    const { data, error: qErr } = await q;
 
     if (qErr) {
       console.error("[live_map_pins]", qErr);
       return;
     }
     setPins((data ?? []) as PinRow[]);
-  }, [supabase]);
+  }, [supabase, filterCategorySlug]);
 
   const syncOwnRowState = useCallback(async () => {
     const { data: own } = await supabase.from("live_map_pins").select("*").eq("user_id", userId).maybeSingle();
@@ -110,10 +135,13 @@ export function LiveMapClient({ userId }: Props) {
     }
     setIsLive(true);
     setViewerPos({ lat: own.lat, lng: own.lng });
+    if (own.category_slug) {
+      setLiveCategorySlug(own.category_slug);
+    }
   }, [supabase, userId]);
 
   const upsertPin = useCallback(
-    async (lat: number, lng: number) => {
+    async (lat: number, lng: number, categorySlug: string | null) => {
       const until = availabilityIso();
       const row = {
         user_id: userId,
@@ -121,6 +149,7 @@ export function LiveMapClient({ userId }: Props) {
         lng,
         available_until: until,
         updated_at: new Date().toISOString(),
+        category_slug: categorySlug && categorySlug.length > 0 ? categorySlug : null,
       };
       // Delete-then-insert avoids some PostgREST upsert + RLS edge cases.
       const { error: delErr } = await supabase.from("live_map_pins").delete().eq("user_id", userId);
@@ -206,6 +235,10 @@ export function LiveMapClient({ userId }: Props) {
       const typeKey = pr?.user_type === "supplier" ? "supplier" : "contractor";
       const typeLabel = t(typeKey);
       const profileUrl = `/profile/${pin.user_id}`;
+      const catOpt = pin.category_slug ? categories.find((c) => c.slug === pin.category_slug) : undefined;
+      const categoryLine = catOpt
+        ? `<div style="font-size:12px;margin-top:2px;opacity:0.9">${escapeHtml(categoryMenuLabel(catOpt, locale))}</div>`
+        : "";
 
       let distanceLine = "";
       if (viewerPos && !isSelf) {
@@ -216,6 +249,7 @@ export function LiveMapClient({ userId }: Props) {
       const popupHtml = `<div style="min-width:10rem">
         <strong>${escapeHtml(name)}</strong>
         <div style="font-size:12px;margin-top:2px;opacity:0.9">${escapeHtml(typeLabel)}</div>
+        ${categoryLine}
         ${distanceLine}
         <div style="margin-top:6px"><a href="${profileUrl}" style="color:#2563eb;font-weight:600">${escapeHtml(t("profileLink"))}</a></div>
       </div>`;
@@ -231,12 +265,17 @@ export function LiveMapClient({ userId }: Props) {
     }
 
     requestAnimationFrame(() => map.invalidateSize());
-  }, [mapReady, pins, t, userId, viewerPos]);
+  }, [categories, locale, mapReady, pins, t, userId, viewerPos]);
 
   const startLiveAfterConsent = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
+      if (categories.length > 0 && !liveCategorySlugRef.current.trim()) {
+        setError("categoryRequired");
+        return;
+      }
+
       // Android: show Google Play “Location accuracy” system sheet when needed (same UX as other map apps).
       if (Capacitor.getPlatform() === "android") {
         const { LocationAccuracy } = await import("@/lib/capacitor/location-accuracy");
@@ -244,13 +283,14 @@ export function LiveMapClient({ userId }: Props) {
       }
 
       const { lat, lng } = await getPrecisePosition();
-      await upsertPin(lat, lng);
+      const cat = liveCategorySlugRef.current.trim() || null;
+      await upsertPin(lat, lng, cat);
       stopHeartbeat();
       heartbeatRef.current = setInterval(() => {
         void (async () => {
           try {
             const next = await getPrecisePosition();
-            await upsertPin(next.lat, next.lng);
+            await upsertPin(next.lat, next.lng, liveCategorySlugRef.current.trim() || null);
           } catch (e) {
             console.error("[live map heartbeat]", e);
           }
@@ -297,7 +337,7 @@ export function LiveMapClient({ userId }: Props) {
       setBusy(false);
       setConsentOpen(false);
     }
-  }, [stopHeartbeat, upsertPin]);
+  }, [categories.length, stopHeartbeat, upsertPin]);
 
   const onAvailableClick = useCallback(() => {
     setError(null);
@@ -334,36 +374,90 @@ export function LiveMapClient({ userId }: Props) {
     };
   }, [stopHeartbeat]);
 
+  const liveCategoryLabel =
+    liveCategorySlug && categories.length > 0
+      ? categoryMenuLabel(
+          categories.find((c) => c.slug === liveCategorySlug) ?? {
+            slug: liveCategorySlug,
+            label_ar: liveCategorySlug,
+          },
+          locale,
+        )
+      : liveCategorySlug;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-b border-zinc-200 px-3 py-2 dark:border-zinc-800">
-        <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("subtitle")}</p>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{t("pollHint")}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+      <div className="shrink-0 border-b border-zinc-200 px-2 py-1.5 dark:border-zinc-800 sm:px-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:shrink-0">{t("title")}</h1>
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
+            <select
+              aria-label={t("filterCategoryAria")}
+              className="min-w-0 max-w-[min(100%,18rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+              value={filterCategorySlug}
+              onChange={(e) => setFilterCategorySlug(e.target.value)}
+            >
+              <option value="">{t("filterAllCategories")}</option>
+              {categories.map((c) => (
+                <option key={c.slug} value={c.slug}>
+                  {categoryMenuLabel(c, locale)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           {!isLive ? (
-            <button
-              className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
-              disabled={busy}
-              onClick={onAvailableClick}
-              type="button"
-            >
-              {busy ? t("locating") : t("availableNow")}
-            </button>
+            <>
+              <select
+                aria-label={t("liveCategoryAria")}
+                className="max-w-[min(100%,16rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                disabled={categories.length === 0 || busy}
+                value={liveCategorySlug}
+                onChange={(e) => setLiveCategorySlug(e.target.value)}
+              >
+                {categories.length === 0 ? (
+                  <option value="">{t("noCategories")}</option>
+                ) : (
+                  categories.map((c) => (
+                    <option key={c.slug} value={c.slug}>
+                      {categoryMenuLabel(c, locale)}
+                    </option>
+                  ))
+                )}
+              </select>
+              <button
+                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
+                disabled={busy || categories.length === 0}
+                onClick={onAvailableClick}
+                type="button"
+              >
+                {busy ? t("locating") : t("availableNow")}
+              </button>
+            </>
           ) : (
-            <button
-              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
-              disabled={busy}
-              onClick={() => void onCloseLive()}
-              type="button"
-            >
-              {t("closeLive")}
-            </button>
+            <>
+              <button
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                disabled={busy}
+                onClick={() => void onCloseLive()}
+                type="button"
+              >
+                {t("closeLive")}
+              </button>
+              {liveCategoryLabel ? (
+                <span className="text-xs text-zinc-600 dark:text-zinc-400">{t("liveAsCategory", { category: liveCategoryLabel })}</span>
+              ) : null}
+            </>
           )}
           <Link className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400" href="/profile">
             {t("myProfile")}
           </Link>
         </div>
+        {error === "categoryRequired" ? (
+          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">{t("errorCategoryRequired")}</p>
+        ) : null}
         {error === "geoPermission" ? (
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocationPermission")}</p>
         ) : null}
@@ -403,14 +497,16 @@ export function LiveMapClient({ userId }: Props) {
         ) : null}
       </div>
 
-      <div className="relative min-h-[min(70dvh,32rem)] flex-1 bg-zinc-100 dark:bg-zinc-900" ref={containerRef}>
+      <div className="relative min-h-[min(85dvh,44rem)] flex-1 bg-zinc-100 dark:bg-zinc-900" ref={containerRef}>
         {!mapReady ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-500">{t("loadingMap")}</div>
         ) : null}
       </div>
 
       {pins.length === 0 && mapReady ? (
-        <p className="px-3 py-2 text-center text-sm text-zinc-500 dark:text-zinc-400">{t("noPins")}</p>
+        <p className="px-3 py-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
+          {filterCategorySlug ? t("noPinsInCategory") : t("noPins")}
+        </p>
       ) : null}
 
       {consentOpen ? (

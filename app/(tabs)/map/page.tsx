@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { MapPageShell } from "@/components/map-page-shell";
+import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function MapPage() {
@@ -13,5 +14,7 @@ export default async function MapPage() {
     redirect(`/login?next=${encodeURIComponent("/map")}`);
   }
 
-  return <MapPageShell userId={user.id} />;
+  const categories = await getActiveCategoriesForSelect();
+
+  return <MapPageShell categories={categories} userId={user.id} />;
 }

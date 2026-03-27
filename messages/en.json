@@ -205,6 +205,13 @@
   "mapPage": {
     "title": "Map",
     "subtitle": "Only people who turn on “Available now” appear. We use precise GPS only while that mode is on.",
+    "filterAllCategories": "All services",
+    "filterCategoryAria": "Filter the map by service category",
+    "liveCategoryAria": "Service you offer while on the map",
+    "liveAsCategory": "Live: {category}",
+    "noCategories": "No categories — contact admin",
+    "noPinsInCategory": "No one is live in this category right now.",
+    "errorCategoryRequired": "Choose the service category you offer, then tap “Available now”.",
     "availableNow": "Available now",
     "closeLive": "Close live location",
     "myProfile": "My account",
