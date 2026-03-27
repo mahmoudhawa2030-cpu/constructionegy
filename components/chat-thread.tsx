@@ -50,6 +50,20 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     }, 400);
   }, [chatId]);
 
+  /** On native: clear any delivered push notifications in the status bar when this chat opens. */
+  useEffect(() => {
+    void (async () => {
+      try {
+        const { Capacitor } = await import("@capacitor/core");
+        if (!Capacitor.isNativePlatform()) return;
+        const { PushNotifications } = await import("@capacitor/push-notifications");
+        await PushNotifications.removeAllDeliveredNotifications();
+      } catch {
+        /* plugin unavailable */
+      }
+    })();
+  }, [chatId]);
+
   useEffect(() => {
     scheduleMarkSeen();
     const onVis = () => {

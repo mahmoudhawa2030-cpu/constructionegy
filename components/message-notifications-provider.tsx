@@ -75,6 +75,44 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
     setUnreadTotal(initialUnreadTotal);
   }, [initialUnreadTotal]);
 
+  /** Re-queries the real unread count from DB — used on resume and when entering a chat. */
+  const refreshFromServer = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      const { data: chats } = await supabase
+        .from("chats")
+        .select("id")
+        .or(`participant1_id.eq.${userId},participant2_id.eq.${userId}`);
+      if (!chats?.length) {
+        setUnreadTotal(0);
+        return;
+      }
+      const { count } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .in("chat_id", chats.map((c) => c.id))
+        .is("read_at", null)
+        .neq("sender_id", userId);
+      setUnreadTotal(count ?? 0);
+    } catch {
+      /* ignore */
+    }
+  }, [userId]);
+
+  /** On app resume, Realtime reconnects and may have missed UPDATE events — re-sync from DB. */
+  useEffect(() => {
+    if (resumeNonce === 0) return;
+    void refreshFromServer();
+  }, [resumeNonce, refreshFromServer]);
+
+  /** When user navigates into a chat, refresh count ~800 ms after (after markConversationSeen runs). */
+  useEffect(() => {
+    const chatId = activeChatIdFromPath(pathname);
+    if (!chatId) return;
+    const timer = setTimeout(() => void refreshFromServer(), 800);
+    return () => clearTimeout(timer);
+  }, [pathname, refreshFromServer]);
+
   const dismissToast = useCallback(() => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = null;
