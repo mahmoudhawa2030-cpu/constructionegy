@@ -8,6 +8,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(LocationAccuracyPlugin.class);
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
     }

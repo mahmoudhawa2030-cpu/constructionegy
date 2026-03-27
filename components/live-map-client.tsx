@@ -1,10 +1,12 @@
 "use client";
 
+import { Capacitor } from "@capacitor/core";
 import type { Map as LeafletMap, LayerGroup } from "leaflet";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { tryOpenAndroidLocationSettings } from "@/lib/capacitor/try-open-location-settings";
 import { getPrecisePosition } from "@/lib/geolocation/precise-position";
 import { haversineKm } from "@/lib/map/haversine";
 import { createClient } from "@/lib/supabase/client";
@@ -235,6 +237,12 @@ export function LiveMapClient({ userId }: Props) {
     setBusy(true);
     setError(null);
     try {
+      // Android: show Google Play “Location accuracy” system sheet when needed (same UX as other map apps).
+      if (Capacitor.getPlatform() === "android") {
+        const { LocationAccuracy } = await import("@/lib/capacitor/location-accuracy");
+        await LocationAccuracy.requestHighAccuracySheet();
+      }
+
       const { lat, lng } = await getPrecisePosition();
       await upsertPin(lat, lng);
       stopHeartbeat();
@@ -251,10 +259,18 @@ export function LiveMapClient({ userId }: Props) {
     } catch (e: unknown) {
       console.error("[live map start]", e);
       setSaveErrorDetail(null);
+      const msg =
+        postgrestMessage(e) ?? (e instanceof Error ? e.message : undefined);
+
       if (e instanceof Error && e.message === "permission_denied") {
         setError("geoPermission");
+      } else if (
+        (e instanceof Error && e.message === "location_services_disabled") ||
+        (msg && /location services are not enabled/i.test(msg))
+      ) {
+        // Android: system Location (GPS) master switch is off — apps cannot turn it on for you.
+        setError("locationServicesOff");
       } else {
-        const msg = postgrestMessage(e);
         if (msg) setSaveErrorDetail(msg);
 
         const hasPostgrestCode =
@@ -263,7 +279,6 @@ export function LiveMapClient({ userId }: Props) {
           "code" in e &&
           typeof (e as { code?: unknown }).code === "string";
 
-        // Capacitor Geolocation used to throw “Not implemented on web” — treat as GPS, not DB.
         if (msg && /not implemented on web|geolocation_unavailable/i.test(msg)) {
           setError("geoFailed");
         } else if (
@@ -351,6 +366,21 @@ export function LiveMapClient({ userId }: Props) {
         </div>
         {error === "geoPermission" ? (
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocationPermission")}</p>
+        ) : null}
+        {error === "locationServicesOff" ? (
+          <div className="mt-2 space-y-2">
+            <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("errorLocationServicesOff")}</p>
+            <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">{t("errorLocationServicesOffHint")}</p>
+            {Capacitor.getPlatform() === "android" ? (
+              <button
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                onClick={() => tryOpenAndroidLocationSettings()}
+                type="button"
+              >
+                {t("openLocationSettings")}
+              </button>
+            ) : null}
+          </div>
         ) : null}
         {error === "geoFailed" ? (
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocation")}</p>

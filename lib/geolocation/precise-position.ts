@@ -8,24 +8,37 @@ import { isNativePlatform } from "@/lib/capacitor/is-native";
  */
 export async function getPrecisePosition(): Promise<{ lat: number; lng: number }> {
   if (isNativePlatform()) {
-    let status = await Geolocation.checkPermissions();
-    if (status.location !== "granted") {
-      status = await Geolocation.requestPermissions();
-    }
-    if (status.location !== "granted") {
-      throw new Error("permission_denied");
-    }
+    try {
+      let status = await Geolocation.checkPermissions();
+      if (status.location !== "granted") {
+        status = await Geolocation.requestPermissions();
+      }
+      if (status.location !== "granted") {
+        throw new Error("permission_denied");
+      }
 
-    const pos = await Geolocation.getCurrentPosition({
-      enableHighAccuracy: true,
-      timeout: 25_000,
-      maximumAge: 0,
-    });
+      const pos = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: true,
+        timeout: 25_000,
+        maximumAge: 0,
+      });
 
-    return {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-    };
+      return {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
+    } catch (e: unknown) {
+      const raw =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object" && e !== null && "message" in e
+            ? String((e as { message: unknown }).message)
+            : String(e);
+      if (/location services are not enabled/i.test(raw)) {
+        throw new Error("location_services_disabled");
+      }
+      throw e;
+    }
   }
 
   return getPrecisePositionWeb();
