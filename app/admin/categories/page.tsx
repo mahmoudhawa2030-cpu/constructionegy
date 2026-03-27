@@ -11,8 +11,7 @@ export default async function AdminCategoriesPage() {
 
   return (
     <div className={adminUi.page}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className={adminUi.pageTitle}>التصنيفات</h1>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Link className={adminUi.linkBack} href="/admin">
           العودة للنظرة العامة
         </Link>
@@ -28,7 +27,10 @@ export default async function AdminCategoriesPage() {
       <p className={adminUi.footnote}>
         كل صف: عدد الإعلانات · المعرف (لاتيني) · الاسم بالعربية · الترتيب · مفعّل · حفظ — ثم حذف.
       </p>
-      <div className={adminUi.tableWrap}>
+      <div className={adminUi.widget}>
+        <div className={adminUi.widgetHeader}>التصنيفات</div>
+        <div className={adminUi.widgetBodyFlush}>
+          <div className={adminUi.tableWrap}>
         <table className={`${adminUi.table} min-w-[36rem]`}>
           <thead>
             <tr className={adminUi.theadRow}>
@@ -52,6 +54,8 @@ export default async function AdminCategoriesPage() {
             ))}
           </tbody>
         </table>
+          </div>
+        </div>
       </div>
 
       {rows.length === 0 ? (

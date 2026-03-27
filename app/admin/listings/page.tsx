@@ -39,14 +39,16 @@ export default async function AdminListingsPage() {
 
   return (
     <div className={adminUi.page}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className={adminUi.pageTitle}>الإعلانات</h1>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Link className={adminUi.linkBack} href="/gallery">
           عرض المعرض
         </Link>
       </div>
 
-      <div className={adminUi.tableWrap}>
+      <div className={adminUi.widget}>
+        <div className={adminUi.widgetHeader}>الإعلانات</div>
+        <div className={adminUi.widgetBodyFlush}>
+          <div className={adminUi.tableWrap}>
         <table className={adminUi.table}>
           <thead>
             <tr className={adminUi.theadRow}>
@@ -99,6 +101,8 @@ export default async function AdminListingsPage() {
             ))}
           </tbody>
         </table>
+          </div>
+        </div>
       </div>
 
       {(listings?.length ?? 0) === 0 ? (

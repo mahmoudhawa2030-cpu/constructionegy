@@ -21,13 +21,9 @@ export default async function AdminDashboardPage() {
       <div>
         <h1 className={adminUi.pageTitle}>نظرة عامة</h1>
         <div className={adminUi.kpiGrid}>
-          <Link
-            className={adminUi.kpiAccent}
-            href="/admin/listings"
-            prefetch={true}
-          >
-            <p className={`${adminUi.kpiLabel} text-amber-900 dark:text-amber-200`}>بانتظار الموافقة</p>
-            <p className={`${adminUi.kpiValue} text-amber-950 dark:text-amber-50`}>{pendingListings}</p>
+          <Link className={adminUi.kpiAccent} href="/admin/listings" prefetch={true}>
+            <p className={adminUi.kpiLabel}>بانتظار الموافقة</p>
+            <p className={adminUi.kpiValue}>{pendingListings}</p>
           </Link>
           <div className={adminUi.kpiNeutral}>
             <p className={adminUi.kpiLabel}>إجمالي الإعلانات</p>
@@ -43,56 +39,56 @@ export default async function AdminDashboardPage() {
       <section className="flex flex-col gap-4">
         <h2 className={adminUi.sectionTitle}>أقسام الإدارة</h2>
         <div className={adminUi.gridTwo}>
-          <div className={`${adminUi.cardPadded} flex flex-col`}>
-            <div className="mb-4">
-              <h3 className={adminUi.sectionTitle}>عمليات المستخدمين</h3>
-              <p className={adminUi.sectionLead}>
+          <div className={adminUi.widget}>
+            <div className={adminUi.widgetHeader}>عمليات المستخدمين</div>
+            <div className={adminUi.widgetBody}>
+              <p className={`${adminUi.sectionLead} mb-4`}>
                 إدارة الحسابات، مراقبة المحادثات، وما سيُضاف لاحقًا من أدوات تتعلق بالمستخدمين.
               </p>
+              <ul className="flex flex-col gap-2">
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/users">
+                    جدول المستخدمين
+                  </Link>
+                </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/messages">
+                    مراقبة المحادثات
+                  </Link>
+                </li>
+                <li>
+                  <div className={adminUi.placeholderTile} role="status">
+                    عمليات مستقبلية (قريبًا)
+                  </div>
+                </li>
+              </ul>
             </div>
-            <ul className="flex flex-col gap-2">
-              <li>
-                <Link className={adminUi.objectLink} href="/admin/users">
-                  جدول المستخدمين
-                </Link>
-              </li>
-              <li>
-                <Link className={adminUi.objectLink} href="/admin/messages">
-                  مراقبة المحادثات
-                </Link>
-              </li>
-              <li>
-                <div className={adminUi.placeholderTile} role="status">
-                  عمليات مستقبلية (قريبًا)
-                </div>
-              </li>
-            </ul>
           </div>
 
-          <div className={`${adminUi.cardPadded} flex flex-col`}>
-            <div className="mb-4">
-              <h3 className={adminUi.sectionTitle}>الإعلانات والمحتوى</h3>
-              <p className={adminUi.sectionLead}>
+          <div className={adminUi.widget}>
+            <div className={adminUi.widgetHeader}>الإعلانات والمحتوى</div>
+            <div className={adminUi.widgetBody}>
+              <p className={`${adminUi.sectionLead} mb-4`}>
                 الموافقة على الإعلانات، التصنيفات، وإضافة إعلانات جديدة.
               </p>
+              <ul className="flex flex-col gap-2">
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/listings">
+                    إدارة الإعلانات
+                  </Link>
+                </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/categories">
+                    التصنيفات
+                  </Link>
+                </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/listings/new">
+                    إضافة إعلان
+                  </Link>
+                </li>
+              </ul>
             </div>
-            <ul className="flex flex-col gap-2">
-              <li>
-                <Link className={adminUi.objectLink} href="/admin/listings">
-                  إدارة الإعلانات
-                </Link>
-              </li>
-              <li>
-                <Link className={adminUi.objectLink} href="/admin/categories">
-                  التصنيفات
-                </Link>
-              </li>
-              <li>
-                <Link className={adminUi.objectLink} href="/listings/new">
-                  إضافة إعلان
-                </Link>
-              </li>
-            </ul>
           </div>
         </div>
         <p className={adminUi.footnote}>

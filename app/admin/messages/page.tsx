@@ -33,8 +33,7 @@ export default async function AdminModerationChatsPage({ searchParams }: PagePro
 
   return (
     <div className={`${adminUi.page} min-w-0`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className={adminUi.pageTitle}>مراقبة المحادثات</h1>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Link className={adminUi.linkBack} href="/admin">
           العودة للنظرة العامة
         </Link>
@@ -52,7 +51,10 @@ export default async function AdminModerationChatsPage({ searchParams }: PagePro
         الصفحة {page} من {totalPages}
       </p>
 
-      <div className={adminUi.tableWrap}>
+      <div className={adminUi.widget}>
+        <div className={adminUi.widgetHeader}>مراقبة المحادثات</div>
+        <div className={adminUi.widgetBodyFlush}>
+          <div className={adminUi.tableWrap}>
         <table className={adminUi.table}>
           <thead>
             <tr className={adminUi.theadRow}>
@@ -93,6 +95,8 @@ export default async function AdminModerationChatsPage({ searchParams }: PagePro
             })}
           </tbody>
         </table>
+          </div>
+        </div>
       </div>
 
       {chats.length === 0 ? (

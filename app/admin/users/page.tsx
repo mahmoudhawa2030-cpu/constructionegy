@@ -75,8 +75,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
 
   return (
     <div className={`${adminUi.page} min-w-0`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className={adminUi.pageTitle}>المستخدمون</h1>
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <Link className={adminUi.linkBack} href="/admin">
           العودة للنظرة العامة
         </Link>
@@ -108,7 +107,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         على نبضات التطبيق كل ~٩٠ ثانية (نفس نطاق التصفية والشارة: آخر ظهور خلال حوالي ٣–٤ دقائق).
       </p>
 
-      <div className={adminUi.tableWrap}>
+      <div className={adminUi.widget}>
+        <div className={adminUi.widgetHeader}>المستخدمون</div>
+        <div className={adminUi.widgetBodyFlush}>
+          <div className={adminUi.tableWrap}>
         <table className={adminUi.table}>
           <thead>
             <tr className={adminUi.theadRow}>
@@ -204,6 +206,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
             })}
           </tbody>
         </table>
+          </div>
+        </div>
       </div>
 
       {rows.length === 0 ? (

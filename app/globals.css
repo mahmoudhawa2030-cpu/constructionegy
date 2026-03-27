@@ -29,31 +29,205 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
-/* SAP Fiori Horizon–inspired shell (admin routes only; see `admin-app` on layout). */
+/*
+ * SAP BusinessObjects / Crystal-style admin (reference: dashboard widgets,
+ * gradient table headers, zebra rows, light blue workspace).
+ */
 .admin-app {
-  --admin-brand: #0070f2;
-  --admin-brand-press: #0057d2;
-  --admin-shell-border: #d9d9d9;
-  --admin-page-bg: #f5f6f7;
-  --admin-header-bg: #ffffff;
+  --admin-brand: #0f4c81;
+  --admin-brand-soft: #2a69a3;
+  --admin-brand-press: #0c3d6b;
+  --admin-shell-border: #9eb6ce;
+  --admin-header-bg: linear-gradient(180deg, #fafcfe 0%, #e8eef6 100%);
   --admin-card-bg: #ffffff;
   --admin-field-bg: #ffffff;
-  --admin-text: #32363a;
-  --admin-text-secondary: #6a6d70;
-  --admin-table-header-bg: #fafafa;
-  --admin-row-hover: #eaecee;
+  --admin-text: #1a1a1a;
+  --admin-text-secondary: #4a5568;
+  --admin-table-header-text: #0f2d4a;
+  --admin-cell-border: #c5d3e3;
+  --admin-widget-header-start: #d6e3f2;
+  --admin-widget-header-end: #a8c0d8;
+  --admin-zebra-odd: #f5f8fc;
+  --admin-zebra-even: #ffffff;
+  --admin-table-head-top: #5a7faf;
+  --admin-table-head-bottom: #8fa8c4;
+  --admin-row-hover: #e3edf7;
+
+  min-height: 100%;
+  background: linear-gradient(180deg, #e4edf6 0%, #d9e4f0 35%, #e2ebf5 100%);
+  color: var(--admin-text);
 }
 
 .dark .admin-app {
-  --admin-brand: #4c9ffe;
-  --admin-brand-press: #328ff5;
-  --admin-shell-border: #3f3f46;
-  --admin-page-bg: #18181b;
-  --admin-header-bg: #27272a;
-  --admin-card-bg: #27272a;
-  --admin-field-bg: #18181b;
-  --admin-text: #fafafa;
-  --admin-text-secondary: #a1a1aa;
-  --admin-table-header-bg: #3f3f46;
-  --admin-row-hover: #3f3f46;
+  --admin-brand: #5b9bd5;
+  --admin-brand-soft: #7eb3e0;
+  --admin-brand-press: #4a8bc4;
+  --admin-shell-border: #4a5568;
+  --admin-header-bg: linear-gradient(180deg, #2d3340 0%, #252a35 100%);
+  --admin-card-bg: #2d3340;
+  --admin-field-bg: #232830;
+  --admin-text: #f1f5f9;
+  --admin-text-secondary: #94a3b8;
+  --admin-table-header-text: #e2e8f0;
+  --admin-cell-border: #475569;
+  --admin-widget-header-start: #334155;
+  --admin-widget-header-end: #1e293b;
+  --admin-zebra-odd: #2a3140;
+  --admin-zebra-even: #323948;
+  --admin-table-head-top: #475569;
+  --admin-table-head-bottom: #334155;
+  --admin-row-hover: #3d4658;
+
+  background: linear-gradient(180deg, #1a1d24 0%, #151821 100%);
+}
+
+.admin-app .admin-shell-header {
+  background: var(--admin-header-bg);
+  border-bottom: 1px solid var(--admin-shell-border);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.dark .admin-app .admin-shell-header {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.admin-app .admin-brand-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, var(--admin-brand) 0%, var(--admin-brand-soft) 100%);
+}
+
+/* Data table: gradient header band + grid + zebra (SAP BO / dashboard style) */
+.admin-app .admin-table-wrap {
+  border: 1px solid var(--admin-shell-border);
+  background: var(--admin-card-bg);
+  box-shadow:
+    0 1px 3px rgba(15, 45, 74, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .admin-app .admin-table-wrap {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.admin-app .admin-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.admin-app .admin-table thead th {
+  background: linear-gradient(
+    180deg,
+    #f0f6fc 0%,
+    #d2e0ef 45%,
+    #b9cce0 100%
+  );
+  color: var(--admin-table-header-text);
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  border-top: 1px solid var(--admin-table-head-top);
+  border-bottom: 1px solid var(--admin-table-head-bottom);
+  border-inline-end: 1px solid var(--admin-cell-border);
+  padding: 0.55rem 0.65rem;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.dark .admin-app .admin-table thead th {
+  background: linear-gradient(180deg, #3d4a5c 0%, #2f3a4a 50%, #283240 100%);
+}
+
+.admin-app .admin-table thead th:last-child {
+  border-inline-end: none;
+}
+
+.admin-app .admin-table tbody td {
+  border: 1px solid var(--admin-cell-border);
+  padding: 0.45rem 0.65rem;
+  vertical-align: middle;
+  color: var(--admin-text);
+}
+
+.admin-app .admin-table tbody tr:nth-child(odd) {
+  background: var(--admin-zebra-odd);
+}
+
+.admin-app .admin-table tbody tr:nth-child(even) {
+  background: var(--admin-zebra-even);
+}
+
+.admin-app .admin-table tbody tr:hover {
+  background: #e3edf7;
+}
+
+.dark .admin-app .admin-table tbody tr:hover {
+  background: #3d4658;
+}
+
+/* Table inside a widget: one outer frame only */
+.admin-app .admin-widget .admin-table-wrap {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  border-top: 1px solid var(--admin-cell-border);
+}
+
+/* Widget / card: blue gradient title bar + white body (dashboard tile) */
+.admin-app .admin-widget {
+  border: 1px solid var(--admin-shell-border);
+  background: var(--admin-card-bg);
+  box-shadow:
+    0 1px 4px rgba(15, 45, 74, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+}
+
+.admin-app .admin-widget-header {
+  background: linear-gradient(
+    180deg,
+    var(--admin-widget-header-start) 0%,
+    var(--admin-widget-header-end) 100%
+  );
+  border-top: 1px solid #7a9cbc;
+  border-bottom: 1px solid #6b8aac;
+  color: var(--admin-table-header-text);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.75rem;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.dark .admin-app .admin-widget-header {
+  border-top-color: #64748b;
+  border-bottom-color: #475569;
+  text-shadow: none;
+}
+
+.admin-app .admin-widget-body {
+  background: var(--admin-card-bg);
+  padding: 1rem 1rem 1.1rem;
+}
+
+/* KPI / metric box: bright white, subtle frame */
+.admin-app .admin-kpi-box {
+  border: 1px solid var(--admin-shell-border);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: 0 1px 3px rgba(15, 45, 74, 0.08);
+}
+
+.dark .admin-app .admin-kpi-box {
+  background: linear-gradient(180deg, var(--admin-card-bg) 0%, #282f3c 100%);
+}
+
+.admin-app .admin-kpi-box--accent {
+  border-color: #c4a050;
+  background: linear-gradient(180deg, #fffdf5 0%, #fdf6e3 100%);
+}
+
+.dark .admin-app .admin-kpi-box--accent {
+  border-color: #a67c2c;
+  background: linear-gradient(180deg, #3d3426 0%, #2d271c 100%);
 }

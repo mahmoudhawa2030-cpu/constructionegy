@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 
 function navLinkClass(active: boolean): string {
   const base =
-    "rounded-sm px-3 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand)]";
+    "rounded-sm border px-3 py-2 text-sm font-semibold shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--admin-brand)]";
   if (active) {
-    return `${base} bg-[var(--admin-row-hover)] text-[var(--admin-brand)]`;
+    return `${base} border-[var(--admin-brand-press)] bg-gradient-to-b from-[var(--admin-brand-soft)] to-[var(--admin-brand)] text-white`;
   }
-  return `${base} text-[var(--admin-text-secondary)] hover:bg-[var(--admin-row-hover)] hover:text-[var(--admin-text)]`;
+  return `${base} border-[var(--admin-shell-border)] bg-gradient-to-b from-white to-[#dce8f2] text-[var(--admin-table-header-text)] hover:to-[#cfe0f0] dark:from-zinc-700 dark:to-zinc-800 dark:text-zinc-100 dark:hover:to-zinc-700`;
 }
 
 const HREFS = [
@@ -31,7 +31,7 @@ export function AdminNav() {
   const t = useTranslations("admin");
 
   return (
-    <nav aria-label={t("navAria")} className="flex flex-wrap gap-1">
+    <nav aria-label={t("navAria")} className="flex flex-wrap gap-1.5">
       {HREFS.map((href) => (
         <Link key={href} className={navLinkClass(isActive(pathname, href))} href={href}>
           {href === "/admin"
