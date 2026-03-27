@@ -1,6 +1,6 @@
 -- Opt-in live map: GPS pin visible to other signed-in users only while session is active.
 
-CREATE TABLE public.live_map_pins (
+CREATE TABLE IF NOT EXISTS public.live_map_pins (
   user_id uuid PRIMARY KEY REFERENCES public.profiles (id) ON DELETE CASCADE,
   lat double precision NOT NULL CHECK (lat >= -90 AND lat <= 90),
   lng double precision NOT NULL CHECK (lng >= -180 AND lng <= 180),
@@ -8,9 +8,14 @@ CREATE TABLE public.live_map_pins (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX live_map_pins_available_until_idx ON public.live_map_pins (available_until);
+CREATE INDEX IF NOT EXISTS live_map_pins_available_until_idx ON public.live_map_pins (available_until);
 
 ALTER TABLE public.live_map_pins ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "live_map_pins_select_visible_or_own" ON public.live_map_pins;
+DROP POLICY IF EXISTS "live_map_pins_insert_own" ON public.live_map_pins;
+DROP POLICY IF EXISTS "live_map_pins_update_own" ON public.live_map_pins;
+DROP POLICY IF EXISTS "live_map_pins_delete_own" ON public.live_map_pins;
 
 -- Others see only non-expired pins; you can always read your own row (e.g. to clean up).
 CREATE POLICY "live_map_pins_select_visible_or_own"

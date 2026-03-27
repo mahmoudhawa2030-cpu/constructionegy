@@ -10,6 +10,7 @@ COMMENT ON COLUMN public.messages.read_at IS 'Recipient read the message (double
 ALTER TABLE public.messages REPLICA IDENTITY FULL;
 
 DROP POLICY IF EXISTS "messages_update_read_own_chat" ON public.messages;
+DROP POLICY IF EXISTS "messages_update_recipient_receipts" ON public.messages;
 
 -- Only the *other* participant (not the sender) can update delivery/read columns
 CREATE POLICY "messages_update_recipient_receipts"

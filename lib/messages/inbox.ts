@@ -15,6 +15,7 @@ export type InboxItem = {
   otherId: string;
   otherName: string;
   lastPreview: string | null;
+  unreadCount: number;
 };
 
 export async function getInboxData(userId: string) {
@@ -62,6 +63,22 @@ export async function getInboxData(userId: string) {
   const lastByChat = new Map(previews.map((p) => [p.chatId, p.last]));
   const lastAtByChat = new Map(previews.map((p) => [p.chatId, p.lastAt]));
 
+  const chatIds = rows.map((r) => r.id);
+  const unreadByChat = new Map<string, number>();
+  if (chatIds.length > 0) {
+    const { data: unreadRows } = await supabase
+      .from("messages")
+      .select("chat_id")
+      .in("chat_id", chatIds)
+      .is("read_at", null)
+      .neq("sender_id", userId);
+
+    for (const row of unreadRows ?? []) {
+      const cid = row.chat_id as string;
+      unreadByChat.set(cid, (unreadByChat.get(cid) ?? 0) + 1);
+    }
+  }
+
   const rowsByRecent = [...rows].sort((a, b) => {
     const aAt = lastAtByChat.get(a.id) ?? a.created_at;
     const bAt = lastAtByChat.get(b.id) ?? b.created_at;
@@ -80,6 +97,7 @@ export async function getInboxData(userId: string) {
       otherId,
       otherName: nameById.get(otherId) ?? "مستخدم",
       lastPreview: lastByChat.get(c.id) ?? null,
+      unreadCount: unreadByChat.get(c.id) ?? 0,
     };
   });
 

@@ -34,3 +34,17 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Message push (Android FCM + in-app)
+
+Automated checklist (env, migration, webhook steps, Firebase paths):
+
+```bash
+npm run push:setup
+npm run push:check
+npm run push:secret
+npm run db:push
+npm run push:webhook
+```
+
+Apply migrations to your Supabase project (`npx supabase link` first if needed), add `google-services.json` under `android/app/`, set `PUSH_NOTIFY_SECRET`, `FIREBASE_SERVICE_ACCOUNT_JSON`, and `SUPABASE_SERVICE_ROLE_KEY` on Vercel, then create the **Database Webhook** on `public.messages` INSERT as printed by `npm run push:webhook`. See `.env.example`.

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { TabsChrome } from "@/components/tabs-chrome";
+import { getUnreadIncomingTotal } from "@/lib/messages/unread";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function TabsLayout({
@@ -25,5 +26,15 @@ export default async function TabsLayout({
     }
   }
 
-  return <TabsChrome hasUser={Boolean(user)}>{children}</TabsChrome>;
+  const unreadMessages = user ? await getUnreadIncomingTotal(user.id) : 0;
+
+  return (
+    <TabsChrome
+      hasUser={Boolean(user)}
+      userId={user?.id ?? null}
+      initialUnreadMessageCount={unreadMessages}
+    >
+      {children}
+    </TabsChrome>
+  );
 }

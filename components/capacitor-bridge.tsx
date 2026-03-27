@@ -3,6 +3,19 @@
 import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
 
+async function registerTokenWithServer(token: string, platform: string) {
+  try {
+    await fetch("/api/push/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ token, platform }),
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
  * Initializes native-only behavior on the client. Do not import Capacitor plugins in RSC.
  */
@@ -30,24 +43,32 @@ export function CapacitorBridge() {
         await PushNotifications.requestPermissions();
         await PushNotifications.register();
       } catch {
-        // FCM/APNs not configured yet
+        // FCM/APNs not configured on device
       }
 
       const hReg = await PushNotifications.addListener("registration", (token) => {
-        if (process.env.NODE_ENV === "development") {
-          console.debug("[push] registration", token.value);
-        }
+        const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
+        void registerTokenWithServer(token.value, platform);
       });
 
-      const hErr = await PushNotifications.addListener("registrationError", (err) => {
-        if (process.env.NODE_ENV === "development") {
-          console.debug("[push] registrationError", err);
+      const hErr = await PushNotifications.addListener("registrationError", () => {
+        /* optional dev logging */
+      });
+
+      const hTap = await PushNotifications.addListener("pushNotificationActionPerformed", (event) => {
+        const chatId =
+          typeof event.notification.data?.chatId === "string"
+            ? event.notification.data.chatId
+            : undefined;
+        if (chatId && typeof window !== "undefined") {
+          window.location.href = `/messages/${chatId}`;
         }
       });
 
       ac.signal.addEventListener("abort", () => {
         void hReg.remove();
         void hErr.remove();
+        void hTap.remove();
       });
     })();
 

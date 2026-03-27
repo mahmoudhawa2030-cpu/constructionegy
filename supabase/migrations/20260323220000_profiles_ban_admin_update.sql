@@ -5,6 +5,8 @@ ALTER TABLE public.profiles
 
 CREATE INDEX IF NOT EXISTS profiles_is_banned_idx ON public.profiles (is_banned) WHERE is_banned = true;
 
+DROP POLICY IF EXISTS "profiles_update_admin" ON public.profiles;
+
 CREATE POLICY "profiles_update_admin"
   ON public.profiles FOR UPDATE TO authenticated
   USING (

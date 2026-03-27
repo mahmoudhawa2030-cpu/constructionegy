@@ -13,7 +13,24 @@
     "map": "الخريطة",
     "messages": "الرسائل",
     "profile": "حسابي",
-    "favorites": "المفضلة"
+    "favorites": "المفضلة",
+    "mainNavAria": "التنقل الرئيسي",
+    "messagesLinkAria": "الرسائل",
+    "messagesTabAriaWithUnread": "الرسائل · {count} غير مقروء"
+  },
+  "messagesInbox": {
+    "title": "الرسائل",
+    "subtitle": "سجل المحادثات",
+    "empty": "لا محادثات بعد. افتح أي إعلان واضغط «مراسلة البائع».",
+    "noMessagesYet": "لا رسائل بعد",
+    "withUser": "مع",
+    "unreadBadgeAria": "رسائل غير مقروءة: {count}"
+  },
+  "messageNotifications": {
+    "toastTitle": "رسالة جديدة",
+    "toastOpen": "فتح",
+    "toastDismiss": "إغلاق",
+    "notificationTitle": "رسالة جديدة"
   },
   "home": {
     "title": "construction-egy",
