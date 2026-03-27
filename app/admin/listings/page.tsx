@@ -19,7 +19,7 @@ export default async function AdminListingsPage() {
   const supabase = await createClient();
   const { data: listingsRaw, error } = await supabase
     .from("listings")
-    .select("id, title, status, price, price_unit, created_at, user_id, view_count")
+    .select("id, title, status, price, price_unit, created_at, user_id, view_count, phone_click_count")
     .order("created_at", { ascending: false });
 
   const listings = [...(listingsRaw ?? [])].sort((a, b) => {
@@ -55,6 +55,7 @@ export default async function AdminListingsPage() {
               <th className={adminUi.th}>العنوان</th>
               <th className={adminUi.th}>السعر</th>
               <th className={adminUi.th}>مشاهدات</th>
+              <th className={adminUi.th}>الضغط على رقمك</th>
               <th className={adminUi.th}>الحالة</th>
               <th className={adminUi.th}>تاريخ الإنشاء</th>
             </tr>
@@ -78,6 +79,9 @@ export default async function AdminListingsPage() {
                 </td>
                 <td className={`${adminUi.tdMuted} align-top tabular-nums`}>
                   {new Intl.NumberFormat("ar-EG").format(row.view_count ?? 0)}
+                </td>
+                <td className={`${adminUi.tdMuted} align-top tabular-nums`}>
+                  {new Intl.NumberFormat("ar-EG").format(row.phone_click_count ?? 0)}
                 </td>
                 <td className={`${adminUi.td} align-top`}>
                   <form action={updateListingStatusFromForm} className="flex flex-wrap items-center gap-2">
