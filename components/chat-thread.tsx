@@ -24,6 +24,11 @@ function sortOldestFirst(rows: MessageRow[]): MessageRow[] {
   );
 }
 
+function bubbleRadius(mine: boolean, isLastInGroup: boolean): string {
+  const tail = mine ? "rounded-br-[5px]" : "rounded-bl-[5px]";
+  return isLastInGroup ? `rounded-[18px] ${tail}` : "rounded-[18px] rounded-b-[6px]";
+}
+
 export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const resumeNonce = useSupabaseResumeNonce();
   const t = useTranslations("chatThread");
@@ -31,7 +36,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLLIElement>(null);
   const markSeenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const scrollToBottom = useCallback(() => {
@@ -170,31 +175,54 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/*
+        LTR physics: “mine” stays on the right and “theirs” on the left (Messenger/WhatsApp),
+        regardless of page dir. Bubble text uses dir="auto" for Arabic/English.
+      */}
+      <ul
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain bg-[#e8e3dc] px-2 pt-2 sm:rounded-b-xl sm:px-3 dark:bg-zinc-900"
+        dir="ltr"
+      >
         {messages.length === 0 ? (
-          <li className="text-center text-sm text-zinc-500 dark:text-zinc-400">{t("emptyList")}</li>
+          <li className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">{t("emptyList")}</li>
         ) : (
-          messages.map((m) => {
+          messages.map((m, i) => {
             const mine = m.sender_id === currentUserId;
             const receipt = mine ? messageReceiptStatus(m) : null;
+            const prev = messages[i - 1];
+            const next = messages[i + 1];
+            const isFirstInGroup = !prev || prev.sender_id !== m.sender_id;
+            const isLastInGroup = !next || next.sender_id !== m.sender_id;
             return (
               <li
                 key={m.id}
-                className={`flex ${mine ? "justify-end" : "justify-start"}`}
+                className={[
+                  "flex w-full",
+                  mine ? "justify-end" : "justify-start",
+                  isFirstInGroup && i > 0 ? "mt-2.5" : "",
+                  !isFirstInGroup ? "mt-0.5" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
               >
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${
+                  className={[
+                    "max-w-[min(85%,20rem)] px-3 py-1.5 text-[15px] leading-snug sm:text-sm",
+                    bubbleRadius(mine, isLastInGroup),
                     mine
-                      ? "rounded-br-md bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                      : "rounded-bl-md bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100"
-                  }`}
+                      ? "bg-emerald-600 text-white shadow-sm dark:bg-emerald-700"
+                      : "bg-white text-zinc-900 shadow-sm dark:bg-zinc-800 dark:text-zinc-100",
+                  ].join(" ")}
                 >
-                  <p className="whitespace-pre-wrap break-words">{m.content}</p>
+                  <p className="whitespace-pre-wrap break-words" dir="auto">
+                    {m.content}
+                  </p>
                   <div
-                    className={`mt-1 flex items-center justify-end gap-1.5 text-[10px] ${
-                      mine ? "text-white/80 dark:text-zinc-600" : "text-zinc-500"
-                    }`}
+                    className={[
+                      "mt-0.5 flex items-center gap-1.5 text-[11px] tabular-nums",
+                      mine ? "justify-end text-emerald-50/90" : "justify-start text-zinc-500 dark:text-zinc-400",
+                    ].join(" ")}
                   >
                     <time dateTime={m.created_at}>{formatEgyptTime(m.created_at)}</time>
                     {mine && receipt ? <MessageDeliveryTicks status={receipt} /> : null}
@@ -204,30 +232,44 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
             );
           })
         )}
-        <div ref={bottomRef} />
+        <li ref={bottomRef} className="h-2 shrink-0 list-none" aria-hidden />
       </ul>
 
-      <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
-        <div className="flex gap-2">
+      <form
+        className="shrink-0 border-t border-zinc-300/50 bg-white px-2 pb-1 pt-2 dark:border-zinc-700/50 dark:bg-zinc-950 sm:rounded-b-xl sm:px-3 sm:pb-2"
+        onSubmit={handleSubmit}
+        style={{ paddingBottom: "max(0.25rem, env(safe-area-inset-bottom, 0px))" }}
+      >
+        <div className="flex items-end gap-2">
           <textarea
-            className="min-h-[44px] flex-1 resize-none rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+            className="max-h-32 min-h-[44px] flex-1 resize-none rounded-[1.35rem] border border-zinc-300 bg-zinc-50 px-4 py-2.5 text-[15px] text-zinc-900 outline-none placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 dark:focus:border-emerald-500 dark:focus:ring-emerald-500"
             maxLength={5000}
             placeholder={t("placeholder")}
             aria-label={t("placeholder")}
-            rows={2}
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
           <button
-            className="shrink-0 self-end rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="mb-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition-colors hover:bg-emerald-700 disabled:opacity-40 dark:bg-emerald-600 dark:hover:bg-emerald-500"
             disabled={sending || !text.trim()}
             type="submit"
+            aria-label={sending ? t("sending") : t("send")}
           >
-            {sending ? t("sending") : t("send")}
+            {sending ? (
+              <span
+                className="inline-block size-5 animate-spin rounded-full border-2 border-emerald-50 border-t-transparent"
+                aria-hidden
+              />
+            ) : (
+              <svg className="h-5 w-5 -translate-x-px" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            )}
           </button>
         </div>
         {error ? (
-          <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400" role="alert">
             {error}
           </p>
         ) : null}

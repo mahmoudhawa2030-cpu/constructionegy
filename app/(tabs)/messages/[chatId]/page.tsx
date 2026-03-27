@@ -91,7 +91,7 @@ export default async function ChatThreadPage({ params }: PageProps) {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col px-3 pb-3 pt-3 sm:px-5 sm:pb-4 sm:pt-4">
+      <div className="flex min-h-0 flex-1 flex-col pt-2 sm:px-5 sm:pb-2 sm:pt-4">
         <ChatThread
           chatId={chatId}
           currentUserId={user.id}
