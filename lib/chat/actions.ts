@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { markConversationSeenWithClient } from "@/lib/chat/mark-conversation-seen-core";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateChatForListingCore, type StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import type { Database } from "@/lib/supabase/database.types";
@@ -64,36 +65,5 @@ export async function sendMessage(chatId: string, content: string): Promise<Send
  */
 export async function markConversationSeen(chatId: string): Promise<{ ok: true } | { ok: false; message: string }> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return { ok: false, message: "يجب تسجيل الدخول." };
-  }
-
-  const now = new Date().toISOString();
-
-  const { error: e1 } = await supabase
-    .from("messages")
-    .update({ delivered_at: now })
-    .eq("chat_id", chatId)
-    .neq("sender_id", user.id)
-    .is("delivered_at", null);
-
-  if (e1) {
-    return { ok: false, message: e1.message };
-  }
-
-  const { error: e2 } = await supabase
-    .from("messages")
-    .update({ read_at: now })
-    .eq("chat_id", chatId)
-    .neq("sender_id", user.id)
-    .is("read_at", null);
-
-  if (e2) {
-    return { ok: false, message: e2.message };
-  }
-
-  return { ok: true };
+  return markConversationSeenWithClient(supabase, chatId);
 }

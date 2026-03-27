@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
-import { markConversationSeen } from "@/lib/chat/actions";
+import { markConversationSeenWithClient } from "@/lib/chat/mark-conversation-seen-core";
 import { formatEgyptTime } from "@/lib/date/egypt";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
@@ -43,7 +43,8 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const scheduleMarkSeen = useCallback(() => {
     if (markSeenTimer.current) clearTimeout(markSeenTimer.current);
     markSeenTimer.current = setTimeout(() => {
-      void markConversationSeen(chatId);
+      const supabase = createClient();
+      void markConversationSeenWithClient(supabase, chatId);
     }, 400);
   }, [chatId]);
 

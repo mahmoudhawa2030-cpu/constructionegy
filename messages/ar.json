@@ -225,7 +225,10 @@
       "loginRequired": "يجب تسجيل الدخول.",
       "sendFailed": "تعذر إرسال الرسالة. حاول مرة أخرى.",
       "unknown": "حدث خطأ. حاول مرة أخرى."
-    }
+    },
+    "receiptSent": "تم الإرسال",
+    "receiptDelivered": "تم التسليم",
+    "receiptRead": "تمت القراءة"
   },
   "common": {
     "brandAlt": "Next.js logo"

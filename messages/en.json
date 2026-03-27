@@ -225,7 +225,10 @@
       "loginRequired": "You must be signed in.",
       "sendFailed": "Could not send the message. Try again.",
       "unknown": "Something went wrong. Try again."
-    }
+    },
+    "receiptSent": "Sent",
+    "receiptDelivered": "Delivered",
+    "receiptRead": "Read"
   },
   "common": {
     "brandAlt": "Next.js logo"

@@ -1,3 +1,7 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 /**
  * WhatsApp-style delivery indicators for outgoing messages (RTL-friendly).
  * — single ✓: sent (stored on server)
@@ -18,6 +22,7 @@ type Props = {
 };
 
 export function MessageDeliveryTicks({ status }: Props) {
+  const t = useTranslations("chatThread");
   const read = status === "read";
   const delivered = status === "delivered" || read;
   const colorClass = read
@@ -26,10 +31,10 @@ export function MessageDeliveryTicks({ status }: Props) {
 
   const label =
     status === "read"
-      ? "تمت القراءة"
+      ? t("receiptRead")
       : status === "delivered"
-        ? "تم التسليم"
-        : "تم الإرسال";
+        ? t("receiptDelivered")
+        : t("receiptSent");
 
   return (
     <span
