@@ -214,6 +214,19 @@
     "used": "Used",
     "views": "views"
   },
+  "chatThread": {
+    "emptyList": "No messages yet. Type below.",
+    "placeholder": "Type your message…",
+    "send": "Send",
+    "sending": "Sending…",
+    "errors": {
+      "emptyMessage": "Write a message.",
+      "tooLong": "Message is too long.",
+      "loginRequired": "You must be signed in.",
+      "sendFailed": "Could not send the message. Try again.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
   "common": {
     "brandAlt": "Next.js logo"
   }

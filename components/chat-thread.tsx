@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
-import { markConversationSeen, sendMessage } from "@/lib/chat/actions";
+import { markConversationSeen } from "@/lib/chat/actions";
 import { formatEgyptTime } from "@/lib/date/egypt";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
@@ -23,6 +24,7 @@ function sortOldestFirst(rows: MessageRow[]): MessageRow[] {
 }
 
 export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
+  const t = useTranslations("chatThread");
   const [messages, setMessages] = useState<MessageRow[]>(() => sortOldestFirst(initialMessages));
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -106,26 +108,55 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     e.preventDefault();
     setError(null);
     const trimmed = text.trim();
-    if (!trimmed) return;
-    setSending(true);
-    const result = await sendMessage(chatId, trimmed);
-    setSending(false);
-    if (!result.ok) {
-      setError(result.message);
+    if (!trimmed) {
+      setError(t("errors.emptyMessage"));
       return;
     }
-    setMessages((prev) => {
-      if (prev.some((m) => m.id === result.message.id)) return prev;
-      return sortOldestFirst([...prev, result.message]);
-    });
-    setText("");
+    if (trimmed.length > 5000) {
+      setError(t("errors.tooLong"));
+      return;
+    }
+    setSending(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setError(t("errors.loginRequired"));
+        return;
+      }
+      const { data: row, error: insertError } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender_id: user.id,
+          content: trimmed,
+        })
+        .select()
+        .single();
+
+      if (insertError || !row) {
+        setError(t("errors.sendFailed"));
+        return;
+      }
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === row.id)) return prev;
+        return sortOldestFirst([...prev, row]);
+      });
+      setText("");
+    } catch {
+      setError(t("errors.unknown"));
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-zinc-200 bg-zinc-50 p-3 sm:p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
         {messages.length === 0 ? (
-          <li className="text-center text-sm text-zinc-500 dark:text-zinc-400">لا رسائل بعد. اكتب أدناه.</li>
+          <li className="text-center text-sm text-zinc-500 dark:text-zinc-400">{t("emptyList")}</li>
         ) : (
           messages.map((m) => {
             const mine = m.sender_id === currentUserId;
@@ -164,7 +195,8 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
           <textarea
             className="min-h-[44px] flex-1 resize-none rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
             maxLength={5000}
-            placeholder="اكتب رسالتك…"
+            placeholder={t("placeholder")}
+            aria-label={t("placeholder")}
             rows={2}
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -174,7 +206,7 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
             disabled={sending || !text.trim()}
             type="submit"
           >
-            {sending ? "…" : "إرسال"}
+            {sending ? t("sending") : t("send")}
           </button>
         </div>
         {error ? (

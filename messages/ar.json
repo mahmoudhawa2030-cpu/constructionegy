@@ -214,6 +214,19 @@
     "used": "مستعمل",
     "views": "مشاهدة"
   },
+  "chatThread": {
+    "emptyList": "لا رسائل بعد. اكتب أدناه.",
+    "placeholder": "اكتب رسالتك…",
+    "send": "إرسال",
+    "sending": "جاري الإرسال…",
+    "errors": {
+      "emptyMessage": "اكتب رسالة.",
+      "tooLong": "الرسالة طويلة جداً.",
+      "loginRequired": "يجب تسجيل الدخول.",
+      "sendFailed": "تعذر إرسال الرسالة. حاول مرة أخرى.",
+      "unknown": "حدث خطأ. حاول مرة أخرى."
+    }
+  },
   "common": {
     "brandAlt": "Next.js logo"
   }
