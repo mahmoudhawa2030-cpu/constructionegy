@@ -18,7 +18,10 @@
     "cap:add:android": "npx cap add android",
     "cap:sync": "npx cap sync",
     "cap:open:ios": "npx cap open ios",
-    "cap:open:android": "npx cap open android"
+    "cap:open:android": "npx cap open android",
+    "android:sync": "node scripts/android-run.cjs sync",
+    "android:open": "node scripts/android-run.cjs open",
+    "android:apk-debug": "node scripts/android-run.cjs assemble-debug"
   },
   "dependencies": {
     "@capacitor/android": "^8.2.0",

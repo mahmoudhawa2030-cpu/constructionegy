@@ -48,3 +48,53 @@ npm run push:webhook
 ```
 
 Apply migrations to your Supabase project (`npx supabase link` first if needed), add `google-services.json` under `android/app/`, set `PUSH_NOTIFY_SECRET`, `FIREBASE_SERVICE_ACCOUNT_JSON`, and `SUPABASE_SERVICE_ROLE_KEY` on Vercel, then create the **Database Webhook** on `public.messages` INSERT as printed by `npm run push:webhook`. See `.env.example`.
+
+## Android app on your phone (step-by-step)
+
+Do this on your **Windows PC** after you change code or run `npm install` (plugins need sync).
+
+1. Open **PowerShell** (normal user is fine; avoid starting in `System32` if it confuses you).
+
+2. Go to the project (adjust the path if yours differs):
+
+   ```powershell
+   cd D:\My-business\construction-egy
+   ```
+
+3. Install JS deps (if you have not yet):
+
+   ```powershell
+   npm install
+   ```
+
+4. Sync Capacitor into the Android project (**use this; it always runs from the correct folder**):
+
+   ```powershell
+   npm run android:sync
+   ```
+
+5. **Either** open Android Studio and tap Run ▶:
+
+   ```powershell
+   npm run android:open
+   ```
+
+   **Or** build a debug APK without Studio:
+
+   ```powershell
+   npm run android:apk-debug
+   ```
+
+   Then copy the file  
+   `android\app\build\outputs\apk\debug\app-debug.apk`  
+   to your phone and open it to install (enable “Install unknown apps” if asked).
+
+6. On the phone, when Android asks for **notifications**, tap **Allow**.
+
+**If `npm run android:sync` ever fails**, you can run the same thing **from any directory** (full path to your clone):
+
+```powershell
+node D:\My-business\construction-egy\scripts\android-run.cjs sync
+```
+
+We **cannot** install the APK on your phone or click Run in Android Studio for you—those two steps have to happen on your machine/device.
