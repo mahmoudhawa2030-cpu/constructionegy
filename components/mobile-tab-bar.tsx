@@ -9,6 +9,7 @@ function useTabDefs(homeHref: string) {
   return [
     { href: homeHref, label: t("home") },
     { href: "/gallery", label: t("gallery") },
+    { href: "/map", label: t("map") },
     { href: "/messages", label: t("messages") },
     { href: "/profile", label: t("profile") },
   ] as const;
