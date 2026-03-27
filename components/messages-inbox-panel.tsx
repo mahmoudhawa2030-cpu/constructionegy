@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
+import { AndroidInboxPullRefresh } from "@/components/android-inbox-pull-refresh";
 import { MessagesInboxList } from "@/components/messages-inbox-list";
 import type { InboxItem } from "@/lib/messages/inbox";
 
@@ -23,7 +24,7 @@ export function MessagesInboxPanel({ userId, error, items }: Props) {
         <p className="mt-0.5 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{t("subtitle")}</p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto pb-4 pt-1">
+      <AndroidInboxPullRefresh>
         {error ? (
           <p className="px-2 text-sm text-red-600 dark:text-red-400">{error}</p>
         ) : null}
@@ -33,7 +34,7 @@ export function MessagesInboxPanel({ userId, error, items }: Props) {
           </div>
         ) : null}
         {!error && items.length > 0 ? <MessagesInboxList userId={userId} items={items} /> : null}
-      </div>
+      </AndroidInboxPullRefresh>
     </div>
   );
 }

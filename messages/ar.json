@@ -25,7 +25,11 @@
     "noMessagesYet": "لا رسائل بعد",
     "withUser": "مع",
     "unreadBadgeAria": "رسائل غير مقروءة: {count}",
-    "openChatAria": "فتح المحادثة مع {name} · {listing}"
+    "openChatAria": "فتح المحادثة مع {name} · {listing}",
+    "pullToRefreshAria": "اسحب للأسفل لتحديث المحادثات",
+    "pullRefreshingAria": "جاري تحديث المحادثات",
+    "pullReleaseToRefresh": "أفلت للتحديث",
+    "pullRefreshing": "جاري التحديث…"
   },
   "messageNotifications": {
     "toastTitle": "رسالة جديدة",

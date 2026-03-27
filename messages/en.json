@@ -25,7 +25,11 @@
     "noMessagesYet": "No messages yet",
     "withUser": "With",
     "unreadBadgeAria": "Unread messages: {count}",
-    "openChatAria": "Open chat with {name} · {listing}"
+    "openChatAria": "Open chat with {name} · {listing}",
+    "pullToRefreshAria": "Pull down to refresh conversations",
+    "pullRefreshingAria": "Refreshing conversations",
+    "pullReleaseToRefresh": "Release to refresh",
+    "pullRefreshing": "Refreshing…"
   },
   "messageNotifications": {
     "toastTitle": "New message",
