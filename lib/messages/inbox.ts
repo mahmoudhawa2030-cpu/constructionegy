@@ -46,32 +46,49 @@ export async function getInboxData(userId: string) {
     nameById = new Map((profiles ?? []).map((p) => [p.id, p.full_name]));
   }
 
-  const previews = await Promise.all(
-    rows.map(async (c) => {
-      const { data: last } = await supabase
-        .from("messages")
-        .select("content, created_at")
-        .eq("chat_id", c.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return {
-        chatId: c.id,
-        last: last?.content ?? null,
-        lastAt: last?.created_at ?? null,
-      };
-    }),
-  );
-  const lastByChat = new Map(previews.map((p) => [p.chatId, p.last]));
-  const lastAtByChat = new Map(previews.map((p) => [p.chatId, p.lastAt]));
+  const chatIdsForPreview = rows.map((r) => r.id);
+  const lastByChat = new Map<string, string | null>();
+  const lastAtByChat = new Map<string, string | null>();
 
-  const chatIds = rows.map((r) => r.id);
+  if (chatIdsForPreview.length > 0) {
+    const { data: latestRows, error: rpcErr } = await supabase.rpc("inbox_latest_message_rows", {
+      p_chat_ids: chatIdsForPreview,
+    });
+    if (!rpcErr && latestRows != null) {
+      for (const row of latestRows) {
+        lastByChat.set(row.chat_id, row.content ?? null);
+        lastAtByChat.set(row.chat_id, row.created_at);
+      }
+    } else {
+      const previews = await Promise.all(
+        rows.map(async (c) => {
+          const { data: last } = await supabase
+            .from("messages")
+            .select("content, created_at")
+            .eq("chat_id", c.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          return {
+            chatId: c.id,
+            last: last?.content ?? null,
+            lastAt: last?.created_at ?? null,
+          };
+        }),
+      );
+      for (const p of previews) {
+        lastByChat.set(p.chatId, p.last);
+        lastAtByChat.set(p.chatId, p.lastAt);
+      }
+    }
+  }
+
   const unreadByChat = new Map<string, number>();
-  if (chatIds.length > 0) {
+  if (chatIdsForPreview.length > 0) {
     const { data: unreadRows } = await supabase
       .from("messages")
       .select("chat_id")
-      .in("chat_id", chatIds)
+      .in("chat_id", chatIdsForPreview)
       .is("read_at", null)
       .neq("sender_id", userId);
 

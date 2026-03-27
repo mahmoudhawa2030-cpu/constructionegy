@@ -24,6 +24,31 @@ function sortInboxByRecent(list: InboxItem[]): InboxItem[] {
   );
 }
 
+/** Prefer the row with newer lastMessageAt so Realtime (in + out) is not overwritten by stale RSC layout data. */
+function mergeInboxServerWithClient(server: InboxItem[], prev: InboxItem[]): InboxItem[] {
+  if (prev.length === 0) return sortInboxByRecent(server);
+  const serverById = new Map(server.map((r) => [r.chatId, r]));
+  const prevById = new Map(prev.map((r) => [r.chatId, r]));
+  const allIds = [...new Set([...serverById.keys(), ...prevById.keys()])];
+  const merged: InboxItem[] = [];
+  for (const id of allIds) {
+    const s = serverById.get(id);
+    const p = prevById.get(id);
+    if (!s) {
+      if (p) merged.push(p);
+      continue;
+    }
+    if (!p) {
+      merged.push(s);
+      continue;
+    }
+    const sT = new Date(s.lastMessageAt).getTime();
+    const pT = new Date(p.lastMessageAt).getTime();
+    merged.push(pT > sT ? p : s);
+  }
+  return sortInboxByRecent(merged);
+}
+
 function avatarInitial(name: string): string {
   const t = name.trim();
   if (!t) return "?";
@@ -41,7 +66,7 @@ export function MessagesInboxList({ userId, items }: Props) {
   const sortedItems = useMemo(() => sortInboxByRecent(items), [items]);
 
   useEffect(() => {
-    setRows(sortedItems);
+    setRows((prev) => mergeInboxServerWithClient(sortedItems, prev));
   }, [sortedItems]);
 
   useEffect(() => {

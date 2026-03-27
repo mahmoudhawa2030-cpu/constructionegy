@@ -606,6 +606,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      inbox_latest_message_rows: {
+        Args: { p_chat_ids: string[] }
+        Returns: {
+          chat_id: string
+          content: string
+          created_at: string
+        }[]
+      }
       increment_listing_phone_click: {
         Args: { p_listing_id: string }
         Returns: null
