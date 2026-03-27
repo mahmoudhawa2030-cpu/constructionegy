@@ -23,11 +23,15 @@ type WebhookBody = {
 
 function extractRecord(body: unknown): MessageRecord | null {
   if (!body || typeof body !== "object") return null;
-  const b = body as WebhookBody;
+  const b = body as WebhookBody & MessageRecord;
   if (b.record && typeof b.record === "object" && b.record.chat_id) return b.record;
   const nested = b.payload?.record;
   if (nested && typeof nested === "object" && nested.chat_id) return nested;
   if (b.new && typeof b.new === "object" && b.new.chat_id) return b.new;
+  /* Some proxies send the row as the root object */
+  if (typeof b.chat_id === "string" && typeof b.sender_id === "string") {
+    return { id: b.id, chat_id: b.chat_id, sender_id: b.sender_id, content: b.content ?? null };
+  }
   return null;
 }
 

@@ -1,7 +1,9 @@
 "use client";
 
 import { Capacitor } from "@capacitor/core";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+
+import { createClient } from "@/lib/supabase/client";
 
 async function registerTokenWithServer(token: string, platform: string) {
   try {
@@ -20,10 +22,28 @@ async function registerTokenWithServer(token: string, platform: string) {
  * Initializes native-only behavior on the client. Do not import Capacitor plugins in RSC.
  */
 export function CapacitorBridge() {
+  const pushTokenRef = useRef<{ token: string; platform: string } | null>(null);
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
 
     const ac = new AbortController();
+    const supabase = createClient();
+
+    const flushPushTokenToServer = () => {
+      const p = pushTokenRef.current;
+      if (!p) return;
+      void registerTokenWithServer(p.token, p.platform);
+    };
+
+    const {
+      data: { subscription: authSub },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session?.user) return;
+      if (event === "INITIAL_SESSION" || event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        flushPushTokenToServer();
+      }
+    });
 
     void (async () => {
       const { StatusBar, Style } = await import("@capacitor/status-bar");
@@ -48,6 +68,7 @@ export function CapacitorBridge() {
 
       const hReg = await PushNotifications.addListener("registration", (token) => {
         const platform = Capacitor.getPlatform() === "ios" ? "ios" : "android";
+        pushTokenRef.current = { token: token.value, platform };
         void registerTokenWithServer(token.value, platform);
       });
 
@@ -131,7 +152,10 @@ export function CapacitorBridge() {
       });
     })();
 
-    return () => ac.abort();
+    return () => {
+      authSub.unsubscribe();
+      ac.abort();
+    };
   }, []);
 
   return null;
