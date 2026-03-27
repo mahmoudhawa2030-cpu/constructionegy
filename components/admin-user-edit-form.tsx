@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 
 import { updateAdminUserProfile } from "@/app/admin/users/actions";
+import { adminUi } from "@/lib/admin-ui";
 import type { UpdateProfileState } from "@/lib/profile/actions";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -27,13 +28,13 @@ export function AdminUserEditForm({ profile }: Props) {
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
+    <form action={formAction} className={`${adminUi.card} flex flex-col gap-4 p-5`}>
       <input name="user_id" type="hidden" value={profile.id} />
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">الاسم الظاهر</span>
+        <span className={adminUi.label}>الاسم الظاهر</span>
         <input
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          className={adminUi.input}
           defaultValue={profile.full_name}
           name="full_name"
           required
@@ -45,9 +46,9 @@ export function AdminUserEditForm({ profile }: Props) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">نوع الحساب</span>
+        <span className={adminUi.label}>نوع الحساب</span>
         <select
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          className={`${adminUi.select} px-3 py-2 text-sm`}
           defaultValue={profile.user_type}
           name="user_type"
           required
@@ -61,9 +62,9 @@ export function AdminUserEditForm({ profile }: Props) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">رقم الهاتف (اختياري)</span>
+        <span className={adminUi.label}>رقم الهاتف (اختياري)</span>
         <input
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          className={adminUi.input}
           defaultValue={profile.phone_number ?? ""}
           dir="ltr"
           inputMode="tel"
@@ -74,9 +75,9 @@ export function AdminUserEditForm({ profile }: Props) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">واتساب (اختياري)</span>
+        <span className={adminUi.label}>واتساب (اختياري)</span>
         <input
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          className={adminUi.input}
           defaultValue={profile.whatsapp_number ?? ""}
           dir="ltr"
           inputMode="tel"
@@ -87,9 +88,9 @@ export function AdminUserEditForm({ profile }: Props) {
       </label>
 
       <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">الموقع أو المدينة (اختياري)</span>
+        <span className={adminUi.label}>الموقع أو المدينة (اختياري)</span>
         <input
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          className={adminUi.input}
           defaultValue={profile.location ?? ""}
           name="location"
           type="text"
@@ -123,7 +124,7 @@ export function AdminUserEditForm({ profile }: Props) {
       ) : null}
 
       <button
-        className="w-fit rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+        className={`${adminUi.btnPrimary} w-fit px-4 py-2.5 text-sm`}
         disabled={pending}
         type="submit"
       >

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminDashboardPage() {
@@ -15,100 +16,88 @@ export default async function AdminDashboardPage() {
   const pendingListings = pendingCount.count ?? 0;
   const totalProfiles = profilesCount.count ?? 0;
 
-  const linkRowClass =
-    "block w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-900 transition-colors hover:border-zinc-300 hover:bg-zinc-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:border-zinc-600 dark:hover:bg-zinc-800/80";
-
   return (
-    <div className="flex flex-col gap-8">
+    <div className={adminUi.page}>
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">نظرة عامة</h1>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <h1 className={adminUi.pageTitle}>نظرة عامة</h1>
+        <div className={adminUi.kpiGrid}>
           <Link
-            className="block rounded-2xl border border-amber-200 bg-amber-50 p-5 transition-colors hover:border-amber-300 hover:bg-amber-100/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500 dark:border-amber-800 dark:bg-amber-950/40 dark:hover:border-amber-700 dark:hover:bg-amber-950/70"
+            className={adminUi.kpiAccent}
             href="/admin/listings"
             prefetch={true}
           >
-            <p className="text-sm text-amber-800 dark:text-amber-200">بانتظار الموافقة</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-950 dark:text-amber-50">
-              {pendingListings}
-            </p>
+            <p className={`${adminUi.kpiLabel} text-amber-900 dark:text-amber-200`}>بانتظار الموافقة</p>
+            <p className={`${adminUi.kpiValue} text-amber-950 dark:text-amber-50`}>{pendingListings}</p>
           </Link>
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">إجمالي الإعلانات</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-              {totalListings}
-            </p>
+          <div className={adminUi.kpiNeutral}>
+            <p className={adminUi.kpiLabel}>إجمالي الإعلانات</p>
+            <p className={adminUi.kpiValue}>{totalListings}</p>
           </div>
-          <div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">إجمالي المستخدمين</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-              {totalProfiles}
-            </p>
+          <div className={adminUi.kpiNeutral}>
+            <p className={adminUi.kpiLabel}>إجمالي المستخدمين</p>
+            <p className={adminUi.kpiValue}>{totalProfiles}</p>
           </div>
         </div>
       </div>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">أقسام الإدارة</h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <h2 className={adminUi.sectionTitle}>أقسام الإدارة</h2>
+        <div className={adminUi.gridTwo}>
+          <div className={`${adminUi.cardPadded} flex flex-col`}>
             <div className="mb-4">
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">عمليات المستخدمين</h3>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <h3 className={adminUi.sectionTitle}>عمليات المستخدمين</h3>
+              <p className={adminUi.sectionLead}>
                 إدارة الحسابات، مراقبة المحادثات، وما سيُضاف لاحقًا من أدوات تتعلق بالمستخدمين.
               </p>
             </div>
             <ul className="flex flex-col gap-2">
               <li>
-                <Link className={linkRowClass} href="/admin/users">
+                <Link className={adminUi.objectLink} href="/admin/users">
                   جدول المستخدمين
                 </Link>
               </li>
               <li>
-                <Link className={linkRowClass} href="/admin/messages">
+                <Link className={adminUi.objectLink} href="/admin/messages">
                   مراقبة المحادثات
                 </Link>
               </li>
               <li>
-                <div
-                  className="rounded-xl border border-dashed border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950/50 dark:text-zinc-500"
-                  role="status"
-                >
+                <div className={adminUi.placeholderTile} role="status">
                   عمليات مستقبلية (قريبًا)
                 </div>
               </li>
             </ul>
           </div>
 
-          <div className="flex flex-col rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className={`${adminUi.cardPadded} flex flex-col`}>
             <div className="mb-4">
-              <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">الإعلانات والمحتوى</h3>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <h3 className={adminUi.sectionTitle}>الإعلانات والمحتوى</h3>
+              <p className={adminUi.sectionLead}>
                 الموافقة على الإعلانات، التصنيفات، وإضافة إعلانات جديدة.
               </p>
             </div>
             <ul className="flex flex-col gap-2">
               <li>
-                <Link className={linkRowClass} href="/admin/listings">
+                <Link className={adminUi.objectLink} href="/admin/listings">
                   إدارة الإعلانات
                 </Link>
               </li>
               <li>
-                <Link className={linkRowClass} href="/admin/categories">
+                <Link className={adminUi.objectLink} href="/admin/categories">
                   التصنيفات
                 </Link>
               </li>
               <li>
-                <Link className={linkRowClass} href="/listings/new">
+                <Link className={adminUi.objectLink} href="/listings/new">
                   إضافة إعلان
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          إضافة إعلان من التطبيق: <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">/listings/new</code> — ليس تحت{" "}
-          <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">/admin</code>.
+        <p className={adminUi.footnote}>
+          إضافة إعلان من التطبيق: <code className={adminUi.code}>/listings/new</code> — ليس تحت{" "}
+          <code className={adminUi.code}>/admin</code>.
         </p>
       </section>
     </div>

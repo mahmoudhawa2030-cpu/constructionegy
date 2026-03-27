@@ -9,6 +9,7 @@ import {
   type AdminUserActionState,
   unbanUserFromForm,
 } from "@/app/admin/users/actions";
+import { adminUi } from "@/lib/admin-ui";
 
 type Props = {
   userId: string;
@@ -61,7 +62,7 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
       >
         {canEdit ? (
           <Link
-            className="shrink-0 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-900 no-underline hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+            className={`${adminUi.btnSecondary} shrink-0 no-underline`}
             href={`/admin/users/${userId}/edit`}
           >
             تعديل
@@ -71,7 +72,7 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
           <form action={unbanAction} className="inline-flex shrink-0">
             <input name="user_id" type="hidden" value={userId} />
             <button
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-xs font-medium text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+              className={`${adminUi.btnGhost} disabled:opacity-50`}
               disabled={disabled || unbanPending}
               type="submit"
             >
@@ -82,7 +83,7 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
           <form action={banAction} className="inline-flex shrink-0">
             <input name="user_id" type="hidden" value={userId} />
             <button
-              className="rounded-lg border border-amber-300 bg-amber-50 px-2 py-1 text-xs font-medium text-amber-950 disabled:opacity-50 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100"
+              className={`${adminUi.btnAttention} disabled:opacity-50`}
               disabled={disabled || banPending}
               type="submit"
             >
@@ -101,7 +102,7 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
         >
           <input name="user_id" type="hidden" value={userId} />
           <button
-            className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-900 disabled:opacity-50 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
+            className={`${adminUi.btnDanger} disabled:opacity-50`}
             disabled={disabled || deletePending}
             type="submit"
           >

@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 
 import type { PresenceFilter } from "@/lib/admin/presence-filters";
+import { adminUi } from "@/lib/admin-ui";
 
 const OPTIONS: { value: PresenceFilter; label: string }[] = [
   { value: "all", label: "الكل" },
@@ -24,9 +25,9 @@ export function AdminUsersPresenceFilter({ value }: Props) {
 
   return (
     <label className="flex min-w-[12rem] flex-col gap-1 text-sm">
-      <span className="font-medium text-zinc-700 dark:text-zinc-300">تصفية النشاط</span>
+      <span className={adminUi.label}>تصفية النشاط</span>
       <select
-        className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-50"
+        className={`${adminUi.select} px-3 py-2 text-sm`}
         value={value}
         onChange={(e) => {
           const next = e.target.value as PresenceFilter;

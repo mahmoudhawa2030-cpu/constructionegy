@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { AdminUsersPhoneSearch } from "@/components/admin-users-phone-search";
 import { AdminUsersPresenceFilter } from "@/components/admin-users-presence-filter";
 import { AdminUserActions } from "@/components/admin-user-actions";
+import { adminUi } from "@/lib/admin-ui";
 import {
   activeSinceIso,
   isUserOnlineNow,
@@ -73,13 +74,10 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const rows = profiles ?? [];
 
   return (
-    <div className="flex min-w-0 flex-col gap-4">
+    <div className={`${adminUi.page} min-w-0`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">المستخدمون</h1>
-        <Link
-          className="text-sm text-zinc-600 underline dark:text-zinc-400"
-          href="/admin"
-        >
+        <h1 className={adminUi.pageTitle}>المستخدمون</h1>
+        <Link className={adminUi.linkBack} href="/admin">
           العودة للنظرة العامة
         </Link>
       </div>
@@ -88,8 +86,8 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
         <Suspense
           fallback={
             <div className="flex flex-wrap gap-4">
-              <div className="h-[4.25rem] min-w-[14rem] flex-1 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
-              <div className="h-[4.25rem] min-w-[12rem] animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-800" />
+              <div className="h-[4.25rem] min-w-[14rem] flex-1 animate-pulse rounded-sm bg-[var(--admin-table-header-bg)]" />
+              <div className="h-[4.25rem] min-w-[12rem] animate-pulse rounded-sm bg-[var(--admin-table-header-bg)]" />
             </div>
           }
         >
@@ -98,59 +96,33 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
             <AdminUsersPresenceFilter value={presence} />
           </div>
         </Suspense>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-[var(--admin-text-secondary)]">
           العدد:{" "}
-          <span className="font-semibold tabular-nums text-zinc-900 dark:text-zinc-50">
-            {rows.length}
-          </span>
+          <span className="font-semibold tabular-nums text-[var(--admin-text)]">{rows.length}</span>
         </p>
       </div>
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className={adminUi.footnote}>
         البريد الإلكتروني غير معروض هنا لأنه مخزّن في نظام المصادقة فقط. المعرف أدناه يطابق حساب المستخدم. حذف
-        الحساب يحتاج مفتاح <code className="rounded bg-zinc-100 px-1 dark:bg-zinc-800">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-        في الخادم. «متصل الآن» يعتمد على نبضات التطبيق كل ~٩٠ ثانية (نفس نطاق التصفية والشارة: آخر ظهور خلال حوالي ٣–٤ دقائق).
+        الحساب يحتاج مفتاح <code className={adminUi.code}>SUPABASE_SERVICE_ROLE_KEY</code> في الخادم. «متصل الآن» يعتمد
+        على نبضات التطبيق كل ~٩٠ ثانية (نفس نطاق التصفية والشارة: آخر ظهور خلال حوالي ٣–٤ دقائق).
       </p>
 
-      <div
-        className="overflow-x-auto rounded-2xl border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-      >
-        <table className="w-full min-w-max text-right text-sm">
+      <div className={adminUi.tableWrap}>
+        <table className={adminUi.table}>
           <thead>
-            <tr className="border-b border-zinc-200 dark:border-zinc-700">
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                الاسم
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                النوع
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                هاتف
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                الموقع
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                إداري
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                الحالة
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                آخر ظهور
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                آخر نشاط
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                التسجيل
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                المعرف
-              </th>
-              <th className="whitespace-nowrap px-3 py-2 font-medium text-zinc-700 dark:text-zinc-300">
-                إجراءات
-              </th>
+            <tr className={adminUi.theadRow}>
+              <th className={adminUi.th}>الاسم</th>
+              <th className={adminUi.th}>النوع</th>
+              <th className={adminUi.th}>هاتف</th>
+              <th className={adminUi.th}>الموقع</th>
+              <th className={adminUi.th}>إداري</th>
+              <th className={adminUi.th}>الحالة</th>
+              <th className={adminUi.th}>آخر ظهور</th>
+              <th className={adminUi.th}>آخر نشاط</th>
+              <th className={adminUi.th}>التسجيل</th>
+              <th className={adminUi.th}>المعرف</th>
+              <th className={adminUi.th}>إجراءات</th>
             </tr>
           </thead>
           <tbody>
@@ -160,53 +132,43 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
               const online = row.last_seen_at ? isUserOnlineNow(row.last_seen_at) : false;
 
               return (
-                <tr
-                  key={row.id}
-                  className="border-b border-zinc-100 last:border-0 dark:border-zinc-800"
-                >
-                  <td className="whitespace-nowrap px-3 py-2 align-middle">
+                <tr key={row.id} className={adminUi.tbodyRow}>
+                  <td className={`${adminUi.td} whitespace-nowrap`}>
                     <Link
-                      className="font-medium text-zinc-900 hover:underline dark:text-zinc-50"
+                      className="font-semibold text-[var(--admin-brand)] hover:underline"
                       href={`/profile/${row.id}`}
                     >
                       {row.full_name}
                     </Link>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle text-zinc-800 dark:text-zinc-200">
-                    {USER_TYPE_LABELS[row.user_type]}
-                  </td>
-                  <td
-                    className="whitespace-nowrap px-3 py-2 align-middle tabular-nums text-zinc-600 dark:text-zinc-400"
-                    dir="ltr"
-                  >
+                  <td className={`${adminUi.td} whitespace-nowrap`}>{USER_TYPE_LABELS[row.user_type]}</td>
+                  <td className={`${adminUi.tdMuted} whitespace-nowrap tabular-nums`} dir="ltr">
                     {row.phone_number ?? "—"}
                   </td>
-                  <td className="max-w-[12rem] truncate px-3 py-2 align-middle text-zinc-600 dark:text-zinc-400">
-                    {row.location ?? "—"}
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle">
+                  <td className={`${adminUi.tdMuted} max-w-[12rem] truncate`}>{row.location ?? "—"}</td>
+                  <td className={`${adminUi.td} whitespace-nowrap`}>
                     {row.is_admin ? (
-                      <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-950 dark:bg-amber-950/50 dark:text-amber-100">
+                      <span className="rounded-sm bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-950 dark:bg-amber-950/50 dark:text-amber-100">
                         نعم
                       </span>
                     ) : (
-                      <span className="text-zinc-500 dark:text-zinc-400">لا</span>
+                      <span className="text-[var(--admin-text-secondary)]">لا</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle">
+                  <td className={`${adminUi.td} whitespace-nowrap`}>
                     {row.is_banned ? (
-                      <span className="rounded-md bg-red-100 px-2 py-0.5 text-xs font-medium text-red-950 dark:bg-red-950/40 dark:text-red-100">
+                      <span className="rounded-sm bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-950 dark:bg-red-950/40 dark:text-red-100">
                         محظور
                       </span>
                     ) : (
-                      <span className="text-xs text-zinc-600 dark:text-zinc-400">نشط</span>
+                      <span className="text-xs text-[var(--admin-text-secondary)]">نشط</span>
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle text-zinc-600 dark:text-zinc-400">
+                  <td className={`${adminUi.tdMuted} whitespace-nowrap`}>
                     {lastSeen ? (
                       <span className="inline-flex flex-wrap items-center gap-1">
                         {online ? (
-                          <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-medium text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
+                          <span className="rounded-sm bg-emerald-100 px-1.5 py-0.5 text-[11px] font-semibold text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">
                             متصل
                           </span>
                         ) : null}
@@ -216,20 +178,20 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                       "—"
                     )}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle text-zinc-600 dark:text-zinc-400">
+                  <td className={`${adminUi.tdMuted} whitespace-nowrap`}>
                     {lastActive ? lastActive.toLocaleString("ar-EG") : "—"}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle text-zinc-600 dark:text-zinc-400">
+                  <td className={`${adminUi.tdMuted} whitespace-nowrap`}>
                     {new Date(row.created_at).toLocaleString("ar-EG")}
                   </td>
                   <td
-                    className="whitespace-nowrap px-3 py-2 align-middle font-mono text-xs text-zinc-500"
+                    className={`${adminUi.tdMuted} whitespace-nowrap font-mono text-xs`}
                     dir="ltr"
                     title={row.id}
                   >
                     {row.id.slice(0, 8)}…
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 align-middle">
+                  <td className={`${adminUi.td} whitespace-nowrap`}>
                     <AdminUserActions
                       isAdmin={row.is_admin}
                       isBanned={row.is_banned}
@@ -245,7 +207,7 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-[var(--admin-text-secondary)]">
           لا يوجد مستخدمون يطابقون التصفية
           {phoneSearch ? ` (بحث الهاتف: ${phoneSearch})` : ""}.
         </p>

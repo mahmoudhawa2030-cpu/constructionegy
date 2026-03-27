@@ -3,6 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
+import { adminUi } from "@/lib/admin-ui";
+
 export function AdminUsersPhoneSearch() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -32,7 +34,7 @@ export function AdminUsersPhoneSearch() {
         applyPhone(String(fd.get("phone") ?? ""));
       }}
     >
-      <label className="font-medium text-zinc-700 dark:text-zinc-300" htmlFor="admin-users-phone">
+      <label className={adminUi.label} htmlFor="admin-users-phone">
         بحث برقم الهاتف
       </label>
       <div className="flex flex-wrap items-stretch gap-2">
@@ -43,14 +45,11 @@ export function AdminUsersPhoneSearch() {
           enterKeyHint="search"
           autoComplete="off"
           placeholder="مثال: 010 أو جزء من الرقم"
-          className="min-w-[10rem] flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-50"
+          className={`${adminUi.input} min-w-[10rem] flex-1`}
           defaultValue={searchParams.get("phone") ?? ""}
           dir="ltr"
         />
-        <button
-          type="submit"
-          className="rounded-lg border border-zinc-300 bg-zinc-100 px-3 py-2 font-medium text-zinc-900 hover:bg-zinc-200 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700"
-        >
+        <button type="submit" className={adminUi.btnToolbar}>
           بحث
         </button>
       </div>

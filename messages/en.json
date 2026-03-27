@@ -166,6 +166,8 @@
     }
   },
   "admin": {
+    "navAria": "Administration navigation",
+    "shellSubtitle": "Enterprise console",
     "panel": "Admin",
     "overview": "Overview",
     "listings": "Listings",
