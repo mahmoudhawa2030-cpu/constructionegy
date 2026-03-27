@@ -23,7 +23,9 @@ export default async function AdminListingsPage() {
   const supabase = await createClient();
   const { data: listingsRaw, error } = await supabase
     .from("listings")
-    .select("id, title, status, price, price_unit, created_at, user_id, view_count, phone_click_count, profiles(full_name)")
+    .select(
+      "id, title, status, price, price_unit, created_at, user_id, view_count, phone_click_count, profiles!listings_user_id_fkey(full_name)",
+    )
     .order("created_at", { ascending: false });
 
   const listings = [...((listingsRaw ?? []) as ListingWithOwner[])].sort((a, b) => {
