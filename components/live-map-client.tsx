@@ -256,16 +256,23 @@ export function LiveMapClient({ userId }: Props) {
       } else {
         const msg = postgrestMessage(e);
         if (msg) setSaveErrorDetail(msg);
-        if (
+
+        const hasPostgrestCode =
+          typeof e === "object" &&
+          e !== null &&
+          "code" in e &&
+          typeof (e as { code?: unknown }).code === "string";
+
+        // Capacitor Geolocation used to throw “Not implemented on web” — treat as GPS, not DB.
+        if (msg && /not implemented on web|geolocation_unavailable/i.test(msg)) {
+          setError("geoFailed");
+        } else if (
           msg &&
           (/does not exist|relation|schema cache|live_map_pins/i.test(msg) ||
-            (typeof e === "object" &&
-              e !== null &&
-              "code" in e &&
-              String((e as { code?: string }).code) === "PGRST205"))
+            (hasPostgrestCode && String((e as { code?: string }).code) === "PGRST205"))
         ) {
           setError("errorSaveMigration");
-        } else if (typeof e === "object" && e !== null && ("code" in e || msg)) {
+        } else if (hasPostgrestCode) {
           setError("errorSave");
         } else {
           setError("geoFailed");
