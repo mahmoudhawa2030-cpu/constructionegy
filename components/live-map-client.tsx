@@ -41,6 +41,13 @@ function availabilityIso(): string {
   return new Date(Date.now() + LIVE_SESSION_MS).toISOString();
 }
 
+function postgrestMessage(e: unknown): string | undefined {
+  if (!e || typeof e !== "object") return undefined;
+  const o = e as Record<string, unknown>;
+  if (typeof o.message === "string" && o.message.length > 0) return o.message;
+  return undefined;
+}
+
 type Props = {
   userId: string;
 };
@@ -59,6 +66,7 @@ export function LiveMapClient({ userId }: Props) {
   const [consentOpen, setConsentOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
   const [viewerPos, setViewerPos] = useState<{ lat: number; lng: number } | null>(null);
 
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -105,17 +113,18 @@ export function LiveMapClient({ userId }: Props) {
   const upsertPin = useCallback(
     async (lat: number, lng: number) => {
       const until = availabilityIso();
-      const { error: upErr } = await supabase.from("live_map_pins").upsert(
-        {
-          user_id: userId,
-          lat,
-          lng,
-          available_until: until,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "user_id" },
-      );
-      if (upErr) throw upErr;
+      const row = {
+        user_id: userId,
+        lat,
+        lng,
+        available_until: until,
+        updated_at: new Date().toISOString(),
+      };
+      // Delete-then-insert avoids some PostgREST upsert + RLS edge cases.
+      const { error: delErr } = await supabase.from("live_map_pins").delete().eq("user_id", userId);
+      if (delErr) throw delErr;
+      const { error: insErr } = await supabase.from("live_map_pins").insert(row);
+      if (insErr) throw insErr;
       setViewerPos({ lat, lng });
       setIsLive(true);
       void fetchPins();
@@ -241,12 +250,26 @@ export function LiveMapClient({ userId }: Props) {
       }, HEARTBEAT_MS);
     } catch (e: unknown) {
       console.error("[live map start]", e);
+      setSaveErrorDetail(null);
       if (e instanceof Error && e.message === "permission_denied") {
         setError("geoPermission");
-      } else if (typeof e === "object" && e !== null && "code" in e) {
-        setError("errorSave");
       } else {
-        setError("geoFailed");
+        const msg = postgrestMessage(e);
+        if (msg) setSaveErrorDetail(msg);
+        if (
+          msg &&
+          (/does not exist|relation|schema cache|live_map_pins/i.test(msg) ||
+            (typeof e === "object" &&
+              e !== null &&
+              "code" in e &&
+              String((e as { code?: string }).code) === "PGRST205"))
+        ) {
+          setError("errorSaveMigration");
+        } else if (typeof e === "object" && e !== null && ("code" in e || msg)) {
+          setError("errorSave");
+        } else {
+          setError("geoFailed");
+        }
       }
     } finally {
       setBusy(false);
@@ -256,6 +279,7 @@ export function LiveMapClient({ userId }: Props) {
 
   const onAvailableClick = useCallback(() => {
     setError(null);
+    setSaveErrorDetail(null);
     if (typeof window !== "undefined" && window.sessionStorage.getItem(CONSENT_KEY) === "1") {
       void startLiveAfterConsent();
       return;
@@ -273,6 +297,7 @@ export function LiveMapClient({ userId }: Props) {
   const onCloseLive = useCallback(async () => {
     setBusy(true);
     setError(null);
+    setSaveErrorDetail(null);
     stopHeartbeat();
     await supabase.from("live_map_pins").delete().eq("user_id", userId);
     setIsLive(false);
@@ -324,7 +349,20 @@ export function LiveMapClient({ userId }: Props) {
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocation")}</p>
         ) : null}
         {error === "errorSave" ? (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorSave")}</p>
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-red-600 dark:text-red-400">{t("errorSave")}</p>
+            {saveErrorDetail ? (
+              <p className="break-all font-mono text-xs text-red-600/90 dark:text-red-400/90">{saveErrorDetail}</p>
+            ) : null}
+          </div>
+        ) : null}
+        {error === "errorSaveMigration" ? (
+          <div className="mt-2 space-y-1">
+            <p className="text-sm text-red-600 dark:text-red-400">{t("errorSaveMigration")}</p>
+            {saveErrorDetail ? (
+              <p className="break-all font-mono text-xs text-red-600/90 dark:text-red-400/90">{saveErrorDetail}</p>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

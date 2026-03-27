@@ -31,3 +31,6 @@ CREATE POLICY "live_map_pins_delete_own"
   USING (user_id = auth.uid());
 
 COMMENT ON TABLE public.live_map_pins IS 'Ephemeral GPS for optional “available now” map visibility.';
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.live_map_pins TO authenticated;
+GRANT ALL ON public.live_map_pins TO service_role;
