@@ -57,9 +57,9 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </li>
                 <li>
-                  <div className={adminUi.placeholderTile} role="status">
-                    عمليات مستقبلية (قريبًا)
-                  </div>
+                  <Link className={adminUi.objectLink} href="/admin/subscriptions">
+                    الاشتراكات
+                  </Link>
                 </li>
               </ul>
             </div>

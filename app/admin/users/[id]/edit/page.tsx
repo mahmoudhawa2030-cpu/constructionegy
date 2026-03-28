@@ -34,9 +34,14 @@ export default async function AdminUserEditPage({ params }: PageProps) {
     <div className={adminUi.page}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className={adminUi.pageTitle}>تعديل مستخدم</h1>
-        <Link className={adminUi.linkBack} href="/admin/users">
-          العودة لقائمة المستخدمين
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link className={adminUi.linkBack} href={`/admin/users/${id}/subscriptions`}>
+            الاشتراكات
+          </Link>
+          <Link className={adminUi.linkBack} href="/admin/users">
+            العودة لقائمة المستخدمين
+          </Link>
+        </div>
       </div>
 
       {isOtherAdmin ? (

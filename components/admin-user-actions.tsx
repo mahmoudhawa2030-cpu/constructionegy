@@ -68,6 +68,12 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
             تعديل
           </Link>
         ) : null}
+        <Link
+          className={`${adminUi.btnGhost} shrink-0 no-underline`}
+          href={`/admin/users/${userId}/subscriptions`}
+        >
+          اشتراكات
+        </Link>
         {isBanned ? (
           <form action={unbanAction} className="inline-flex shrink-0">
             <input name="user_id" type="hidden" value={userId} />
