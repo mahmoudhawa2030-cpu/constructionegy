@@ -19,7 +19,6 @@
     "messagesTabAriaWithUnread": "Messages · {count} unread",
     "menuTitle": "Menu",
     "menuNavAria": "App menu",
-    "openMenuAria": "Open menu",
     "closeMenuAria": "Close menu",
     "closeMenuBackdropAria": "Close menu",
     "menuAppearance": "Appearance",

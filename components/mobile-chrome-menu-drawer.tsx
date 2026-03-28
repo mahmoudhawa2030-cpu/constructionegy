@@ -16,6 +16,7 @@ type Props = {
 
 export function MobileChromeMenuDrawer({ hasUser }: Props) {
   const t = useTranslations("nav");
+  const tHome = useTranslations("home");
   const { open, closeMenu } = useMobileChromeMenu();
   const { unreadTotal } = useMessageNotifications();
 
@@ -83,6 +84,11 @@ export function MobileChromeMenuDrawer({ hasUser }: Props) {
         </div>
 
         <nav aria-label={t("menuNavAria")} className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          {!hasUser ? (
+            <Link className={linkClass} href="/login" onClick={closeMenu} prefetch={true}>
+              {tHome("login")}
+            </Link>
+          ) : null}
           {hasUser ? (
             <>
               <Link className={linkClass} href="/profile" onClick={closeMenu} prefetch={true}>

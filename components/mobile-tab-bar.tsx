@@ -22,11 +22,9 @@ type Props = {
   homeHref?: string;
   /** Unread incoming messages (shown on Messages tab). */
   messageUnreadCount?: number;
-  /** Signed-in users: on small screens, “My account” opens the app menu instead of navigating only. */
-  hasUser?: boolean;
 };
 
-export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0, hasUser = false }: Props) {
+export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0 }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tabs = useTabDefs(homeHref, t);
@@ -46,7 +44,7 @@ export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0, hasUser =
               ? pathname === homeHref
               : pathname === href || pathname.startsWith(`${href}/`);
           const showMsgBadge = href === "/messages" && messageUnreadCount > 0;
-          const profileOpensMenu = href === "/profile" && hasUser && isMobile;
+          const profileOpensMenu = href === "/profile" && isMobile;
 
           if (profileOpensMenu) {
             return (
