@@ -226,6 +226,11 @@
     "subscriptionServices": "Subscription services",
     "site": "Site"
   },
+  "adminUsersPage": {
+    "colPaidService": "Paid service",
+    "paidServiceNone": "—",
+    "subscriptionsManageAria": "Manage subscriptions for {name}"
+  },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",
     "back": "Back to overview",
