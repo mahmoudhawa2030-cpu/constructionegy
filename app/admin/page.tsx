@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminDashboardPage() {
+  const tAdmin = await getTranslations("admin");
+  const tSubPage = await getTranslations("adminSubscriptionsPage");
   const supabase = await createClient();
 
   const [listingsCount, pendingCount, profilesCount] = await Promise.all([
@@ -58,7 +61,12 @@ export default async function AdminDashboardPage() {
                 </li>
                 <li>
                   <Link className={adminUi.objectLink} href="/admin/subscriptions">
-                    الاشتراكات
+                    {tSubPage("title")}
+                  </Link>
+                </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/subscription-services">
+                    {tAdmin("subscriptionServices")}
                   </Link>
                 </li>
               </ul>

@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { featureLabel, type SubscriptionFeature } from "@/lib/subscriptions/features";
+import { featureLabel } from "@/lib/subscriptions/features";
+import { getSubscriptionServicesOrdered } from "@/lib/subscriptions/services-queries";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -11,17 +12,17 @@ type PageProps = {
   searchParams: Promise<{ feature?: string | string[] }>;
 };
 
-const GATED: SubscriptionFeature[] = ["rfq", "live_map", "premium_listings"];
+const KEY_RE = /^[a-z][a-z0-9_]*$/;
 
-function parseFeature(raw: string | string[] | undefined): SubscriptionFeature | null {
+function parseFeatureKey(raw: string | string[] | undefined): string | null {
   const s = Array.isArray(raw) ? raw[0] : raw;
-  if (s === "rfq" || s === "live_map" || s === "premium_listings") return s;
-  return null;
+  if (!s || !KEY_RE.test(s)) return null;
+  return s;
 }
 
 export default async function SubscriptionRequiredPage({ searchParams }: PageProps) {
   const sp = await searchParams;
-  const feature = parseFeature(sp.feature);
+  const featureKey = parseFeatureKey(sp.feature);
 
   const supabase = await createClient();
   const {
@@ -29,16 +30,27 @@ export default async function SubscriptionRequiredPage({ searchParams }: PagePro
   } = await supabase.auth.getUser();
 
   if (!user) {
-    const nextPath = feature
-      ? `/subscription-required?feature=${feature}`
+    const nextPath = featureKey
+      ? `/subscription-required?feature=${encodeURIComponent(featureKey)}`
       : "/subscription-required";
     redirect(`/login?next=${encodeURIComponent(nextPath)}`);
   }
+
   const locale = await getLocale();
   const loc = locale === "en" ? "en" : "ar";
   const t = await getTranslations("subscriptionRequired");
 
-  const featureTitle = feature ? featureLabel(feature, loc) : null;
+  const services = await getSubscriptionServicesOrdered();
+  const listForUi = services.filter((s) => s.feature_key !== "all");
+
+  const row = featureKey ? services.find((s) => s.feature_key === featureKey) : null;
+  const featureTitle = row
+    ? loc === "en"
+      ? row.label_en
+      : row.label_ar
+    : featureKey
+      ? featureLabel(featureKey, loc)
+      : null;
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 px-4 py-8">
@@ -48,9 +60,13 @@ export default async function SubscriptionRequiredPage({ searchParams }: PagePro
       </p>
       <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{t("hintAdmin")}</p>
       <ul className="list-inside list-disc text-xs text-zinc-500 dark:text-zinc-400">
-        {GATED.map((f) => (
-          <li key={f}>{featureLabel(f, loc)}</li>
-        ))}
+        {listForUi.length > 0
+          ? listForUi.map((s) => (
+              <li key={s.feature_key}>{loc === "en" ? s.label_en : s.label_ar}</li>
+            ))
+          : ["rfq", "live_map", "premium_listings"].map((k) => (
+              <li key={k}>{featureLabel(k, loc)}</li>
+            ))}
       </ul>
       <div className="flex flex-wrap gap-3 pt-2">
         <Link

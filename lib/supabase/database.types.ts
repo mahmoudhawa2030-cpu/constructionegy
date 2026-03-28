@@ -111,11 +111,41 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_services: {
+        Row: {
+          created_at: string
+          feature_key: string
+          label_ar: string
+          label_en: string
+          requires_subscription: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feature_key: string
+          label_ar: string
+          label_en: string
+          requires_subscription?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feature_key?: string
+          label_ar?: string
+          label_en?: string
+          requires_subscription?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           id: string
           user_id: string
-          feature: "rfq" | "live_map" | "premium_listings" | "all"
+          feature: string
           valid_until: string | null
           notes: string | null
           created_at: string
@@ -124,7 +154,7 @@ export type Database = {
         Insert: {
           id?: string
           user_id: string
-          feature: "rfq" | "live_map" | "premium_listings" | "all"
+          feature: string
           valid_until?: string | null
           notes?: string | null
           created_at?: string
@@ -133,13 +163,20 @@ export type Database = {
         Update: {
           id?: string
           user_id?: string
-          feature?: "rfq" | "live_map" | "premium_listings" | "all"
+          feature?: string
           valid_until?: string | null
           notes?: string | null
           created_at?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "subscriptions_feature_fkey"
+            columns: ["feature"]
+            isOneToOne: false
+            referencedRelation: "subscription_services"
+            referencedColumns: ["feature_key"]
+          },
           {
             foreignKeyName: "subscriptions_user_id_fkey"
             columns: ["user_id"]
@@ -680,6 +717,14 @@ export type Database = {
         Returns: boolean
       }
       user_has_active_subscription: {
+        Args: { p_user_id: string; p_feature: string }
+        Returns: boolean
+      }
+      subscription_service_requires_payment: {
+        Args: { p_feature: string }
+        Returns: boolean
+      }
+      feature_usable_under_enforcement: {
         Args: { p_user_id: string; p_feature: string }
         Returns: boolean
       }

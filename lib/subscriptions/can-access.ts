@@ -35,6 +35,16 @@ export async function canAccessFeature(
     return true;
   }
 
+  const { data: svc, error: svcErr } = await supabase
+    .from("subscription_services")
+    .select("requires_subscription")
+    .eq("feature_key", feature)
+    .maybeSingle();
+
+  if (!svcErr && svc && !svc.requires_subscription) {
+    return true;
+  }
+
   const now = new Date().toISOString();
   const { data } = await supabase
     .from("subscriptions")

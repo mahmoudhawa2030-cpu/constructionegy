@@ -13,13 +13,14 @@ function navLinkClass(active: boolean): string {
   return `${base} border-[var(--admin-shell-border)] bg-gradient-to-b from-white to-[#dce8f2] text-[var(--admin-table-header-text)] hover:to-[#cfe0f0] dark:from-zinc-700 dark:to-zinc-800 dark:text-zinc-100 dark:hover:to-zinc-700`;
 }
 
-const HREFS = [
-  "/admin",
-  "/admin/listings",
-  "/admin/users",
-  "/admin/messages",
-  "/admin/categories",
-] as const;
+const NAV_ITEMS: { href: string; labelKey: "overview" | "listings" | "users" | "chats" | "categories" | "subscriptionServices" }[] = [
+  { href: "/admin", labelKey: "overview" },
+  { href: "/admin/listings", labelKey: "listings" },
+  { href: "/admin/users", labelKey: "users" },
+  { href: "/admin/messages", labelKey: "chats" },
+  { href: "/admin/categories", labelKey: "categories" },
+  { href: "/admin/subscription-services", labelKey: "subscriptionServices" },
+];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/admin") return pathname === "/admin";
@@ -32,17 +33,9 @@ export function AdminNav() {
 
   return (
     <nav aria-label={t("navAria")} className="flex flex-wrap gap-1.5">
-      {HREFS.map((href) => (
+      {NAV_ITEMS.map(({ href, labelKey }) => (
         <Link key={href} className={navLinkClass(isActive(pathname, href))} href={href}>
-          {href === "/admin"
-            ? t("overview")
-            : href === "/admin/listings"
-              ? t("listings")
-              : href === "/admin/users"
-                ? t("users")
-                : href === "/admin/messages"
-                  ? t("chats")
-                  : t("categories")}
+          {t(labelKey)}
         </Link>
       ))}
     </nav>
