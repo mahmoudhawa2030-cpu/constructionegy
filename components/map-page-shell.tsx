@@ -19,5 +19,9 @@ type Props = {
 };
 
 export function MapPageShell({ userId, categories }: Props) {
-  return <LiveMapClient categories={categories} userId={userId} />;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      <LiveMapClient categories={categories} userId={userId} />
+    </div>
+  );
 }

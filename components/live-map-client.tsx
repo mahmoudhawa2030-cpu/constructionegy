@@ -472,14 +472,14 @@ export function LiveMapClient({ userId, categories }: Props) {
       : liveCategorySlug;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-zinc-200 px-2 py-1.5 dark:border-zinc-800 sm:px-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <h1 className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:shrink-0">{t("title")}</h1>
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 sm:justify-end">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="shrink-0 border-b border-zinc-200 px-2 py-1 dark:border-zinc-800 sm:px-3">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:justify-between">
+          <h1 className="shrink-0 text-sm font-semibold text-zinc-900 dark:text-zinc-50 sm:text-base">{t("title")}</h1>
+          <div className="flex min-w-0 flex-1 basis-[12rem] flex-wrap items-center gap-1.5 sm:justify-end">
             <select
               aria-label={t("filterCategoryAria")}
-              className="min-w-0 max-w-[min(100%,18rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+              className="min-w-0 max-w-[min(100%,18rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               value={filterCategorySlug}
               onChange={(e) => setFilterCategorySlug(e.target.value)}
             >
@@ -493,12 +493,12 @@ export function LiveMapClient({ userId, categories }: Props) {
           </div>
         </div>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {!isLive ? (
             <>
               <select
                 aria-label={t("liveCategoryAria")}
-                className="max-w-[min(100%,16rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+                className="max-w-[min(100%,16rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
                 disabled={categories.length === 0 || busy}
                 value={liveCategorySlug}
                 onChange={(e) => setLiveCategorySlug(e.target.value)}
@@ -514,7 +514,7 @@ export function LiveMapClient({ userId, categories }: Props) {
                 )}
               </select>
               <button
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
+                className="rounded-lg bg-emerald-600 px-2.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
                 disabled={busy || categories.length === 0}
                 onClick={onAvailableClick}
                 type="button"
@@ -525,7 +525,7 @@ export function LiveMapClient({ userId, categories }: Props) {
           ) : (
             <>
               <button
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg border border-zinc-300 bg-white px-2.5 py-1 text-sm font-semibold text-zinc-900 shadow-sm hover:bg-zinc-50 disabled:opacity-60 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
                 disabled={busy}
                 onClick={() => void onCloseLive()}
                 type="button"
@@ -537,18 +537,18 @@ export function LiveMapClient({ userId, categories }: Props) {
               ) : null}
             </>
           )}
-          <Link className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400" href="/profile">
+          <Link className="text-xs font-medium text-blue-600 hover:underline sm:text-sm dark:text-blue-400" href="/profile">
             {t("myProfile")}
           </Link>
         </div>
         {error === "categoryRequired" ? (
-          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300">{t("errorCategoryRequired")}</p>
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300 sm:text-sm">{t("errorCategoryRequired")}</p>
         ) : null}
         {error === "geoPermission" ? (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocationPermission")}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400 sm:text-sm">{t("errorGeolocationPermission")}</p>
         ) : null}
         {error === "locationServicesOff" ? (
-          <div className="mt-2 space-y-2">
+          <div className="mt-1 space-y-1.5 sm:mt-2 sm:space-y-2">
             <p className="text-sm font-medium text-red-600 dark:text-red-400">{t("errorLocationServicesOff")}</p>
             <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">{t("errorLocationServicesOffHint")}</p>
             {Capacitor.getPlatform() === "android" ? (
@@ -563,19 +563,19 @@ export function LiveMapClient({ userId, categories }: Props) {
           </div>
         ) : null}
         {error === "geoFailed" ? (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{t("errorGeolocation")}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400 sm:text-sm">{t("errorGeolocation")}</p>
         ) : null}
         {error === "errorSave" ? (
-          <div className="mt-2 space-y-1">
-            <p className="text-sm text-red-600 dark:text-red-400">{t("errorSave")}</p>
+          <div className="mt-1 space-y-1 sm:mt-2">
+            <p className="text-xs text-red-600 dark:text-red-400 sm:text-sm">{t("errorSave")}</p>
             {saveErrorDetail ? (
               <p className="break-all font-mono text-xs text-red-600/90 dark:text-red-400/90">{saveErrorDetail}</p>
             ) : null}
           </div>
         ) : null}
         {error === "errorSaveMigration" ? (
-          <div className="mt-2 space-y-1">
-            <p className="text-sm text-red-600 dark:text-red-400">{t("errorSaveMigration")}</p>
+          <div className="mt-1 space-y-1 sm:mt-2">
+            <p className="text-xs text-red-600 dark:text-red-400 sm:text-sm">{t("errorSaveMigration")}</p>
             {saveErrorDetail ? (
               <p className="break-all font-mono text-xs text-red-600/90 dark:text-red-400/90">{saveErrorDetail}</p>
             ) : null}
@@ -583,12 +583,20 @@ export function LiveMapClient({ userId, categories }: Props) {
         ) : null}
       </div>
 
-      <div className="relative min-h-[min(85dvh,44rem)] flex-1 bg-zinc-100 dark:bg-zinc-900" ref={containerRef}>
+      <div
+        className="relative min-h-0 w-full flex-1 bg-zinc-100 dark:bg-zinc-900"
+        ref={containerRef}
+      >
         {!mapReady ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-500">{t("loadingMap")}</div>
         ) : null}
         {mapReady ? (
           <>
+            {pins.length === 0 ? (
+              <p className="pointer-events-none absolute bottom-12 start-2 end-2 z-[300] text-center text-xs leading-snug text-zinc-600 dark:text-zinc-400 sm:bottom-14 sm:text-sm">
+                {filterCategorySlug ? t("noPinsInCategory") : t("noPins")}
+              </p>
+            ) : null}
             {locateMapError ? (
               <div
                 className="absolute start-2 end-2 bottom-2 z-[401] rounded-lg border border-zinc-200 bg-white/95 p-2 text-center text-xs shadow-lg dark:border-zinc-600 dark:bg-zinc-950/95"
@@ -620,12 +628,6 @@ export function LiveMapClient({ userId, categories }: Props) {
           </>
         ) : null}
       </div>
-
-      {pins.length === 0 && mapReady ? (
-        <p className="px-3 py-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
-          {filterCategorySlug ? t("noPinsInCategory") : t("noPins")}
-        </p>
-      ) : null}
     </div>
   );
 }
