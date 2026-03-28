@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { CreateCategoryForm, DeleteCategoryForm, EditCategoryForm } from "@/components/admin-category-forms";
 import { getAllCategoriesForAdmin } from "@/lib/categories/admin-queries";
@@ -8,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminCategoriesPage() {
   const rows = await getAllCategoriesForAdmin();
+  const t = await getTranslations("adminCategories");
 
   return (
     <div className={adminUi.page}>
@@ -19,7 +21,7 @@ export default async function AdminCategoriesPage() {
 
       <p className="text-sm text-[var(--admin-text-secondary)]">
         المعرف (slug) يُخزَّن في الإعلانات؛ تغييره يحدّث الإعلانات تلقائياً. لا يمكن حذف تصنيف ما دامت إعلانات
-        تستخدمه.
+        تستخدمه. خانة «تصنيف مدفوع» تطبّق عند تفعيل فرض الاشتراكات في لوحة الاشتراكات.
       </p>
 
       <CreateCategoryForm />
@@ -35,6 +37,7 @@ export default async function AdminCategoriesPage() {
           <thead>
             <tr className={adminUi.theadRow}>
               <th className={adminUi.th}>عدد الإعلانات</th>
+              <th className={adminUi.th}>النوع</th>
               <th className={adminUi.th}>التصنيف</th>
             </tr>
           </thead>
@@ -43,6 +46,17 @@ export default async function AdminCategoriesPage() {
               <tr key={row.id} className={`${adminUi.tbodyRow} align-middle`}>
                 <td className={`${adminUi.td} whitespace-nowrap text-center tabular-nums`}>
                   {new Intl.NumberFormat("ar-EG").format(row.listing_count)}
+                </td>
+                <td className={`${adminUi.td} whitespace-nowrap text-center`}>
+                  {row.requires_subscription ? (
+                    <span className="rounded-sm bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100">
+                      {t("badgePaid")}
+                    </span>
+                  ) : (
+                    <span className="rounded-sm bg-zinc-100 px-2 py-0.5 text-xs font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                      {t("badgeFree")}
+                    </span>
+                  )}
                 </td>
                 <td className={adminUi.td}>
                   <div className="flex flex-nowrap items-start gap-3">

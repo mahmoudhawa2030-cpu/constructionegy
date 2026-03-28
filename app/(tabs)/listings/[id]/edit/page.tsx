@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ListingForm, type ListingFormInitial } from "@/components/listing-form";
 import { getCategoriesForListingForm } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
+import { canAccessFeature, isSubscriptionEnforcementOn } from "@/lib/subscriptions/can-access";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,10 @@ export default async function EditListingPage({ params }: PageProps) {
 
   const categories = await getCategoriesForListingForm([listing.category]);
 
+  const enforcementOn = await isSubscriptionEnforcementOn();
+  const canUsePaidCategories =
+    !enforcementOn || (await canAccessFeature(user.id, "premium_listings"));
+
   const initial: ListingFormInitial = {
     title: listing.title,
     category: listing.category,
@@ -58,7 +63,13 @@ export default async function EditListingPage({ params }: PageProps) {
           عدّل الحقول ثم احفظ. الصور الجديدة تُضاف إلى الموجودة حتى {10} صور.
         </p>
       </div>
-      <ListingForm categories={categories} initial={initial} listingId={id} mode="edit" />
+      <ListingForm
+        canUsePaidCategories={canUsePaidCategories}
+        categories={categories}
+        initial={initial}
+        listingId={id}
+        mode="edit"
+      />
     </div>
   );
 }

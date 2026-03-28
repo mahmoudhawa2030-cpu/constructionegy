@@ -25,6 +25,7 @@ export async function createCategoryFromForm(
     label_ar: String(formData.get("label_ar") ?? "").trim(),
     sort_order: String(formData.get("sort_order") ?? "0"),
     is_active: formData.get("is_active") === "on",
+    requires_subscription: formData.get("requires_subscription") === "on",
   };
 
   const slugParsed = slugSchema.safeParse(raw.slug);
@@ -43,6 +44,7 @@ export async function createCategoryFromForm(
     label_ar: raw.label_ar,
     sort_order: sortNum,
     is_active: raw.is_active,
+    requires_subscription: raw.requires_subscription,
   });
 
   if (error) {
@@ -75,6 +77,7 @@ export async function updateCategoryFromForm(
     label_ar: String(formData.get("label_ar") ?? "").trim(),
     sort_order: String(formData.get("sort_order") ?? "0"),
     is_active: formData.get("is_active") === "on",
+    requires_subscription: formData.get("requires_subscription") === "on",
   };
 
   const slugParsed = slugSchema.safeParse(raw.slug);
@@ -95,6 +98,7 @@ export async function updateCategoryFromForm(
       label_ar: raw.label_ar,
       sort_order: sortNum,
       is_active: raw.is_active,
+      requires_subscription: raw.requires_subscription,
     })
     .eq("id", id);
 

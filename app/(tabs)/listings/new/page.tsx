@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ListingForm } from "@/components/listing-form";
-import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
-import { canAccessFeature } from "@/lib/subscriptions/can-access";
+import { getActiveCategoriesForSelect, hasActiveFreeListingCategory } from "@/lib/categories/queries";
+import { canAccessFeature, isSubscriptionEnforcementOn } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -17,11 +17,19 @@ export default async function NewListingPage() {
     redirect("/login?next=/listings/new");
   }
 
-  if (!(await canAccessFeature(user.id, "premium_listings"))) {
-    redirect("/subscription-required?feature=premium_listings");
-  }
-
   const categories = await getActiveCategoriesForSelect();
+
+  const enforcementOn = await isSubscriptionEnforcementOn();
+  let canUsePaidCategories = true;
+  if (enforcementOn) {
+    canUsePaidCategories = await canAccessFeature(user.id, "premium_listings");
+    if (!canUsePaidCategories) {
+      const hasFree = await hasActiveFreeListingCategory();
+      if (!hasFree) {
+        redirect("/subscription-required?feature=premium_listings");
+      }
+    }
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-8">
@@ -38,7 +46,7 @@ export default async function NewListingPage() {
           المعرض العام.
         </p>
       </div>
-      <ListingForm categories={categories} />
+      <ListingForm canUsePaidCategories={canUsePaidCategories} categories={categories} />
     </div>
   );
 }

@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { categorySlugExists } from "@/lib/categories/queries";
 import { createListingSchema, updateListingSchema } from "@/lib/listings/schema";
 import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
+import { canPostListingInCategory } from "@/lib/subscriptions/can-access";
 
 function isAllowedPublicImageUrl(url: string, supabaseOrigin: string): boolean {
   try {
@@ -43,6 +45,11 @@ export async function createListing(input: unknown): Promise<CreateListingResult
     if (!isAllowedPublicImageUrl(imageUrl, supabaseUrl)) {
       return { ok: false, message: "رابط صورة غير مسموح." };
     }
+  }
+
+  if (!(await canPostListingInCategory(user.id, body.category))) {
+    const t = await getTranslations("listingActions");
+    return { ok: false, message: t("paidCategoryBlocked") };
   }
 
   const { data, error } = await supabase
@@ -92,7 +99,7 @@ export async function updateListing(
 
   const { data: existing, error: fetchErr } = await supabase
     .from("listings")
-    .select("id, user_id")
+    .select("id, user_id, category")
     .eq("id", listingId)
     .maybeSingle();
 
@@ -113,6 +120,11 @@ export async function updateListing(
   const exists = await categorySlugExists(body.category);
   if (!exists) {
     return { ok: false, message: "التصنيف غير موجود." };
+  }
+
+  if (body.category !== existing.category && !(await canPostListingInCategory(user.id, body.category))) {
+    const t = await getTranslations("listingActions");
+    return { ok: false, message: t("paidCategoryBlocked") };
   }
 
   const { url: supabaseUrl } = getSupabasePublicEnv();

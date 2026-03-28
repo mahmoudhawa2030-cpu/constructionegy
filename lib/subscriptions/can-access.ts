@@ -47,3 +47,37 @@ export async function canAccessFeature(
 
   return data !== null;
 }
+
+/**
+ * When enforcement is off, any active category is allowed.
+ * When on, free categories (`requires_subscription = false`) are allowed for everyone;
+ * paid categories require `premium_listings` or `all` (same as RLS on listings insert/update).
+ */
+export async function canPostListingInCategory(userId: string, categorySlug: string): Promise<boolean> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
+    return false;
+  }
+
+  if (!(await isSubscriptionEnforcementOn())) {
+    return true;
+  }
+
+  const { data: cat } = await supabase
+    .from("categories")
+    .select("requires_subscription")
+    .eq("slug", categorySlug)
+    .maybeSingle();
+
+  if (!cat) {
+    return false;
+  }
+  if (!cat.requires_subscription) {
+    return true;
+  }
+
+  return canAccessFeature(userId, "premium_listings");
+}

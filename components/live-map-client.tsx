@@ -473,6 +473,7 @@ export function LiveMapClient({ userId, categories, canUseLiveMap }: Props) {
           categories.find((c) => c.slug === liveCategorySlug) ?? {
             slug: liveCategorySlug,
             label_ar: liveCategorySlug,
+            requires_subscription: false,
           },
           locale,
         )

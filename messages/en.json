@@ -138,7 +138,7 @@
   },
   "subscriptionRequired": {
     "title": "Subscription required",
-    "bodyGeneric": "This area is limited while subscription enforcement is on. An admin must assign you an active subscription for the right feature (or “all features”).",
+    "bodyGeneric": "This area is limited while subscription enforcement is on. An admin must assign you an active subscription for the right feature (or “all features”). Listing categories can be set to free or paid in Admin → Categories; free categories stay open without premium.",
     "bodyWithFeature": "“{feature}” is not included in your current access while enforcement is on. Contact an administrator to activate a subscription.",
     "hintAdmin": "Gated features:",
     "ctaHome": "Home",
@@ -222,6 +222,20 @@
     "chats": "Chat moderation",
     "categories": "Categories",
     "site": "Site"
+  },
+  "adminCategories": {
+    "requiresSubscription": "Paid category",
+    "requiresSubscriptionHint": "When subscription enforcement is on, only users with premium listings (or “all”) can post in this category. New categories stay free until you enable this.",
+    "badgeFree": "Free",
+    "badgePaid": "Paid"
+  },
+  "listingForm": {
+    "categoryPaidTag": "(paid)",
+    "paidCategoriesHint": "Categories marked “paid” need an active premium listing subscription while enforcement is on.",
+    "upgradeLink": "Subscription options"
+  },
+  "listingActions": {
+    "paidCategoryBlocked": "This category requires a premium listing subscription while enforcement is on. Choose another category or contact an admin."
   },
   "adminUserEdit": {
     "emailLabel": "Email",

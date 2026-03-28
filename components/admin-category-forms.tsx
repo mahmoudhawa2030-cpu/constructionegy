@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   createCategoryFromForm,
@@ -12,6 +13,7 @@ import type { CategoryRow } from "@/lib/categories/admin-queries";
 import { adminUi } from "@/lib/admin-ui";
 
 export function CreateCategoryForm() {
+  const t = useTranslations("adminCategories");
   const [state, formAction, pending] = useActionState(createCategoryFromForm, null as CategoryActionState | null);
 
   return (
@@ -45,6 +47,13 @@ export function CreateCategoryForm() {
           <input className={adminUi.checkbox} defaultChecked name="is_active" type="checkbox" />
           <span className={adminUi.label}>مفعّل</span>
         </label>
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+          <span className="flex cursor-pointer items-center gap-2">
+            <input className={adminUi.checkbox} name="requires_subscription" type="checkbox" />
+            <span className={adminUi.label}>{t("requiresSubscription")}</span>
+          </span>
+          <span className="text-xs text-[var(--admin-text-secondary)]">{t("requiresSubscriptionHint")}</span>
+        </label>
       </div>
       {state?.ok === false ? (
         <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>
@@ -60,6 +69,7 @@ export function CreateCategoryForm() {
 }
 
 export function EditCategoryForm({ row }: { row: CategoryRow }) {
+  const t = useTranslations("adminCategories");
   const [state, formAction, pending] = useActionState(updateCategoryFromForm, null as CategoryActionState | null);
 
   return (
@@ -96,6 +106,18 @@ export function EditCategoryForm({ row }: { row: CategoryRow }) {
             type="checkbox"
           />
           <span className={adminUi.label}>مفعّل</span>
+        </label>
+        <label
+          className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-xs"
+          title={t("requiresSubscriptionHint")}
+        >
+          <input
+            className={adminUi.checkbox}
+            defaultChecked={Boolean(row.requires_subscription)}
+            name="requires_subscription"
+            type="checkbox"
+          />
+          <span className={adminUi.label}>{t("requiresSubscription")}</span>
         </label>
         <button className={`${adminUi.btnPrimary} shrink-0`} disabled={pending} type="submit">
           {pending ? "…" : "حفظ"}

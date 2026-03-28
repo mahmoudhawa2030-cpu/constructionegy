@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import type { CategoryOption } from "@/lib/categories/queries";
@@ -33,13 +35,22 @@ type ListingFormProps = {
   listingId?: string;
   initial?: ListingFormInitial;
   categories: CategoryOption[];
+  /** When false, paid categories are not selectable (create) or shown disabled unless current (edit). */
+  canUsePaidCategories: boolean;
 };
 
 function safeFileName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || "image";
 }
 
-export function ListingForm({ mode = "create", listingId, initial, categories }: ListingFormProps) {
+export function ListingForm({
+  mode = "create",
+  listingId,
+  initial,
+  categories,
+  canUsePaidCategories,
+}: ListingFormProps) {
+  const tForm = useTranslations("listingForm");
   const router = useRouter();
   const isEdit = mode === "edit" && Boolean(listingId && initial);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +62,14 @@ export function ListingForm({ mode = "create", listingId, initial, categories }:
     initial?.category && !knownSlugs.has(initial.category) ? initial.category : null;
   const legacyLocation =
     initial?.location && !isEgyptGovernorateAr(initial.location) ? initial.location : null;
+
+  const firstAllowedSlug =
+    categories.find((c) => !c.requires_subscription || canUsePaidCategories)?.slug ?? "";
+
+  const showPaidHint =
+    categories.some((c) => c.requires_subscription) &&
+    !canUsePaidCategories &&
+    categories.length > 0;
 
   async function uploadFilesToStorage(files: File[], userId: string): Promise<string[]> {
     const supabase = createClient();
@@ -237,7 +256,7 @@ export function ListingForm({ mode = "create", listingId, initial, categories }:
                 ? initial.category
                 : legacyCategory
                   ? legacyCategory
-                  : categories[0]?.slug ?? ""
+                  : firstAllowedSlug || categories[0]?.slug || ""
             }
             key={isEdit ? `${listingId}-cat` : "cat"}
             name="category"
@@ -251,13 +270,32 @@ export function ListingForm({ mode = "create", listingId, initial, categories }:
                 {labelForCategorySlug(legacyCategory)} (قديم / غير في القائمة)
               </option>
             ) : null}
-            {categories.map(({ slug, label_ar }) => (
-              <option key={slug} value={slug}>
-                {label_ar}
-              </option>
-            ))}
+            {categories.map((c) => {
+              const isPaid = c.requires_subscription;
+              const disabled =
+                isPaid &&
+                !canUsePaidCategories &&
+                !(isEdit && initial?.category === c.slug);
+              return (
+                <option key={c.slug} disabled={disabled} value={c.slug}>
+                  {c.label_ar}
+                  {isPaid ? ` ${tForm("categoryPaidTag")}` : ""}
+                </option>
+              );
+            })}
           </select>
         )}
+        {showPaidHint ? (
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            {tForm("paidCategoriesHint")}{" "}
+            <Link
+              className="font-medium text-zinc-800 underline hover:no-underline dark:text-zinc-200"
+              href="/subscription-required?feature=premium_listings"
+            >
+              {tForm("upgradeLink")}
+            </Link>
+          </p>
+        ) : null}
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
