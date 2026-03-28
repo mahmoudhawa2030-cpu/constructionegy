@@ -226,11 +226,6 @@
     "subscriptionServices": "خدمات الاشتراك",
     "site": "الموقع"
   },
-  "adminUsersPage": {
-    "colPaidService": "الخدمة المدفوعة",
-    "paidServiceNone": "—",
-    "subscriptionsManageAria": "إدارة اشتراكات {name}"
-  },
   "adminSubscriptionsPage": {
     "title": "الاشتراكات",
     "back": "العودة للنظرة العامة",

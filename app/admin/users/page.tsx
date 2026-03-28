@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { getLocale, getTranslations } from "next-intl/server";
 
 import { AdminUsersPhoneSearch } from "@/components/admin-users-phone-search";
 import { AdminUsersPresenceFilter } from "@/components/admin-users-presence-filter";
@@ -35,9 +34,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   const { presence: presenceRaw, phone: phoneRaw } = await searchParams;
   const presence = parsePresenceFilter(presenceRaw);
   const phoneSearch = typeof phoneRaw === "string" ? phoneRaw.trim() : "";
-  const tUsers = await getTranslations("adminUsersPage");
-  const locale = await getLocale();
-  const isEn = locale === "en";
 
   const supabase = await createClient();
   const {
@@ -76,59 +72,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
   }
 
   const rows = profiles ?? [];
-
-  const userIds = rows.map((r) => r.id);
-  type ServiceMeta = { label_ar: string; label_en: string; sort_order: number };
-  const serviceMeta = new Map<string, ServiceMeta>();
-  const subsByUser = new Map<string, { feature: string; valid_until: string | null }[]>();
-
-  if (userIds.length > 0) {
-    const [subsRes, servicesRes] = await Promise.all([
-      supabase.from("subscriptions").select("user_id, feature, valid_until").in("user_id", userIds),
-      supabase
-        .from("subscription_services")
-        .select("feature_key, label_ar, label_en, sort_order")
-        .order("sort_order", { ascending: true }),
-    ]);
-
-    for (const s of servicesRes.data ?? []) {
-      serviceMeta.set(s.feature_key, {
-        label_ar: s.label_ar,
-        label_en: s.label_en,
-        sort_order: s.sort_order,
-      });
-    }
-
-    for (const sub of subsRes.data ?? []) {
-      const list = subsByUser.get(sub.user_id) ?? [];
-      list.push({ feature: sub.feature, valid_until: sub.valid_until });
-      subsByUser.set(sub.user_id, list);
-    }
-  }
-
-  const nowMs = Date.now();
-  const listSeparator = isEn ? ", " : "، ";
-
-  function activePaidServiceLabels(userId: string): string[] {
-    const subs = subsByUser.get(userId) ?? [];
-    const activeFeatures = new Set<string>();
-    for (const s of subs) {
-      const expires = s.valid_until ? new Date(s.valid_until).getTime() : null;
-      const active = expires === null || expires > nowMs;
-      if (active) activeFeatures.add(s.feature);
-    }
-    const sorted = [...activeFeatures].sort((a, b) => {
-      const oa = serviceMeta.get(a)?.sort_order ?? 9999;
-      const ob = serviceMeta.get(b)?.sort_order ?? 9999;
-      if (oa !== ob) return oa - ob;
-      return a.localeCompare(b);
-    });
-    return sorted.map((f) => {
-      const meta = serviceMeta.get(f);
-      if (meta) return isEn ? meta.label_en : meta.label_ar;
-      return f;
-    });
-  }
 
   return (
     <div className={`${adminUi.page} min-w-0`}>
@@ -172,7 +115,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
           <thead>
             <tr className={adminUi.theadRow}>
               <th className={adminUi.th}>الاسم</th>
-              <th className={adminUi.th}>{tUsers("colPaidService")}</th>
               <th className={adminUi.th}>النوع</th>
               <th className={adminUi.th}>هاتف</th>
               <th className={adminUi.th}>الموقع</th>
@@ -190,9 +132,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
               const lastSeen = row.last_seen_at ? new Date(row.last_seen_at) : null;
               const lastActive = row.last_active_at ? new Date(row.last_active_at) : null;
               const online = row.last_seen_at ? isUserOnlineNow(row.last_seen_at) : false;
-              const paidLabels = activePaidServiceLabels(row.id);
-              const paidText =
-                paidLabels.length > 0 ? paidLabels.join(listSeparator) : tUsers("paidServiceNone");
 
               return (
                 <tr key={row.id} className={adminUi.tbodyRow}>
@@ -203,22 +142,6 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                     >
                       {row.full_name}
                     </Link>
-                  </td>
-                  <td className={`${adminUi.td} max-w-[14rem]`}>
-                    {paidLabels.length > 0 ? (
-                      <Link
-                        aria-label={tUsers("subscriptionsManageAria", {
-                          name: row.full_name?.trim() || row.id.slice(0, 8),
-                        })}
-                        className="text-sm font-medium text-[var(--admin-brand)] hover:underline"
-                        href={`/admin/users/${row.id}/subscriptions`}
-                        title={paidText}
-                      >
-                        {paidText}
-                      </Link>
-                    ) : (
-                      <span className="text-sm text-[var(--admin-text-secondary)]">{paidText}</span>
-                    )}
                   </td>
                   <td className={`${adminUi.td} whitespace-nowrap`}>{USER_TYPE_LABELS[row.user_type]}</td>
                   <td className={`${adminUi.tdMuted} whitespace-nowrap tabular-nums`} dir="ltr">
