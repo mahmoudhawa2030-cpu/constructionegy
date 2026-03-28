@@ -216,6 +216,7 @@
     "closeLive": "Close live location",
     "myProfile": "My account",
     "loadingMap": "Loading map…",
+    "myLocationAria": "My location — center the map on your current position",
     "locating": "Getting your location…",
     "errorGeolocation": "Could not get your location. Check settings and try again.",
     "errorGeolocationPermission": "Location permission was denied. Allow location access in the browser or app settings.",

@@ -83,6 +83,11 @@ export function LiveMapClient({ userId, categories }: Props) {
   const liveCategorySlugRef = useRef("");
   liveCategorySlugRef.current = liveCategorySlug;
 
+  const [myLocationBusy, setMyLocationBusy] = useState(false);
+  const [locateMapError, setLocateMapError] = useState<"geoPermission" | "locationServicesOff" | "geoFailed" | null>(
+    null,
+  );
+
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const categoriesInitializedRef = useRef(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -342,6 +347,34 @@ export function LiveMapClient({ userId, categories }: Props) {
     void startLive();
   }, [startLive]);
 
+  const onMyLocationClick = useCallback(async () => {
+    const map = mapRef.current;
+    if (!map || myLocationBusy) return;
+    setMyLocationBusy(true);
+    setLocateMapError(null);
+    try {
+      const { lat, lng } = await getPrecisePosition();
+      const z = Math.max(map.getZoom(), 14);
+      map.setView([lat, lng], z);
+      requestAnimationFrame(() => map.invalidateSize());
+    } catch (e: unknown) {
+      const msg =
+        postgrestMessage(e) ?? (e instanceof Error ? e.message : undefined);
+      if (e instanceof Error && e.message === "permission_denied") {
+        setLocateMapError("geoPermission");
+      } else if (
+        (e instanceof Error && e.message === "location_services_disabled") ||
+        (msg && /location services are not enabled/i.test(msg))
+      ) {
+        setLocateMapError("locationServicesOff");
+      } else {
+        setLocateMapError("geoFailed");
+      }
+    } finally {
+      setMyLocationBusy(false);
+    }
+  }, [myLocationBusy]);
+
   const onCloseLive = useCallback(async () => {
     setBusy(true);
     setError(null);
@@ -486,6 +519,51 @@ export function LiveMapClient({ userId, categories }: Props) {
       <div className="relative min-h-[min(85dvh,44rem)] flex-1 bg-zinc-100 dark:bg-zinc-900" ref={containerRef}>
         {!mapReady ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-zinc-500">{t("loadingMap")}</div>
+        ) : null}
+        {mapReady ? (
+          <>
+            <button
+              aria-busy={myLocationBusy}
+              aria-label={myLocationBusy ? t("locating") : t("myLocationAria")}
+              className="absolute end-3 bottom-16 z-[400] flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-zinc-200/90 hover:bg-zinc-50 disabled:opacity-60 dark:bg-zinc-800 dark:ring-zinc-600 dark:hover:bg-zinc-700"
+              disabled={myLocationBusy}
+              onClick={() => void onMyLocationClick()}
+              type="button"
+            >
+              <svg aria-hidden className="h-6 w-6" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" fill="none" r="7" stroke="#93c5fd" strokeWidth="2" />
+                <circle cx="12" cy="12" fill="#2563eb" r="3" />
+              </svg>
+            </button>
+            {locateMapError ? (
+              <div
+                className="absolute start-2 end-2 bottom-2 z-[401] rounded-lg border border-zinc-200 bg-white/95 p-2 text-center text-xs shadow-lg dark:border-zinc-600 dark:bg-zinc-950/95"
+                role="alert"
+              >
+                {locateMapError === "geoPermission" ? (
+                  <p className="text-red-600 dark:text-red-400">{t("errorGeolocationPermission")}</p>
+                ) : null}
+                {locateMapError === "locationServicesOff" ? (
+                  <div className="space-y-2">
+                    <p className="font-medium text-red-600 dark:text-red-400">{t("errorLocationServicesOff")}</p>
+                    <p className="leading-relaxed text-zinc-600 dark:text-zinc-400">{t("errorLocationServicesOffHint")}</p>
+                    {Capacitor.getPlatform() === "android" ? (
+                      <button
+                        className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+                        onClick={() => tryOpenAndroidLocationSettings()}
+                        type="button"
+                      >
+                        {t("openLocationSettings")}
+                      </button>
+                    ) : null}
+                  </div>
+                ) : null}
+                {locateMapError === "geoFailed" ? (
+                  <p className="text-red-600 dark:text-red-400">{t("errorGeolocation")}</p>
+                ) : null}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </div>
 
