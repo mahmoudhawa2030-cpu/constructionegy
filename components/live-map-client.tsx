@@ -35,7 +35,6 @@ function categoryMenuLabel(c: CategoryOption, locale: string): string {
 const LIVE_SESSION_MS = 2 * 60 * 60 * 1000;
 const HEARTBEAT_MS = 90_000;
 const POLL_MS = 35_000;
-const CONSENT_KEY = "cegy_live_map_gps_v1";
 const DEFAULT_CENTER: [number, number] = [26.82, 30.8];
 const DEFAULT_ZOOM = 6;
 
@@ -75,7 +74,6 @@ export function LiveMapClient({ userId, categories }: Props) {
   const [pins, setPins] = useState<PinRow[]>([]);
   const [mapReady, setMapReady] = useState(false);
   const [isLive, setIsLive] = useState(false);
-  const [consentOpen, setConsentOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saveErrorDetail, setSaveErrorDetail] = useState<string | null>(null);
@@ -267,7 +265,7 @@ export function LiveMapClient({ userId, categories }: Props) {
     requestAnimationFrame(() => map.invalidateSize());
   }, [categories, locale, mapReady, pins, t, userId, viewerPos]);
 
-  const startLiveAfterConsent = useCallback(async () => {
+  const startLive = useCallback(async () => {
     setBusy(true);
     setError(null);
     try {
@@ -335,26 +333,14 @@ export function LiveMapClient({ userId, categories }: Props) {
       }
     } finally {
       setBusy(false);
-      setConsentOpen(false);
     }
   }, [categories.length, stopHeartbeat, upsertPin]);
 
   const onAvailableClick = useCallback(() => {
     setError(null);
     setSaveErrorDetail(null);
-    if (typeof window !== "undefined" && window.sessionStorage.getItem(CONSENT_KEY) === "1") {
-      void startLiveAfterConsent();
-      return;
-    }
-    setConsentOpen(true);
-  }, [startLiveAfterConsent]);
-
-  const onConsentAccept = useCallback(() => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(CONSENT_KEY, "1");
-    }
-    void startLiveAfterConsent();
-  }, [startLiveAfterConsent]);
+    void startLive();
+  }, [startLive]);
 
   const onCloseLive = useCallback(async () => {
     setBusy(true);
@@ -507,36 +493,6 @@ export function LiveMapClient({ userId, categories }: Props) {
         <p className="px-3 py-2 text-center text-sm text-zinc-500 dark:text-zinc-400">
           {filterCategorySlug ? t("noPinsInCategory") : t("noPins")}
         </p>
-      ) : null}
-
-      {consentOpen ? (
-        <div
-          aria-modal="true"
-          className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 p-4 sm:items-center"
-          role="dialog"
-        >
-          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-zinc-200 bg-white p-4 shadow-xl dark:border-zinc-700 dark:bg-zinc-950">
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{t("consentTitle")}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{t("consentBody")}</p>
-            <div className="mt-4 flex flex-wrap justify-end gap-2">
-              <button
-                className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-200 dark:hover:bg-zinc-900"
-                onClick={() => setConsentOpen(false)}
-                type="button"
-              >
-                {t("consentCancel")}
-              </button>
-              <button
-                className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
-                disabled={busy}
-                onClick={onConsentAccept}
-                type="button"
-              >
-                {t("consentAccept")}
-              </button>
-            </div>
-          </div>
-        </div>
       ) : null}
     </div>
   );
