@@ -3,20 +3,24 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 
-import { setSubscriptionEnforcementFromForm, type SubscriptionActionState } from "@/app/admin/subscriptions/actions";
+import {
+  setSubscriptionEnforcementFromForm,
+  type SubscriptionEnforcementActionState,
+} from "@/app/admin/subscriptions/actions";
 import { adminUi } from "@/lib/admin-ui";
 
 type Props = { initialEnabled: boolean };
 
 export function AdminSubscriptionEnforcementForm({ initialEnabled }: Props) {
   const t = useTranslations("adminSubscriptions.enforcement");
-  const [state, action, pending] = useActionState<SubscriptionActionState | null, FormData>(
+  const [state, action, pending] = useActionState<SubscriptionEnforcementActionState | null, FormData>(
     setSubscriptionEnforcementFromForm,
     null,
   );
 
   return (
     <form action={action} className="flex flex-col gap-3">
+      <h2 className={`${adminUi.sectionTitle} text-sm`}>{t("widgetTitle")}</h2>
       <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--admin-text)]">
         <input
           className={adminUi.checkbox}

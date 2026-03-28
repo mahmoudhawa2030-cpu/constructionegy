@@ -150,7 +150,9 @@
       "label": "Require subscriptions for RFQ, live map presence, and adding listings",
       "hint": "When off, logged-in users keep previous access. When on, each user needs a matching row in Subscriptions (or “all features”). The same flag drives Postgres RLS—keep it in sync from here only.",
       "submit": "Save enforcement setting",
-      "submitting": "Saving…"
+      "submitting": "Saving…",
+      "savedOn": "Enforcement is now ON. Paid services and paid categories apply; users without a subscription are blocked.",
+      "savedOff": "Enforcement is now OFF. Everyone keeps access regardless of free/paid service settings (until you turn enforcement back on)."
     }
   },
   "rfqPage": {
@@ -228,11 +230,13 @@
     "title": "Subscriptions",
     "back": "Back to overview",
     "body": "Assign or edit a user’s subscription from the users table (open a user, then Subscriptions). Define which services are free or paid under Subscription services.",
+    "enforcementReminder": "Important: “Paid” on Subscription services only restricts users when Enforcement above is switched ON. If enforcement is off, all logged-in users can still use RFQ, the map, and listings.",
     "usersLink": "Users — open a profile to manage subscriptions",
     "servicesLink": "Subscription services — free / paid per feature key"
   },
   "adminSubscriptionServices": {
     "pageTitle": "Subscription services (free / paid)",
+    "subscriptionsHubLink": "Subscriptions (enforcement)",
     "backOverview": "Back to overview",
     "intro": "Each row is a feature key used in user subscriptions (same list as the “Feature” dropdown when adding a subscription). When subscription enforcement is on, “Paid” services require an active subscription row for that key or “all”. “Free” stays open to everyone. New keys you add appear in the admin subscription form once saved; wiring new gates in the app still needs a developer for pages and RLS if required.",
     "createTitle": "Add future service",
@@ -255,7 +259,10 @@
     "colActions": "Edit",
     "badgeFree": "Free",
     "badgePaid": "Paid",
-    "emptyHint": "No rows — run the subscription_services migration on Supabase."
+    "emptyHint": "No rows — run the subscription_services migration on Supabase.",
+    "enforcementOffTitle": "Subscription enforcement is OFF",
+    "enforcementOffBody": "Free/paid flags here do not block users until you enable enforcement. Turn it on under Subscriptions.",
+    "enforcementOffCta": "Open Subscriptions → turn on enforcement"
   },
   "adminCategories": {
     "requiresSubscription": "Paid category",

@@ -6,6 +6,7 @@ import {
   EditSubscriptionServiceForm,
 } from "@/components/admin-subscription-services-forms";
 import { adminUi } from "@/lib/admin-ui";
+import { isSubscriptionEnforcementOn } from "@/lib/subscriptions/can-access";
 import { getSubscriptionServicesOrdered } from "@/lib/subscriptions/services-queries";
 
 export const dynamic = "force-dynamic";
@@ -13,15 +14,36 @@ export const dynamic = "force-dynamic";
 export default async function AdminSubscriptionServicesPage() {
   const rows = await getSubscriptionServicesOrdered();
   const t = await getTranslations("adminSubscriptionServices");
+  const enforcementOn = await isSubscriptionEnforcementOn();
 
   return (
     <div className={adminUi.page}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className={adminUi.pageTitle}>{t("pageTitle")}</h1>
-        <Link className={adminUi.linkBack} href="/admin">
-          {t("backOverview")}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link className={adminUi.linkBack} href="/admin/subscriptions">
+            {t("subscriptionsHubLink")}
+          </Link>
+          <Link className={adminUi.linkBack} href="/admin">
+            {t("backOverview")}
+          </Link>
+        </div>
       </div>
+
+      {!enforcementOn ? (
+        <div
+          className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+          role="status"
+        >
+          <p className="font-semibold">{t("enforcementOffTitle")}</p>
+          <p className="mt-1">{t("enforcementOffBody")}</p>
+          <p className="mt-2">
+            <Link className="font-medium text-amber-900 underline hover:no-underline dark:text-amber-200" href="/admin/subscriptions">
+              {t("enforcementOffCta")}
+            </Link>
+          </p>
+        </div>
+      ) : null}
 
       <p className="text-sm text-[var(--admin-text-secondary)]">{t("intro")}</p>
 
