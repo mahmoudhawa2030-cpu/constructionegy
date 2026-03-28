@@ -37,6 +37,12 @@ const HEARTBEAT_MS = 90_000;
 const POLL_MS = 35_000;
 const DEFAULT_CENTER: [number, number] = [26.82, 30.8];
 const DEFAULT_ZOOM = 6;
+/** Matches OSM; caps map max zoom for flyTo “maximum”. */
+const MAP_MAX_ZOOM = 19;
+/** Seconds for flyTo animation when centering on GPS. */
+const LOCATE_FLY_DURATION_SEC = 1.55;
+
+const LOCATE_CONTROL_BTN_SVG = `<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="display:block"><circle cx="12" cy="12" fill="none" r="7" stroke="#93c5fd" stroke-width="2"/><circle cx="12" cy="12" fill="#2563eb" r="3"/></svg>`;
 
 function escapeHtml(s: string): string {
   return s
@@ -91,6 +97,8 @@ export function LiveMapClient({ userId, categories }: Props) {
   const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const categoriesInitializedRef = useRef(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const myLocationHandlerRef = useRef<() => void>(() => {});
+  const locateLeafletBtnRef = useRef<HTMLButtonElement | null>(null);
 
   const stopHeartbeat = useCallback(() => {
     if (heartbeatRef.current) {
@@ -188,11 +196,50 @@ export function LiveMapClient({ userId, categories }: Props) {
     import("leaflet").then((L) => {
       if (cancelled || !containerRef.current) return;
       leafletRef.current = L;
-      const map = L.map(containerRef.current, { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      const map = L.map(containerRef.current, { zoomControl: true, maxZoom: MAP_MAX_ZOOM }).setView(
+        DEFAULT_CENTER,
+        DEFAULT_ZOOM,
+      );
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors",
+        maxZoom: MAP_MAX_ZOOM,
       }).addTo(map);
       const group = L.layerGroup().addTo(map);
+
+      const LocateControl = L.Control.extend({
+        onAdd: () => {
+          const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+          const btn = L.DomUtil.create("button", "", container) as HTMLButtonElement;
+          btn.type = "button";
+          btn.innerHTML = LOCATE_CONTROL_BTN_SVG;
+          btn.style.width = "30px";
+          btn.style.height = "30px";
+          btn.style.padding = "0";
+          btn.style.margin = "0";
+          btn.style.display = "flex";
+          btn.style.alignItems = "center";
+          btn.style.justifyContent = "center";
+          btn.style.background = "#fff";
+          btn.style.color = "#333";
+          btn.style.border = "none";
+          btn.style.lineHeight = "30px";
+          btn.style.cursor = "pointer";
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.on(btn, "click", L.DomEvent.stopPropagation);
+          L.DomEvent.on(btn, "click", L.DomEvent.preventDefault);
+          L.DomEvent.on(btn, "click", () => {
+            myLocationHandlerRef.current();
+          });
+          locateLeafletBtnRef.current = btn;
+          return container;
+        },
+        onRemove: () => {
+          locateLeafletBtnRef.current = null;
+        },
+      });
+      // Stacked under default zoom +/- (same `topleft` corner).
+      new LocateControl({ position: "topleft" }).addTo(map);
+
       mapRef.current = map;
       groupRef.current = group;
       setMapReady(true);
@@ -201,6 +248,7 @@ export function LiveMapClient({ userId, categories }: Props) {
 
     return () => {
       cancelled = true;
+      locateLeafletBtnRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
       groupRef.current = null;
@@ -354,8 +402,14 @@ export function LiveMapClient({ userId, categories }: Props) {
     setLocateMapError(null);
     try {
       const { lat, lng } = await getPrecisePosition();
-      const z = Math.max(map.getZoom(), 14);
-      map.setView([lat, lng], z);
+      const maxZ =
+        typeof map.getMaxZoom === "function" && Number.isFinite(map.getMaxZoom())
+          ? map.getMaxZoom()
+          : MAP_MAX_ZOOM;
+      map.flyTo([lat, lng], maxZ, {
+        duration: LOCATE_FLY_DURATION_SEC,
+        easeLinearity: 0.2,
+      });
       requestAnimationFrame(() => map.invalidateSize());
     } catch (e: unknown) {
       const msg =
@@ -374,6 +428,19 @@ export function LiveMapClient({ userId, categories }: Props) {
       setMyLocationBusy(false);
     }
   }, [myLocationBusy]);
+
+  myLocationHandlerRef.current = () => {
+    void onMyLocationClick();
+  };
+
+  useEffect(() => {
+    const btn = locateLeafletBtnRef.current;
+    if (!mapReady || !btn) return;
+    btn.setAttribute("aria-label", myLocationBusy ? t("locating") : t("myLocationAria"));
+    if (myLocationBusy) btn.setAttribute("aria-busy", "true");
+    else btn.removeAttribute("aria-busy");
+    btn.disabled = myLocationBusy;
+  }, [mapReady, myLocationBusy, locale, t]);
 
   const onCloseLive = useCallback(async () => {
     setBusy(true);
@@ -522,19 +589,6 @@ export function LiveMapClient({ userId, categories }: Props) {
         ) : null}
         {mapReady ? (
           <>
-            <button
-              aria-busy={myLocationBusy}
-              aria-label={myLocationBusy ? t("locating") : t("myLocationAria")}
-              className="absolute end-3 bottom-16 z-[400] flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-md ring-1 ring-zinc-200/90 hover:bg-zinc-50 disabled:opacity-60 dark:bg-zinc-800 dark:ring-zinc-600 dark:hover:bg-zinc-700"
-              disabled={myLocationBusy}
-              onClick={() => void onMyLocationClick()}
-              type="button"
-            >
-              <svg aria-hidden className="h-6 w-6" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" fill="none" r="7" stroke="#93c5fd" strokeWidth="2" />
-                <circle cx="12" cy="12" fill="#2563eb" r="3" />
-              </svg>
-            </button>
             {locateMapError ? (
               <div
                 className="absolute start-2 end-2 bottom-2 z-[401] rounded-lg border border-zinc-200 bg-white/95 p-2 text-center text-xs shadow-lg dark:border-zinc-600 dark:bg-zinc-950/95"
