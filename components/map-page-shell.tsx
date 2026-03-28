@@ -16,12 +16,13 @@ const LiveMapClient = dynamic(
 type Props = {
   userId: string;
   categories: CategoryOption[];
+  canUseLiveMap: boolean;
 };
 
-export function MapPageShell({ userId, categories }: Props) {
+export function MapPageShell({ userId, categories, canUseLiveMap }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <LiveMapClient categories={categories} userId={userId} />
+      <LiveMapClient canUseLiveMap={canUseLiveMap} categories={categories} userId={userId} />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { AdminUserEditForm } from "@/components/admin-user-edit-form";
 import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,21 @@ export default async function AdminUserEditPage({ params }: PageProps) {
   const isSelf = currentUser?.id === profile.id;
   const isOtherAdmin = profile.is_admin && !isSelf;
 
+  const service = createServiceRoleClient();
+  let userEmail: string | null = null;
+  let emailLoadIssue: "service_role" | "fetch_failed" | null = null;
+
+  if (!service) {
+    emailLoadIssue = "service_role";
+  } else {
+    const { data: authData, error: authErr } = await service.auth.admin.getUserById(id);
+    if (authErr) {
+      emailLoadIssue = "fetch_failed";
+    } else {
+      userEmail = authData.user?.email ?? null;
+    }
+  }
+
   return (
     <div className={adminUi.page}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -47,7 +63,7 @@ export default async function AdminUserEditPage({ params }: PageProps) {
       {isOtherAdmin ? (
         <div className={adminUi.messageStripWarn}>لا يمكن تعديل بيانات إداري آخر من لوحة التحكم.</div>
       ) : (
-        <AdminUserEditForm profile={profile} />
+        <AdminUserEditForm email={userEmail} emailLoadIssue={emailLoadIssue} profile={profile} />
       )}
     </div>
   );

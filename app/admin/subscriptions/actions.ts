@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { requireAdmin } from "@/lib/auth/admin";
 import { SUBSCRIPTION_FEATURES } from "@/lib/subscriptions/features";
@@ -116,4 +117,36 @@ export async function updateSubscriptionFromForm(
 
   revalidateAll(userId);
   return { ok: true, message: "تم تحديث الاشتراك." };
+}
+
+/** One source of truth with Postgres RLS (`app_settings.enforce_subscriptions`). */
+export async function setSubscriptionEnforcementFromForm(
+  _prev: SubscriptionActionState | null,
+  formData: FormData,
+): Promise<SubscriptionActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const enabled =
+    formData.get("enforce_subscriptions") === "on" ||
+    formData.get("enforce_subscriptions") === "true";
+
+  const { error } = await supabase.from("app_settings").upsert(
+    {
+      key: "enforce_subscriptions",
+      value: enabled ? "true" : "false",
+    },
+    { onConflict: "key" },
+  );
+
+  if (error) {
+    return { ok: false, message: error.message };
+  }
+
+  revalidatePath("/admin/subscriptions");
+  const t = await getTranslations("adminSubscriptions.enforcement");
+  return {
+    ok: true,
+    message: enabled ? t("savedOn") : t("savedOff"),
+  };
 }

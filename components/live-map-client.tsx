@@ -66,9 +66,11 @@ function postgrestMessage(e: unknown): string | undefined {
 type Props = {
   userId: string;
   categories: CategoryOption[];
+  /** When false, map is view-only: no “Available now” / heartbeat (matches RLS). */
+  canUseLiveMap: boolean;
 };
 
-export function LiveMapClient({ userId, categories }: Props) {
+export function LiveMapClient({ userId, categories, canUseLiveMap }: Props) {
   const t = useTranslations("mapPage");
   const locale = useLocale();
   const supabase = useMemo(() => createClient(), []);
@@ -106,6 +108,10 @@ export function LiveMapClient({ userId, categories }: Props) {
       heartbeatRef.current = null;
     }
   }, []);
+
+  useEffect(() => {
+    if (!canUseLiveMap) stopHeartbeat();
+  }, [canUseLiveMap, stopHeartbeat]);
 
   useEffect(() => {
     if (categories.length === 0 || categoriesInitializedRef.current) return;
@@ -319,6 +325,7 @@ export function LiveMapClient({ userId, categories }: Props) {
   }, [categories, locale, mapReady, pins, t, userId, viewerPos]);
 
   const startLive = useCallback(async () => {
+    if (!canUseLiveMap) return;
     setBusy(true);
     setError(null);
     try {
@@ -387,7 +394,7 @@ export function LiveMapClient({ userId, categories }: Props) {
     } finally {
       setBusy(false);
     }
-  }, [categories.length, stopHeartbeat, upsertPin]);
+  }, [canUseLiveMap, categories.length, stopHeartbeat, upsertPin]);
 
   const onAvailableClick = useCallback(() => {
     setError(null);
@@ -493,13 +500,29 @@ export function LiveMapClient({ userId, categories }: Props) {
           </div>
         </div>
 
+        {!canUseLiveMap ? (
+          <div
+            className="mt-1 rounded-lg border border-amber-200 bg-amber-50 px-2 py-1.5 text-xs dark:border-amber-800 dark:bg-amber-950/40 sm:text-sm"
+            role="status"
+          >
+            <p className="text-amber-950 dark:text-amber-100">{t("subscriptionRequiredBanner")}</p>
+            <Link
+              aria-label={t("subscriptionRequiredLinkAria")}
+              className="mt-1 inline-block font-medium text-amber-900 underline hover:no-underline dark:text-amber-200"
+              href="/subscription-required?feature=live_map"
+            >
+              {t("subscriptionRequiredCta")}
+            </Link>
+          </div>
+        ) : null}
+
         <div className="mt-0.5 flex flex-wrap items-center gap-1.5 sm:mt-1">
           {!isLive ? (
             <>
               <select
                 aria-label={t("liveCategoryAria")}
                 className="max-w-[min(100%,16rem)] rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
-                disabled={categories.length === 0 || busy}
+                disabled={categories.length === 0 || busy || !canUseLiveMap}
                 value={liveCategorySlug}
                 onChange={(e) => setLiveCategorySlug(e.target.value)}
               >
@@ -515,7 +538,7 @@ export function LiveMapClient({ userId, categories }: Props) {
               </select>
               <button
                 className="rounded-lg bg-emerald-600 px-2.5 py-1 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-60"
-                disabled={busy || categories.length === 0}
+                disabled={busy || categories.length === 0 || !canUseLiveMap}
                 onClick={onAvailableClick}
                 type="button"
               >

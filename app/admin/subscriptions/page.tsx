@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
+import { AdminSubscriptionEnforcementForm } from "@/components/admin-subscription-enforcement-form";
 import { adminUi } from "@/lib/admin-ui";
 import { FEATURE_LABELS } from "@/lib/subscriptions/features";
 import { createClient } from "@/lib/supabase/server";
@@ -19,6 +21,14 @@ export default async function AdminSubscriptionsPage() {
 
   const active = rows.filter((r) => !r.valid_until || new Date(r.valid_until) > now);
   const expired = rows.filter((r) => r.valid_until && new Date(r.valid_until) <= now);
+
+  const { data: enforceRow } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "enforce_subscriptions")
+    .maybeSingle();
+  const enforcementOn = enforceRow?.value === "true";
+  const tEnf = await getTranslations("adminSubscriptions.enforcement");
 
   return (
     <div className={adminUi.page}>
@@ -41,6 +51,13 @@ export default async function AdminSubscriptionsPage() {
         <div className={adminUi.kpiNeutral}>
           <p className={adminUi.kpiLabel}>اشتراكات منتهية</p>
           <p className={adminUi.kpiValue}>{expired.length}</p>
+        </div>
+      </div>
+
+      <div className={adminUi.widget}>
+        <div className={adminUi.widgetHeader}>{tEnf("widgetTitle")}</div>
+        <div className={adminUi.widgetBody}>
+          <AdminSubscriptionEnforcementForm initialEnabled={enforcementOn} />
         </div>
       </div>
 

@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_settings: {
+        Row: {
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: {
+          key: string
+          value: string
+          updated_at?: string
+        }
+        Update: {
+          key?: string
+          value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
           created_at: string
@@ -654,6 +672,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      subscriptions_enforcement_enabled: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      user_has_active_subscription: {
+        Args: { p_user_id: string; p_feature: string }
+        Returns: boolean
+      }
       inbox_latest_message_rows: {
         Args: { p_chat_ids: string[] }
         Returns: {

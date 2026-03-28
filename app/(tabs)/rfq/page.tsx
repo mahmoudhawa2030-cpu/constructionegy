@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { RfqUpload } from "@/components/rfq-upload";
+import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,10 @@ export default async function RfqPage() {
 
   if (!user) {
     redirect(`/login?next=${encodeURIComponent("/rfq")}`);
+  }
+
+  if (!(await canAccessFeature(user.id, "rfq"))) {
+    redirect("/subscription-required?feature=rfq");
   }
 
   const t = await getTranslations("rfqPage");

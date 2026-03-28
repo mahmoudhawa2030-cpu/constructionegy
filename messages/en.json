@@ -136,6 +136,23 @@
     "defaultDisplayName": "User",
     "rfq": "RFQ — upload"
   },
+  "subscriptionRequired": {
+    "title": "Subscription required",
+    "bodyGeneric": "This area is limited while subscription enforcement is on. An admin must assign you an active subscription for the right feature (or “all features”).",
+    "bodyWithFeature": "“{feature}” is not included in your current access while enforcement is on. Contact an administrator to activate a subscription.",
+    "hintAdmin": "Gated features:",
+    "ctaHome": "Home",
+    "ctaProfile": "My account"
+  },
+  "adminSubscriptions": {
+    "enforcement": {
+      "widgetTitle": "Enforcement (app + database)",
+      "label": "Require subscriptions for RFQ, live map presence, and adding listings",
+      "hint": "When off, logged-in users keep previous access. When on, each user needs a matching row in Subscriptions (or “all features”). The same flag drives Postgres RLS—keep it in sync from here only.",
+      "submit": "Save enforcement setting",
+      "submitting": "Saving…"
+    }
+  },
   "rfqPage": {
     "title": "Request for quotation",
     "subtitle": "Upload spreadsheets (items) and supporting files. Sign in required.",
@@ -191,7 +208,8 @@
       "REPLACE_ATTACHMENT_UNUSED": "Replace was requested but no matching file was processed.",
       "SPREADSHEET_UNMAPPED_COLUMNS": "Some columns were not mapped and were ignored.",
       "UNKNOWN": "Something went wrong.",
-      "NETWORK": "Network error. Try again."
+      "NETWORK": "Network error. Try again.",
+      "SUBSCRIPTION_REQUIRED": "A subscription is required for RFQ. Contact an administrator or open the subscription info page."
     }
   },
   "admin": {
@@ -204,6 +222,13 @@
     "chats": "Chat moderation",
     "categories": "Categories",
     "site": "Site"
+  },
+  "adminUserEdit": {
+    "emailLabel": "Email",
+    "emailReadOnlyHint": "Sign-in email (read-only).",
+    "emailEmpty": "—",
+    "emailNeedsServiceRole": "Email appears here when SUPABASE_SERVICE_ROLE_KEY is set on the server (for example in Vercel project environment variables).",
+    "emailFetchFailed": "Could not load email from authentication."
   },
   "signOut": {
     "label": "Sign out"
@@ -236,7 +261,10 @@
     "distanceKm": "{km} km away",
     "contractor": "Contractor",
     "supplier": "Supplier",
-    "pollHint": "Others’ pins refresh about every minute. Your session extends when your position updates."
+    "pollHint": "Others’ pins refresh about every minute. Your session extends when your position updates.",
+    "subscriptionRequiredBanner": "Going live on the map requires an active subscription while enforcement is on.",
+    "subscriptionRequiredCta": "Learn more",
+    "subscriptionRequiredLinkAria": "Open subscription required information for the live map"
   },
   "listingCard": {
     "noImage": "No image",

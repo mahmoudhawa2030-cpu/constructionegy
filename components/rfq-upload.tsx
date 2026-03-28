@@ -107,6 +107,8 @@ export function RfqUpload({ initialDraftId = null }: Props) {
         return te("UNKNOWN");
       case "NETWORK":
         return te("NETWORK");
+      case "SUBSCRIPTION_REQUIRED":
+        return te("SUBSCRIPTION_REQUIRED");
       default:
         return t("errorsFallback", { code: c });
     }

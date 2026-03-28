@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { updateAdminUserProfile } from "@/app/admin/users/actions";
 import { adminUi } from "@/lib/admin-ui";
@@ -19,9 +20,13 @@ type Props = {
     ProfileRow,
     "id" | "full_name" | "user_type" | "phone_number" | "whatsapp_number" | "location" | "avatar_url"
   >;
+  /** Sign-in email from Auth (read-only). */
+  email: string | null;
+  emailLoadIssue: "service_role" | "fetch_failed" | null;
 };
 
-export function AdminUserEditForm({ profile }: Props) {
+export function AdminUserEditForm({ profile, email, emailLoadIssue }: Props) {
+  const tEmail = useTranslations("adminUserEdit");
   const [state, formAction, pending] = useActionState(
     updateAdminUserProfile,
     null as UpdateProfileState | null,
@@ -30,6 +35,29 @@ export function AdminUserEditForm({ profile }: Props) {
   return (
     <form action={formAction} className={`${adminUi.card} flex flex-col gap-4 p-5`}>
       <input name="user_id" type="hidden" value={profile.id} />
+
+      <div className="flex flex-col gap-1 text-sm">
+        <span className={adminUi.label}>{tEmail("emailLabel")}</span>
+        {emailLoadIssue === "service_role" ? (
+          <p className="text-xs leading-relaxed text-[var(--admin-text-secondary)]">{tEmail("emailNeedsServiceRole")}</p>
+        ) : emailLoadIssue === "fetch_failed" ? (
+          <p className="text-xs text-red-600 dark:text-red-400" role="alert">
+            {tEmail("emailFetchFailed")}
+          </p>
+        ) : (
+          <>
+            <input
+              readOnly
+              aria-label={tEmail("emailLabel")}
+              className={`${adminUi.input} cursor-not-allowed bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200`}
+              dir="ltr"
+              type="email"
+              value={email ?? ""}
+            />
+            <p className="text-xs text-[var(--admin-text-secondary)]">{tEmail("emailReadOnlyHint")}</p>
+          </>
+        )}
+      </div>
 
       <label className="flex flex-col gap-1 text-sm">
         <span className={adminUi.label}>الاسم الظاهر</span>

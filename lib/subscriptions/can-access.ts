@@ -2,24 +2,40 @@ import { createClient } from "@/lib/supabase/server";
 import type { SubscriptionFeature } from "@/lib/subscriptions/features";
 
 /**
- * Returns true if the given authenticated user may access a feature.
- *
- * PHASE 1 (now): ENFORCE_SUBSCRIPTIONS is unset / "false" → always returns true.
- * PHASE 2 (when you go paid): set env ENFORCE_SUBSCRIPTIONS=true.
- *   Access is granted when the user has a matching subscriptions row
- *   with feature = <requested> OR feature = "all", and valid_until is null or in the future.
+ * Enforcement reads `app_settings.enforce_subscriptions` (`'true'` / `'false'`).
+ * Toggle it from **لوحة الإدارة → الاشتراكات** so Postgres RLS and this check stay in sync.
+ */
+export async function isSubscriptionEnforcementOn(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("subscriptions_enforcement_enabled");
+  if (error) {
+    // Migration not applied yet — fail open so the site keeps working.
+    return false;
+  }
+  return data === true;
+}
+
+/**
+ * Returns true if the given user may use a paid feature (same rules as RLS).
+ * Call only for the signed-in user (`userId` must match the session user).
  */
 export async function canAccessFeature(
   userId: string,
   feature: SubscriptionFeature,
 ): Promise<boolean> {
-  if (process.env.ENFORCE_SUBSCRIPTIONS !== "true") {
-    return true; // Phase 1: everything free for all registered users
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || user.id !== userId) {
+    return false;
   }
 
-  const supabase = await createClient();
-  const now = new Date().toISOString();
+  if (!(await isSubscriptionEnforcementOn())) {
+    return true;
+  }
 
+  const now = new Date().toISOString();
   const { data } = await supabase
     .from("subscriptions")
     .select("id")

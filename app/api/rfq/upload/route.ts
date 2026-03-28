@@ -19,6 +19,7 @@ import type {
   RfqUploadFileResult,
   RfqUploadResponse,
 } from "@/lib/rfq/types";
+import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -54,6 +55,13 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
     return err(401, {
       ok: false,
       errors: [{ code: "UNAUTHORIZED" }],
+    });
+  }
+
+  if (!(await canAccessFeature(user.id, "rfq"))) {
+    return err(403, {
+      ok: false,
+      errors: [{ code: "SUBSCRIPTION_REQUIRED" }],
     });
   }
 

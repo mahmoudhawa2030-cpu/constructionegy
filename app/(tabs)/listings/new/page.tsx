@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { ListingForm } from "@/components/listing-form";
 import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
+import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,10 @@ export default async function NewListingPage() {
   } = await supabase.auth.getUser();
   if (!user) {
     redirect("/login?next=/listings/new");
+  }
+
+  if (!(await canAccessFeature(user.id, "premium_listings"))) {
+    redirect("/subscription-required?feature=premium_listings");
   }
 
   const categories = await getActiveCategoriesForSelect();
