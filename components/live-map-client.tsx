@@ -472,9 +472,9 @@ export function LiveMapClient({ userId, categories }: Props) {
       : liveCategorySlug;
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col">
-      <div className="shrink-0 border-b border-zinc-200 px-2 py-1 dark:border-zinc-800 sm:px-3">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 sm:justify-between">
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="shrink-0 border-b border-zinc-200 px-1.5 py-0.5 dark:border-zinc-800 sm:px-3 sm:py-1">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 sm:justify-between">
           <h1 className="shrink-0 text-sm font-semibold text-zinc-900 dark:text-zinc-50 sm:text-base">{t("title")}</h1>
           <div className="flex min-w-0 flex-1 basis-[12rem] flex-wrap items-center gap-1.5 sm:justify-end">
             <select
@@ -493,7 +493,7 @@ export function LiveMapClient({ userId, categories }: Props) {
           </div>
         </div>
 
-        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+        <div className="mt-0.5 flex flex-wrap items-center gap-1.5 sm:mt-1">
           {!isLive ? (
             <>
               <select
@@ -583,8 +583,9 @@ export function LiveMapClient({ userId, categories }: Props) {
         ) : null}
       </div>
 
+      {/* Explicit min-height: nested flex from Next + dynamic import often yields flex-1 height 0 — Leaflet needs pixels. */}
       <div
-        className="relative min-h-0 w-full flex-1 bg-zinc-100 dark:bg-zinc-900"
+        className="relative w-full flex-1 bg-zinc-100 dark:bg-zinc-900 min-h-[max(18rem,calc(100dvh-9rem))] md:min-h-[max(18rem,calc(100dvh-13rem))]"
         ref={containerRef}
       >
         {!mapReady ? (
