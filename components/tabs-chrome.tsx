@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
+import { MobileChromeMenuDrawer } from "@/components/mobile-chrome-menu-drawer";
+import { MobileChromeMenuProvider, useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
 import { MessageNotificationsProvider, useMessageNotifications } from "@/components/message-notifications-provider";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -24,21 +26,37 @@ type Props = {
   children: React.ReactNode;
 };
 
-function TabsChromeShell({ hasUser, children }: { hasUser: boolean; children: React.ReactNode }) {
+function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; children: React.ReactNode }) {
   const t = useTranslations("nav");
   const { unreadTotal } = useMessageNotifications();
+  const { open, toggleMenu } = useMobileChromeMenu();
 
   return (
     <div className="flex min-h-full flex-col">
       <header
-        className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95"
+        className="sticky top-0 z-40 flex w-full items-center justify-start gap-2 border-b border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95 md:justify-between"
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
       >
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center md:hidden">
+          <button
+            aria-controls="mobile-chrome-menu"
+            aria-expanded={open}
+            aria-label={t("openMenuAria")}
+            className="rounded-lg p-2 text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            onClick={() => toggleMenu()}
+            type="button"
+          >
+            <svg aria-hidden className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" strokeWidth={2} />
+            </svg>
+          </button>
+        </div>
+
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
           <ThemeToggle compact />
           <LocaleSwitcher />
         </div>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex">
           {hasUser ? (
             <Link
               className="relative shrink-0 rounded-md px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
@@ -66,11 +84,18 @@ function TabsChromeShell({ hasUser, children }: { hasUser: boolean; children: Re
           {hasUser ? <SignOutButton compact /> : null}
         </div>
       </header>
-      <div className="flex min-h-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-        {children}
-      </div>
-      <MobileTabBar homeHref={hasUser ? "/users/myads" : "/"} messageUnreadCount={unreadTotal} />
+      <div className="flex min-h-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))]">{children}</div>
+      <MobileTabBar hasUser={hasUser} homeHref={hasUser ? "/users/myads" : "/"} messageUnreadCount={unreadTotal} />
+      <MobileChromeMenuDrawer hasUser={hasUser} />
     </div>
+  );
+}
+
+function TabsChromeShell({ hasUser, children }: { hasUser: boolean; children: React.ReactNode }) {
+  return (
+    <MobileChromeMenuProvider>
+      <TabsChromeShellInner hasUser={hasUser}>{children}</TabsChromeShellInner>
+    </MobileChromeMenuProvider>
   );
 }
 

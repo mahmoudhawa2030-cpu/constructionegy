@@ -16,7 +16,14 @@
     "favorites": "Favorites",
     "mainNavAria": "Primary navigation",
     "messagesLinkAria": "Messages",
-    "messagesTabAriaWithUnread": "Messages · {count} unread"
+    "messagesTabAriaWithUnread": "Messages · {count} unread",
+    "menuTitle": "Menu",
+    "menuNavAria": "App menu",
+    "openMenuAria": "Open menu",
+    "closeMenuAria": "Close menu",
+    "closeMenuBackdropAria": "Close menu",
+    "menuAppearance": "Appearance",
+    "menuLanguage": "Language"
   },
   "messagesInbox": {
     "title": "Messages",

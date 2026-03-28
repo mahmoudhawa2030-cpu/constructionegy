@@ -4,6 +4,9 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
+import { useIsMobileNav } from "@/lib/hooks/use-is-mobile-nav";
+
 function useTabDefs(homeHref: string, t: ReturnType<typeof useTranslations>) {
   return [
     { href: homeHref, label: t("home") },
@@ -19,12 +22,16 @@ type Props = {
   homeHref?: string;
   /** Unread incoming messages (shown on Messages tab). */
   messageUnreadCount?: number;
+  /** Signed-in users: on small screens, “My account” opens the app menu instead of navigating only. */
+  hasUser?: boolean;
 };
 
-export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0 }: Props) {
+export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0, hasUser = false }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tabs = useTabDefs(homeHref, t);
+  const isMobile = useIsMobileNav();
+  const { openMenu } = useMobileChromeMenu();
 
   return (
     <nav
@@ -39,6 +46,27 @@ export function MobileTabBar({ homeHref = "/", messageUnreadCount = 0 }: Props) 
               ? pathname === homeHref
               : pathname === href || pathname.startsWith(`${href}/`);
           const showMsgBadge = href === "/messages" && messageUnreadCount > 0;
+          const profileOpensMenu = href === "/profile" && hasUser && isMobile;
+
+          if (profileOpensMenu) {
+            return (
+              <li key={href} className="min-w-0 flex-1">
+                <button
+                  className={`relative flex min-h-[3rem] w-full flex-col items-center justify-center rounded-xl px-1 py-1 text-center text-xs font-medium transition-colors ${
+                    active
+                      ? "text-zinc-900 dark:text-zinc-50"
+                      : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  }`}
+                  type="button"
+                  aria-label={label}
+                  onClick={() => openMenu()}
+                >
+                  <span className="truncate">{label}</span>
+                </button>
+              </li>
+            );
+          }
+
           return (
             <li key={href} className="min-w-0 flex-1">
               <Link

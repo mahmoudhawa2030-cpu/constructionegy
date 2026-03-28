@@ -16,7 +16,14 @@
     "favorites": "المفضلة",
     "mainNavAria": "التنقل الرئيسي",
     "messagesLinkAria": "الرسائل",
-    "messagesTabAriaWithUnread": "الرسائل · {count} غير مقروء"
+    "messagesTabAriaWithUnread": "الرسائل · {count} غير مقروء",
+    "menuTitle": "القائمة",
+    "menuNavAria": "قائمة التطبيق",
+    "openMenuAria": "فتح القائمة",
+    "closeMenuAria": "إغلاق القائمة",
+    "closeMenuBackdropAria": "إغلاق القائمة",
+    "menuAppearance": "المظهر",
+    "menuLanguage": "اللغة"
   },
   "messagesInbox": {
     "title": "الرسائل",
