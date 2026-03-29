@@ -158,6 +158,7 @@
     "allAdsLink": "كل الإعلانات (الأحدث أولاً)",
     "title": "ملف مستخدم",
     "verifiedBadgeAria": "منشأة موثّقة",
+    "legalCompanyNameParens": "({name})",
     "userType": {
       "contractor": "مقاول / مقاولات",
       "supplier": "مورد / توريد"

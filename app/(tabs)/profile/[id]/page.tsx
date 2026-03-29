@@ -7,6 +7,7 @@ import { ProfileListingsGrid } from "@/components/profile-listings-grid";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const userTypeLabel =
     profile.user_type === "supplier" ? t("userType.supplier") : t("userType.contractor");
   const isVerifiedBusiness = profile.business_verification_status === "verified";
+  const legalCompanyName = isVerifiedBusiness ? await fetchProfileLegalCompanyName(supabase, profile.id) : null;
+  const legalCompanyNameTrimmed = legalCompanyName?.trim() ?? "";
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:py-8">
@@ -95,6 +98,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
             <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
             {isVerifiedBusiness ? <VerifiedBadge className="self-center" label={t("verifiedBadgeAria")} /> : null}
           </div>
+          {isVerifiedBusiness && legalCompanyNameTrimmed ? (
+            <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300" dir="auto">
+              {t("legalCompanyNameParens", { name: legalCompanyNameTrimmed })}
+            </p>
+          ) : null}
           <div className="mt-2 flex justify-center">
             <UserPresenceBadge lastSeenAt={profile.last_seen_at} />
           </div>
