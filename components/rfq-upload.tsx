@@ -3,11 +3,8 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useActionState, useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 
-import type { RfqDraftUiActionState } from "@/app/(tabs)/rfq/actions";
-import { saveRfqLegalCompanyNameAction } from "@/app/(tabs)/rfq/actions";
-import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rfq/domain";
 import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
 
 type LocalFile = {
@@ -44,7 +41,6 @@ type Props = {
   initialAttachments?: RfqAttachmentDto[];
   /** When false, hide file upload (e.g. draft already open for bids). */
   allowUpload?: boolean;
-  initialLegalCompanyName?: string;
 };
 
 export function RfqUpload({
@@ -53,13 +49,11 @@ export function RfqUpload({
   initialLineItems = [],
   initialAttachments = [],
   allowUpload = true,
-  initialLegalCompanyName = "",
 }: Props) {
   const router = useRouter();
   const t = useTranslations("rfqUpload");
   const te = useTranslations("rfqUpload.errors");
   const inputId = useId();
-  const legalCompanyInputId = useId();
   const filesRef = useRef<LocalFile[]>([]);
   const [draftId, setDraftId] = useState<string | null>(initialDraftId);
   const [replaceId, setReplaceId] = useState("");
@@ -69,25 +63,8 @@ export function RfqUpload({
   const [warnings, setWarnings] = useState<{ code: string; detail?: string }[]>([]);
   const [blockingErrors, setBlockingErrors] = useState<{ code: string; detail?: string }[]>([]);
   const [busy, setBusy] = useState(false);
-  const [legalCompanyName, setLegalCompanyName] = useState(initialLegalCompanyName);
-  const [legalSaveState, legalSaveAction, legalSavePending] = useActionState(
-    saveRfqLegalCompanyNameAction,
-    null as RfqDraftUiActionState | null,
-  );
 
   filesRef.current = localFiles;
-
-  useEffect(() => {
-    setLegalCompanyName(initialLegalCompanyName);
-  }, [initialLegalCompanyName]);
-
-  useEffect(() => {
-    return () => {
-      for (const lf of filesRef.current) {
-        if (lf.previewUrl) URL.revokeObjectURL(lf.previewUrl);
-      }
-    };
-  }, []);
 
   const errMsg = (code: string | undefined) => {
     const c = code ?? "UNKNOWN";
@@ -181,22 +158,12 @@ export function RfqUpload({
 
   const submit = async () => {
     if (localFiles.length === 0 || busy) return;
-    const trimmedLegal = legalCompanyName.trim();
-    if (trimmedLegal.length < RFQ_LEGAL_COMPANY_NAME_MIN) {
-      setBlockingErrors([{ code: "LEGAL_COMPANY_NAME_REQUIRED" }]);
-      return;
-    }
-    if (trimmedLegal.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
-      setBlockingErrors([{ code: "LEGAL_COMPANY_NAME_TOO_LONG" }]);
-      return;
-    }
     setBusy(true);
     setBlockingErrors([]);
     setWarnings([]);
     setLocalFiles((prev) => prev.map((x) => ({ ...x, status: "uploading" as const })));
 
     const fd = new FormData();
-    fd.append("legalCompanyName", trimmedLegal);
     for (const lf of localFiles) {
       fd.append("files", lf.file);
     }
@@ -258,64 +225,8 @@ export function RfqUpload({
     if (rid) setReplaceId("");
   };
 
-  const legalCompanyBlock = allowUpload ? (
-    <form
-      action={legalSaveAction}
-      className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40"
-      onSubmit={(e) => {
-        if (!draftId) e.preventDefault();
-      }}
-    >
-      <input name="draft_id" type="hidden" value={draftId ?? ""} />
-      <label className="text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={legalCompanyInputId}>
-        {t("legalCompanyNameLabel")}
-        <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>
-          *
-        </span>
-      </label>
-      <input
-        aria-label={t("legalCompanyNameLabel")}
-        className="mt-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-        id={legalCompanyInputId}
-        maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
-        name="legal_company_name"
-        onChange={(e) => setLegalCompanyName(e.target.value)}
-        type="text"
-        value={legalCompanyName}
-      />
-      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
-      {draftId ? (
-        <button
-          className="mt-2 self-start rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-          disabled={legalSavePending}
-          type="submit"
-        >
-          {legalSavePending ? t("savingLegalCompany") : t("saveLegalCompanyOnly")}
-        </button>
-      ) : null}
-      {legalSaveState ? (
-        <p
-          className={
-            legalSaveState.ok ? "mt-2 text-sm text-emerald-700 dark:text-emerald-400" : "mt-2 text-sm text-red-700 dark:text-red-400"
-          }
-          role="status"
-        >
-          {legalSaveState.message}
-        </p>
-      ) : null}
-    </form>
-  ) : (
-    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
-      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("legalCompanyNameLabel")}</p>
-      <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-        {legalCompanyName.trim() ? legalCompanyName.trim() : t("legalCompanyNameMissing")}
-      </p>
-    </div>
-  );
-
   return (
     <div className="flex flex-col gap-4">
-      {legalCompanyBlock}
       {allowUpload ? (
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
           <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={inputId}>
@@ -345,12 +256,7 @@ export function RfqUpload({
             </label>
             <button
               className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-              disabled={
-                busy ||
-                localFiles.length === 0 ||
-                legalCompanyName.trim().length < RFQ_LEGAL_COMPANY_NAME_MIN ||
-                legalCompanyName.trim().length > RFQ_LEGAL_COMPANY_NAME_MAX
-              }
+              disabled={busy || localFiles.length === 0}
               type="button"
               onClick={() => void submit()}
             >

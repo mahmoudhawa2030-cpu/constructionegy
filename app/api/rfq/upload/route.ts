@@ -13,6 +13,7 @@ import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rf
 import { resolveRfqDraftForUpload, updateRfqDraftForOwner } from "@/lib/rfq/draft-service";
 import { parseRfqSpreadsheet } from "@/lib/rfq/parse-spreadsheet";
 import { validateRfqUploadFiles } from "@/lib/rfq/upload-validation";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
 import type {
   RfqAttachmentDto,
   RfqItemPreview,
@@ -116,7 +117,7 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
     });
   }
 
-  const legalRaw = String(form.get("legalCompanyName") ?? "").trim();
+  const legalRaw = (await fetchProfileLegalCompanyName(supabase, user.id))?.trim() ?? "";
   if (legalRaw.length < RFQ_LEGAL_COMPANY_NAME_MIN) {
     return err(400, {
       ok: false,

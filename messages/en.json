@@ -336,7 +336,7 @@
       "SUBSCRIPTION_REQUIRED": "A subscription is required for RFQ. Contact an administrator or open the subscription info page.",
       "DRAFT_LOCKED": "This RFQ is no longer editable for uploads. Open a new draft or pick another one from the list.",
       "ITEMS_PERSIST_FAILED": "Files uploaded but line items could not be saved to the database.",
-      "LEGAL_COMPANY_NAME_REQUIRED": "Enter your legal company name (above attachments) before uploading.",
+      "LEGAL_COMPANY_NAME_REQUIRED": "Set your legal company name in Account > Business verification before uploading.",
       "LEGAL_COMPANY_NAME_TOO_LONG": "Legal company name is too long (max 300 characters).",
       "METADATA_SAVE_FAILED": "Could not save company name. Try again."
     }
@@ -378,7 +378,7 @@
       "legalCompanyTooLong": "Legal company name is too long (max 300 characters).",
       "legalCompanySaved": "Company name saved.",
       "legalCompanySaveFailed": "Could not save company name.",
-      "legalCompanyRequiredBeforePublish": "Add and save your legal company name in the RFQ upload section (above attachments) before opening for bids."
+      "legalCompanyRequiredBeforePublish": "Set your legal company name in Account > Business verification before opening for bids."
     }
   },
   "rfqOpportunity": {

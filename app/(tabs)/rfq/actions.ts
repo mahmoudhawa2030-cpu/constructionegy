@@ -11,6 +11,7 @@ import {
   RFQ_LEGAL_COMPANY_NAME_MIN,
 } from "@/lib/rfq/domain";
 import { updateRfqDraftForOwner } from "@/lib/rfq/draft-service";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -146,9 +147,16 @@ export async function submitRfqDraftForBidsAction(
     return { ok: false, message: t("alreadyPublished") };
   }
 
-  const legalName = getLegalCompanyNameFromDraftMetadata(row.metadata);
-  if (legalName.length < RFQ_LEGAL_COMPANY_NAME_MIN) {
-    return { ok: false, message: t("legalCompanyRequiredBeforePublish") };
+  let legalName = getLegalCompanyNameFromDraftMetadata(row.metadata);
+  if (legalName.length < RFQ_LEGAL_COMPANY_NAME_MIN || legalName.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
+    const profileLegal = (await fetchProfileLegalCompanyName(supabase, user.id))?.trim() ?? "";
+    if (profileLegal.length < RFQ_LEGAL_COMPANY_NAME_MIN || profileLegal.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
+      return { ok: false, message: t("legalCompanyRequiredBeforePublish") };
+    }
+    legalName = profileLegal;
+    await updateRfqDraftForOwner(supabase, parsedId.data, user.id, {
+      metadata: { legal_company_name: legalName },
+    });
   }
 
   const { error: upErr } = await supabase

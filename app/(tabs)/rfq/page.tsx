@@ -6,7 +6,6 @@ import { RfqDraftControls } from "@/components/rfq-draft-controls";
 import { RfqMyDraftsList } from "@/components/rfq-my-drafts-list";
 import { RfqUpload } from "@/components/rfq-upload";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
-import { getLegalCompanyNameFromDraftMetadata } from "@/lib/rfq/domain";
 import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
@@ -48,7 +47,6 @@ export default async function RfqPage({ searchParams }: PageProps) {
   let initialStatus = "draft";
   let initialLineItems: RfqItemPreview[] = [];
   let initialAttachments: RfqAttachmentDto[] = [];
-  let initialLegalCompanyName = "";
 
   const paramId =
     typeof draftParam === "string" && UUID_RE.test(draftParam.trim()) ? draftParam.trim() : null;
@@ -56,7 +54,7 @@ export default async function RfqPage({ searchParams }: PageProps) {
   if (paramId) {
     const { data: one } = await supabase
       .from("rfq_drafts")
-      .select("id, title, status, user_id, metadata")
+      .select("id, title, status, user_id")
       .eq("id", paramId)
       .eq("user_id", user.id)
       .maybeSingle();
@@ -65,7 +63,6 @@ export default async function RfqPage({ searchParams }: PageProps) {
       activeDraftId = one.id;
       initialTitle = one.title;
       initialStatus = one.status;
-      initialLegalCompanyName = getLegalCompanyNameFromDraftMetadata(one.metadata);
 
       const { data: items } = await supabase
         .from("rfq_items")
@@ -137,7 +134,6 @@ export default async function RfqPage({ searchParams }: PageProps) {
             draftIdInUrl={paramId}
             initialAttachments={initialAttachments}
             initialDraftId={activeDraftId}
-            initialLegalCompanyName={initialLegalCompanyName}
             initialLineItems={initialLineItems}
           />
         </div>
