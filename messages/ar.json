@@ -279,8 +279,6 @@
   "rfqUpload": {
     "pickFiles": "اختر الملفات",
     "hint": "الجداول (.xls و .xlsx) تُحلّل إلى بنود. الأنواع الأخرى تُخزّن كمرفقات في المسودة.",
-    "replaceOptional": "استبدال مرفق (اختياري)",
-    "replacePlaceholder": "معرّف UUID للمرفق",
     "upload": "رفع",
     "uploading": "جاري الرفع…",
     "draftId": "معرّف المسودة",

@@ -56,7 +56,6 @@ export function RfqUpload({
   const inputId = useId();
   const filesRef = useRef<LocalFile[]>([]);
   const [draftId, setDraftId] = useState<string | null>(initialDraftId);
-  const [replaceId, setReplaceId] = useState("");
   const [localFiles, setLocalFiles] = useState<LocalFile[]>([]);
   const [parsedItems, setParsedItems] = useState<RfqItemPreview[]>(initialLineItems);
   const [attachments, setAttachments] = useState<RfqAttachmentDto[]>(initialAttachments);
@@ -168,8 +167,6 @@ export function RfqUpload({
       fd.append("files", lf.file);
     }
     if (draftId) fd.append("rfqDraftId", draftId);
-    const rid = replaceId.trim();
-    if (rid) fd.append("replaceAttachmentId", rid);
 
     type UploadJson = {
       rfqDraftId?: string | null;
@@ -222,7 +219,6 @@ export function RfqUpload({
     );
 
     setBusy(false);
-    if (rid) setReplaceId("");
   };
 
   return (
@@ -243,17 +239,7 @@ export function RfqUpload({
             }}
           />
           <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t("hint")}</p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-            <label className="flex flex-1 flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
-              <span>{t("replaceOptional")}</span>
-              <input
-                className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                placeholder={t("replacePlaceholder")}
-                type="text"
-                value={replaceId}
-                onChange={(e) => setReplaceId(e.target.value)}
-              />
-            </label>
+          <div className="mt-3">
             <button
               className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
               disabled={busy || localFiles.length === 0}

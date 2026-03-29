@@ -279,8 +279,6 @@
   "rfqUpload": {
     "pickFiles": "Choose files",
     "hint": "Spreadsheets (.xls, .xlsx) are parsed into line items. Other types are stored as attachments in your draft.",
-    "replaceOptional": "Replace attachment (optional)",
-    "replacePlaceholder": "Attachment UUID to replace",
     "upload": "Upload",
     "uploading": "Uploading…",
     "draftId": "Draft ID",

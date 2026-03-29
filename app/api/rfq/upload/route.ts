@@ -75,7 +75,6 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
   }
 
   const rfqDraftIdRaw = String(form.get("rfqDraftId") ?? "").trim();
-  const replaceAttachmentId = String(form.get("replaceAttachmentId") ?? "").trim();
 
   const files = form
     .getAll("files")
@@ -151,8 +150,6 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
   const errors: { code: string; detail?: string }[] = [];
   const warnings: { code: string; detail?: string }[] = [];
 
-  let pendingReplaceId = replaceAttachmentId || null;
-
   for (const file of files) {
     const ext = extensionOf(file.name);
 
@@ -207,92 +204,6 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
     const hash = createHash("sha256").update(buf).digest("hex");
     const safeBase = normalizeFilename(file.name);
     const contentType = file.type || "application/octet-stream";
-
-    if (pendingReplaceId) {
-      const { data: existing, error: exErr } = await supabase
-        .from("rfq_attachments")
-        .select("id, draft_id, uploaded_by, storage_path")
-        .eq("id", pendingReplaceId)
-        .eq("draft_id", draftId)
-        .maybeSingle();
-
-      if (exErr || !existing || existing.uploaded_by !== user.id) {
-        fileResults.push({
-          originalName: file.name,
-          kind: "attachment",
-          ok: false,
-          errorCode: "REPLACE_TARGET_NOT_FOUND",
-        });
-        errors.push({ code: "REPLACE_TARGET_NOT_FOUND" });
-        pendingReplaceId = null;
-        continue;
-      }
-
-      await supabase.storage.from("rfq-attachments").remove([existing.storage_path]);
-
-      const newPath = `${user.id}/${draftId}/${existing.id}_${Date.now()}_${safeBase}`;
-      const { error: upErr } = await supabase.storage
-        .from("rfq-attachments")
-        .upload(newPath, buf, { contentType, upsert: false });
-
-      if (upErr) {
-        fileResults.push({
-          originalName: file.name,
-          kind: "attachment",
-          ok: false,
-          errorCode: "STORAGE_UPLOAD_FAILED",
-        });
-        errors.push({ code: "STORAGE_UPLOAD_FAILED", detail: upErr.message });
-        pendingReplaceId = null;
-        continue;
-      }
-
-      const { error: updErr } = await supabase
-        .from("rfq_attachments")
-        .update({
-          storage_path: newPath,
-          original_filename: safeBase,
-          content_type: contentType,
-          byte_size: buf.length,
-          content_hash: hash,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existing.id);
-
-      if (updErr) {
-        fileResults.push({
-          originalName: file.name,
-          kind: "attachment",
-          ok: false,
-          errorCode: "ATTACHMENT_UPDATE_FAILED",
-        });
-        errors.push({ code: "ATTACHMENT_UPDATE_FAILED", detail: updErr.message });
-        pendingReplaceId = null;
-        continue;
-      }
-
-      const { data: signed } = await supabase.storage
-        .from("rfq-attachments")
-        .createSignedUrl(newPath, RFQ_SIGNED_URL_TTL);
-
-      attachments.push({
-        id: existing.id,
-        draftId,
-        originalFilename: safeBase,
-        contentType,
-        byteSize: buf.length,
-        signedUrl: signed?.signedUrl ?? null,
-        createdAt: new Date().toISOString(),
-      });
-      fileResults.push({
-        originalName: file.name,
-        kind: "attachment",
-        ok: true,
-        attachmentId: existing.id,
-      });
-      pendingReplaceId = null;
-      continue;
-    }
 
     const newId = randomUUID();
     const newPath = `${user.id}/${draftId}/${newId}_${safeBase}`;
@@ -357,10 +268,6 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
       ok: true,
       attachmentId: inserted.id,
     });
-  }
-
-  if (pendingReplaceId) {
-    warnings.push({ code: "REPLACE_ATTACHMENT_UNUSED", detail: pendingReplaceId });
   }
 
   const spreadsheetOk = fileResults.some((r) => r.ok && r.kind === "spreadsheet");
