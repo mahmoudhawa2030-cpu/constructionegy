@@ -3,8 +3,9 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 
+import { EmailOtpCells } from "@/components/email-otp-cells";
 import { getEmailOtpLength } from "@/lib/auth/email-otp-length";
 import { formatAuthErrorMessage } from "@/lib/supabase/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
@@ -19,6 +20,7 @@ function getEmailRedirectTo(): string {
 export default function SignupPage() {
   const t = useTranslations("signup");
   const otpLength = getEmailOtpLength();
+  const otpLabelId = useId();
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -141,21 +143,19 @@ export default function SignupPage() {
             </span>
           </p>
           <form className="mt-8 flex flex-col gap-4" onSubmit={handleVerifyOtp}>
-            <label className="flex flex-col gap-1.5 text-sm">
-              <span className="text-zinc-700 dark:text-zinc-300">{t("otpLabel")}</span>
-              <input
-                autoComplete="one-time-code"
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-center font-mono text-base tracking-[0.2em] text-zinc-900 outline-none ring-zinc-400 focus:ring-2 sm:text-lg sm:tracking-[0.25em] dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
-                dir="ltr"
-                inputMode="numeric"
-                maxLength={otpLength}
-                name="otp"
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, otpLength))}
-                placeholder={"•".repeat(otpLength)}
-                type="text"
+            <div className="flex flex-col gap-1.5 text-sm">
+              <span className="text-zinc-700 dark:text-zinc-300" id={otpLabelId}>
+                {t("otpLabel")}
+              </span>
+              <EmailOtpCells
+                autoFocusFirst
+                disabled={loading}
+                labelledBy={otpLabelId}
+                length={otpLength}
+                onChange={(digits) => setOtp(digits.replace(/\D/g, "").slice(0, otpLength))}
                 value={otp}
               />
-            </label>
+            </div>
             {error ? (
               <p className="text-sm text-red-600 dark:text-red-400" role="alert">
                 {error}

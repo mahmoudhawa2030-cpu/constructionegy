@@ -496,6 +496,7 @@ export type Database = {
           is_banned: boolean
           last_active_at: string | null
           last_seen_at: string | null
+          legal_company_name: string | null
           location: string | null
           phone_number: string | null
           updated_at: string
@@ -514,6 +515,7 @@ export type Database = {
           is_banned?: boolean
           last_active_at?: string | null
           last_seen_at?: string | null
+          legal_company_name?: string | null
           location?: string | null
           phone_number?: string | null
           updated_at?: string
@@ -532,6 +534,7 @@ export type Database = {
           is_banned?: boolean
           last_active_at?: string | null
           last_seen_at?: string | null
+          legal_company_name?: string | null
           location?: string | null
           phone_number?: string | null
           updated_at?: string

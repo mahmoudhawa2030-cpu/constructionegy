@@ -78,6 +78,7 @@
     "otpTitle": "Confirm email",
     "otpSentTo": "Enter the code sent to",
     "otpLabel": "Verification code",
+    "otpDigitAria": "Code digit {n} of {total}",
     "otpPlaceholder": "••••••",
     "otpHint": "Enter the {count}-digit code sent to your inbox. If it doesn’t arrive within two minutes, check spam or tap “Resend code”.",
     "otpLengthError": "The code must be {count} digits.",
@@ -168,7 +169,7 @@
   },
   "businessVerification": {
     "heading": "Business verification",
-    "intro": "Upload the three required documents. When all are uploaded, your application is sent for admin review. RFQ is available only after approval.",
+    "intro": "Enter your legal company name and save it first, then upload the three required documents. When all are uploaded, your application is sent for admin review. RFQ is available only after approval.",
     "badgeAria": "Verified business",
     "statusVerified": "Your business is verified.",
     "statusPending": "Documents received — pending review.",
@@ -181,6 +182,19 @@
     "uploading": "Uploading…",
     "chooseFile": "Choose file",
     "formatsHint": "PDF, JPG, PNG, or WebP — max 15 MB per file.",
+    "legalCompanyNameLabel": "Legal company name",
+    "legalCompanyNameHint": "Official registered name (e.g. commercial register). Required before document uploads.",
+    "uploadsLockedUntilLegalName": "Save a valid legal company name above (at least 2 characters) to unlock document uploads.",
+    "previewImageAlt": "Uploaded document preview",
+    "actions": {
+      "unauthorized": "You must be signed in.",
+      "legalCompanyTooShort": "Enter the legal company name (at least 2 characters).",
+      "legalCompanyTooLong": "Legal company name is too long (max 300 characters).",
+      "saveFailed": "Could not save. Try again.",
+      "legalCompanySaved": "Company name saved.",
+      "saveLegalCompany": "Save company name",
+      "savingLegalCompany": "Saving…"
+    },
     "doc": {
       "commercial_register": "Commercial register",
       "tax_card": "Tax card",
@@ -196,6 +210,7 @@
       "UNSUPPORTED_TYPE": "Use PDF or an image (JPG, PNG, WebP).",
       "STORAGE_FAILED": "Could not store the file. Try again.",
       "DB_FAILED": "Could not save document metadata. Try again.",
+      "LEGAL_NAME_REQUIRED": "Save your legal company name above before uploading documents.",
       "UNKNOWN": "Something went wrong. Try again."
     }
   },
@@ -219,6 +234,8 @@
       "lastNotes": "Admin notes",
       "decisionHeading": "Decision",
       "documentsHeading": "Documents",
+      "legalCompanyLabel": "Legal company name",
+      "legalCompanyMissing": "No legal company name on file.",
       "noDocs": "No documents uploaded.",
       "open": "Open",
       "docType": {

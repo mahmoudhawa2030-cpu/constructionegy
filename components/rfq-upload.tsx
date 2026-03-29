@@ -258,8 +258,64 @@ export function RfqUpload({
     if (rid) setReplaceId("");
   };
 
+  const legalCompanyBlock = allowUpload ? (
+    <form
+      action={legalSaveAction}
+      className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40"
+      onSubmit={(e) => {
+        if (!draftId) e.preventDefault();
+      }}
+    >
+      <input name="draft_id" type="hidden" value={draftId ?? ""} />
+      <label className="text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={legalCompanyInputId}>
+        {t("legalCompanyNameLabel")}
+        <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>
+          *
+        </span>
+      </label>
+      <input
+        aria-label={t("legalCompanyNameLabel")}
+        className="mt-2 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+        id={legalCompanyInputId}
+        maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
+        name="legal_company_name"
+        onChange={(e) => setLegalCompanyName(e.target.value)}
+        type="text"
+        value={legalCompanyName}
+      />
+      <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
+      {draftId ? (
+        <button
+          className="mt-2 self-start rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+          disabled={legalSavePending}
+          type="submit"
+        >
+          {legalSavePending ? t("savingLegalCompany") : t("saveLegalCompanyOnly")}
+        </button>
+      ) : null}
+      {legalSaveState ? (
+        <p
+          className={
+            legalSaveState.ok ? "mt-2 text-sm text-emerald-700 dark:text-emerald-400" : "mt-2 text-sm text-red-700 dark:text-red-400"
+          }
+          role="status"
+        >
+          {legalSaveState.message}
+        </p>
+      ) : null}
+    </form>
+  ) : (
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
+      <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("legalCompanyNameLabel")}</p>
+      <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+        {legalCompanyName.trim() ? legalCompanyName.trim() : t("legalCompanyNameMissing")}
+      </p>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-4">
+      {legalCompanyBlock}
       {allowUpload ? (
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
           <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={inputId}>
@@ -423,65 +479,6 @@ export function RfqUpload({
           <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50" id="rfq-attach-heading">
             {t("sectionAttachments")}
           </h2>
-          {allowUpload ? (
-            <form
-              action={legalSaveAction}
-              className="mb-4 flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40"
-              onSubmit={(e) => {
-                if (!draftId) e.preventDefault();
-              }}
-            >
-              <input name="draft_id" type="hidden" value={draftId ?? ""} />
-              <label
-                className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
-                htmlFor={legalCompanyInputId}
-              >
-                {t("legalCompanyNameLabel")}
-                <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>
-                  *
-                </span>
-              </label>
-              <input
-                aria-label={t("legalCompanyNameLabel")}
-                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                id={legalCompanyInputId}
-                maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
-                name="legal_company_name"
-                onChange={(e) => setLegalCompanyName(e.target.value)}
-                type="text"
-                value={legalCompanyName}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
-              {draftId ? (
-                <button
-                  className="self-start rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-                  disabled={legalSavePending}
-                  type="submit"
-                >
-                  {legalSavePending ? t("savingLegalCompany") : t("saveLegalCompanyOnly")}
-                </button>
-              ) : null}
-              {legalSaveState ? (
-                <p
-                  className={
-                    legalSaveState.ok
-                      ? "text-sm text-emerald-700 dark:text-emerald-400"
-                      : "text-sm text-red-700 dark:text-red-400"
-                  }
-                  role="status"
-                >
-                  {legalSaveState.message}
-                </p>
-              ) : null}
-            </form>
-          ) : (
-            <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
-              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("legalCompanyNameLabel")}</p>
-              <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-                {legalCompanyName.trim() ? legalCompanyName.trim() : t("legalCompanyNameMissing")}
-              </p>
-            </div>
-          )}
           {attachments.length === 0 ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("emptyAttachments")}</p>
           ) : (

@@ -7,6 +7,8 @@ import { ProfileListingsGrid } from "@/components/profile-listings-grid";
 import { getCurrentProfile } from "@/lib/auth/admin";
 import type { BusinessVerificationDocType } from "@/lib/business-verification/constants";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
+import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -20,7 +22,14 @@ type ProfileFields = Pick<
 type VerificationDocRow = {
   document_type: BusinessVerificationDocType;
   original_filename: string | null;
+  previewUrl: string | null;
 };
+
+function imagePreviewExt(filename: string): boolean {
+  const i = filename.lastIndexOf(".");
+  const ext = i >= 0 ? filename.slice(i + 1).toLowerCase() : "";
+  return ext === "jpg" || ext === "jpeg" || ext === "png" || ext === "webp";
+}
 
 function defaultProfileFromUser(email: string | undefined, defaultDisplayName: string): ProfileFields {
   const local = email?.split("@")[0]?.trim();
@@ -50,12 +59,31 @@ export default async function ProfilePage() {
   const myListings = myListingsRaw ?? [];
   const categoryLabelMap = await getCategoryLabelMap();
 
-  const { data: verificationDocs } = user && profile
-    ? await supabase
-        .from("business_verification_documents")
-        .select("document_type, original_filename")
-        .eq("user_id", user.id)
-    : { data: null };
+  const legalCompanyNameForVerification =
+    user && profile ? await fetchProfileLegalCompanyName(supabase, user.id) : null;
+
+  let verificationDocs: VerificationDocRow[] = [];
+  if (user && profile) {
+    const { data: rawDocs } = await supabase
+      .from("business_verification_documents")
+      .select("document_type, original_filename, storage_path")
+      .eq("user_id", user.id);
+    for (const row of rawDocs ?? []) {
+      let previewUrl: string | null = null;
+      const name = row.original_filename ?? "";
+      if (name && imagePreviewExt(name)) {
+        const { data: signed } = await supabase.storage
+          .from("business-verification")
+          .createSignedUrl(row.storage_path, RFQ_SIGNED_URL_TTL);
+        previewUrl = signed?.signedUrl ?? null;
+      }
+      verificationDocs.push({
+        document_type: row.document_type as BusinessVerificationDocType,
+        original_filename: row.original_filename,
+        previewUrl,
+      });
+    }
+  }
 
   const formProfile: ProfileFields = profile
     ? {
@@ -108,7 +136,8 @@ export default async function ProfilePage() {
         {user && profile ? (
           <BusinessVerificationPanel
             adminNotes={profile.business_verification_admin_notes}
-            documents={(verificationDocs ?? []) as VerificationDocRow[]}
+            documents={verificationDocs}
+            legalCompanyName={legalCompanyNameForVerification}
             status={profile.business_verification_status}
           />
         ) : null}

@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { AdminBusinessVerificationActions } from "@/components/admin-business-verification-actions";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
 import { adminUi } from "@/lib/admin-ui";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -40,6 +41,8 @@ export default async function AdminVerificationDetailPage({ params }: PageProps)
   if (error || !profile) {
     notFound();
   }
+
+  const legalCompanyName = await fetchProfileLegalCompanyName(supabase, userId);
 
   const { data: docs } = await supabase
     .from("business_verification_documents")
@@ -87,6 +90,14 @@ export default async function AdminVerificationDetailPage({ params }: PageProps)
           <p className="text-sm">
             <strong>{t("statusLabel")}:</strong> {profile.business_verification_status}
           </p>
+          {legalCompanyName?.trim() ? (
+            <p className="mt-2 text-sm">
+              <strong>{t("legalCompanyLabel")}:</strong>{" "}
+              <span dir="auto">{legalCompanyName.trim()}</span>
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-[var(--admin-text-secondary)]">{t("legalCompanyMissing")}</p>
+          )}
           {profile.phone_number ? (
             <p className="mt-2 text-sm" dir="ltr">
               {profile.phone_number}

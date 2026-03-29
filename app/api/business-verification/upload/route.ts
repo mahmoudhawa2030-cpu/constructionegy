@@ -9,6 +9,8 @@ import {
   isAllowedVerificationExt,
 } from "@/lib/business-verification/constants";
 import { extensionOf, normalizeFilename } from "@/lib/rfq/constants";
+import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rfq/domain";
+import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
 import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -38,6 +40,12 @@ export async function POST(request: Request): Promise<NextResponse> {
   const st = profile?.business_verification_status ?? "none";
   if (!["none", "pending", "rejected"].includes(st)) {
     return NextResponse.json({ ok: false, code: "NOT_EDITABLE" }, { status: 403 });
+  }
+
+  const legalRow = await fetchProfileLegalCompanyName(supabase, user.id);
+  const legal = (legalRow ?? "").trim();
+  if (legal.length < RFQ_LEGAL_COMPANY_NAME_MIN || legal.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
+    return NextResponse.json({ ok: false, code: "LEGAL_NAME_REQUIRED" }, { status: 400 });
   }
 
   let form: FormData;
