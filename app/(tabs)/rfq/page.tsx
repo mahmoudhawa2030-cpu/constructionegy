@@ -122,12 +122,13 @@ export default async function RfqPage({ searchParams }: PageProps) {
         </p>
       </div>
 
+      {activeDraftId ? (
+        <RfqDraftControls draftId={activeDraftId} initialTitle={initialTitle} status={initialStatus} />
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[minmax(0,17rem)_1fr]">
         <RfqMyDraftsList drafts={drafts ?? []} />
         <div className="flex min-w-0 flex-col gap-4">
-          {activeDraftId ? (
-            <RfqDraftControls draftId={activeDraftId} initialTitle={initialTitle} status={initialStatus} />
-          ) : null}
           <RfqUpload
             key={activeDraftId ?? "new"}
             allowUpload={allowUpload}
