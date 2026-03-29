@@ -498,6 +498,7 @@ export type Database = {
           last_seen_at: string | null
           location: string | null
           phone_number: string | null
+          updated_at: string
           user_type: Database["public"]["Enums"]["user_type"]
           whatsapp_number: string | null
         }
@@ -515,6 +516,7 @@ export type Database = {
           last_seen_at?: string | null
           location?: string | null
           phone_number?: string | null
+          updated_at?: string
           user_type: Database["public"]["Enums"]["user_type"]
           whatsapp_number?: string | null
         }
@@ -532,6 +534,7 @@ export type Database = {
           last_seen_at?: string | null
           location?: string | null
           phone_number?: string | null
+          updated_at?: string
           user_type?: Database["public"]["Enums"]["user_type"]
           whatsapp_number?: string | null
         }
