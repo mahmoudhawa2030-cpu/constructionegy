@@ -2,7 +2,6 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MobileChromeMenuDrawer } from "@/components/mobile-chrome-menu-drawer";
@@ -11,13 +10,6 @@ import { MessageNotificationsProvider, useMessageNotifications } from "@/compone
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
-
-// Published listing detail: /listings/:id only (not /listings/new, not …/edit).
-function isListingDetailPath(pathname: string | null): boolean {
-  if (!pathname) return false;
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.length === 2 && parts[0] === "listings" && parts[1] !== "new";
-}
 
 type Props = {
   hasUser: boolean;
@@ -65,13 +57,26 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
               {t("favorites")}
             </Link>
           ) : null}
+          {hasUser ? (
+            <Link
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              href="/profile#business-verification"
+              prefetch={true}
+            >
+              {t("businessVerification")}
+            </Link>
+          ) : null}
           {hasUser ? <SignOutButton compact /> : null}
         </div>
       </header>
       <div className="flex min-h-0 flex-1 flex-col pt-[max(0px,env(safe-area-inset-top))] pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pt-0">
         {children}
       </div>
-      <MobileTabBar homeHref={hasUser ? "/users/myads" : "/"} messageUnreadCount={unreadTotal} />
+      <MobileTabBar
+        hasUser={hasUser}
+        homeHref={hasUser ? "/users/myads" : "/"}
+        messageUnreadCount={unreadTotal}
+      />
       <MobileChromeMenuDrawer hasUser={hasUser} />
     </div>
   );
@@ -86,17 +91,6 @@ function TabsChromeShell({ hasUser, children }: { hasUser: boolean; children: Re
 }
 
 export function TabsChrome({ hasUser, userId, initialUnreadMessageCount, children }: Props) {
-  const pathname = usePathname();
-  const minimal = isListingDetailPath(pathname);
-
-  if (minimal) {
-    return (
-      <div className="flex min-h-full flex-col">
-        <div className="flex min-h-0 flex-1 flex-col">{children}</div>
-      </div>
-    );
-  }
-
   const shell = <TabsChromeShell hasUser={hasUser}>{children}</TabsChromeShell>;
 
   if (hasUser && userId) {

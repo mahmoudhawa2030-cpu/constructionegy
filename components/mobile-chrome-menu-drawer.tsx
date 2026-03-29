@@ -95,6 +95,14 @@ export function MobileChromeMenuDrawer({ hasUser }: Props) {
                 {t("profile")}
               </Link>
               <Link
+                className={linkClass}
+                href="/profile#business-verification"
+                onClick={closeMenu}
+                prefetch={true}
+              >
+                {t("businessVerification")}
+              </Link>
+              <Link
                 aria-label={unreadTotal > 0 ? t("messagesTabAriaWithUnread", { count: unreadTotal }) : t("messages")}
                 className={`relative ${linkClass}`}
                 href="/messages"

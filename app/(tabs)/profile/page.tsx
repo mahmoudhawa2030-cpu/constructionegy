@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { BusinessVerificationPanel } from "@/components/business-verification-panel";
 import { ProfileEditForm } from "@/components/profile-edit-form";
 import { ProfileListingsGrid } from "@/components/profile-listings-grid";
 import { getCurrentProfile } from "@/lib/auth/admin";
+import type { BusinessVerificationDocType } from "@/lib/business-verification/constants";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
@@ -14,6 +16,11 @@ type ProfileFields = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
   "full_name" | "user_type" | "phone_number" | "whatsapp_number" | "location" | "avatar_url"
 >;
+
+type VerificationDocRow = {
+  document_type: BusinessVerificationDocType;
+  original_filename: string | null;
+};
 
 function defaultProfileFromUser(email: string | undefined, defaultDisplayName: string): ProfileFields {
   const local = email?.split("@")[0]?.trim();
@@ -30,7 +37,6 @@ function defaultProfileFromUser(email: string | undefined, defaultDisplayName: s
 export default async function ProfilePage() {
   const { user, profile } = await getCurrentProfile();
   const t = await getTranslations("profile");
-
   const supabase = await createClient();
   const { data: myListingsRaw } = user
     ? await supabase
@@ -43,6 +49,13 @@ export default async function ProfilePage() {
 
   const myListings = myListingsRaw ?? [];
   const categoryLabelMap = await getCategoryLabelMap();
+
+  const { data: verificationDocs } = user && profile
+    ? await supabase
+        .from("business_verification_documents")
+        .select("document_type, original_filename")
+        .eq("user_id", user.id)
+    : { data: null };
 
   const formProfile: ProfileFields = profile
     ? {
@@ -92,6 +105,13 @@ export default async function ProfilePage() {
             {t("login")}
           </Link>
         ) : null}
+        {user && profile ? (
+          <BusinessVerificationPanel
+            adminNotes={profile.business_verification_admin_notes}
+            documents={(verificationDocs ?? []) as VerificationDocRow[]}
+            status={profile.business_verification_status}
+          />
+        ) : null}
         {user ? (
           <ProfileEditForm key={profile?.id ?? "new"} profile={formProfile} />
         ) : null}
@@ -109,6 +129,14 @@ export default async function ProfilePage() {
             href="/rfq"
           >
             {t("rfq")}
+          </Link>
+        ) : null}
+        {user ? (
+          <Link
+            className="inline-flex w-full justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm font-medium text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+            href="/rfq/opportunities"
+          >
+            {t("rfqOpportunities")}
           </Link>
         ) : null}
         {user ? (
@@ -149,16 +177,15 @@ export default async function ProfilePage() {
         <ProfileListingsGrid
           categoryLabelMap={categoryLabelMap}
           viewerUserId={user.id}
-          empty={
-            <>
-              لا إعلانات بعد.{" "}
+          empty={t.rich("emptyMyListingsRich", {
+            link: (chunks) => (
               <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
-                أضف إعلاناً
+                {chunks}
               </Link>
-            </>
-          }
+            ),
+          })}
           listings={myListings}
-          title="إعلاناتي"
+          title={t("myListingsTitle")}
         />
       ) : null}
     </div>
