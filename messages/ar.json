@@ -134,15 +134,109 @@
     "addListingCta": "أضف إعلاناً",
     "myListingsTitle": "إعلاناتي",
     "defaultDisplayName": "مستخدم",
-    "rfq": "طلب عرض سعر — رفع"
+    "rfq": "طلب عرض سعر — رفع",
+    "rfqOpportunities": "طلبات مفتوحة — تقديم عرض",
+    "emptyMyListingsRich": "لا إعلانات بعد. <link>أضف إعلاناً</link>."
   },
   "subscriptionRequired": {
     "title": "يتطلب اشتراكاً",
+    "titleVerification": "يتطلب توثيق المنشأة",
     "bodyGeneric": "هذه المنطقة مقيدة عند تفعيل فرض الاشتراكات. يجب أن يعيّنك مشرف اشتراكاً فعّالاً للميزة المناسبة (أو «جميع الميزات»). يمكن جعل تصنيفات الإعلانات مجانية أو مدفوعة من الإدارة → التصنيفات؛ المجاني يبقى متاحاً دون اشتراك مميز.",
     "bodyWithFeature": "«{feature}» غير متضمّن في صلاحيتك الحالية أثناء فرض الاشتراكات. تواصل مع الإدارة لتفعيل اشتراك.",
+    "bodyVerificationRfq": "طلب عرض السعر (RFQ) متاح لأصحاب منشآت موثّقة فقط. ارفع السجل التجاري وبطاقة الضريبة وبطاقة الهوية من «حسابي». سيراجع المشرف المستندات.",
+    "hintVerificationThenSubscription": "بعد التوثيق قد تحتاج اشتراكاً فعّالاً لـ RFQ إذا كان فرض الاشتراكات مفعّلاً.",
     "hintAdmin": "الميزات المقيّدة:",
     "ctaHome": "الرئيسية",
     "ctaProfile": "حسابي"
+  },
+  "publicProfile": {
+    "galleryLink": "عرض المعرض",
+    "allAdsLink": "كل الإعلانات (الأحدث أولاً)",
+    "title": "ملف مستخدم",
+    "verifiedBadgeAria": "منشأة موثّقة",
+    "userType": {
+      "contractor": "مقاول / مقاولات",
+      "supplier": "مورد / توريد"
+    },
+    "memberSince": "عضو منذ {date}",
+    "contactHint": "للتواصل استخدم الرسائل أو بيانات الإعلان عند التوفر.",
+    "emptyListings": "لا توجد إعلانات منشورة من هذا المستخدم حالياً.",
+    "listingsTitle": "إعلانات {name}"
+  },
+  "businessVerification": {
+    "heading": "توثيق المنشأة",
+    "intro": "ارفع المستندات الثلاثة المطلوبة. عند اكتمالها تُرسل طلبك للمراجعة. يتاح RFQ فقط بعد الموافقة.",
+    "badgeAria": "منشأة موثّقة",
+    "statusVerified": "منشأتك موثّقة.",
+    "statusPending": "تم استلام المستندات — قيد المراجعة.",
+    "statusRejected": "لم يُقبل الطلب الحالي. يمكنك رفع مستندات جديدة أدناه.",
+    "statusNone": "ارفع المستندات الثلاثة لإرسال الطلب.",
+    "rejectionPrefix": "ملاحظة المراجع:",
+    "uploadSuccess": "تم رفع الملف.",
+    "currentFile": "الملف الحالي",
+    "missing": "لم يُرفع بعد",
+    "uploading": "جاري الرفع…",
+    "chooseFile": "اختر ملفاً",
+    "formatsHint": "PDF أو صورة (JPG أو PNG أو WebP) — بحد أقصى 15 ميجابايت لكل ملف.",
+    "doc": {
+      "commercial_register": "السجل التجاري",
+      "tax_card": "البطاقة الضريبية",
+      "personal_id": "بطاقة الرقم القومي / الهوية"
+    },
+    "errors": {
+      "UNAUTHORIZED": "يجب تسجيل الدخول.",
+      "NOT_EDITABLE": "الحسابات الموثّقة لا تستبدل المستندات من هنا. تواصل مع الدعم إذا لزم التعديل.",
+      "INVALID_FORM": "طلب رفع غير صالح.",
+      "INVALID_DOCUMENT_TYPE": "نوع مستند غير معروف.",
+      "NO_FILE": "اختر ملفاً للرفع.",
+      "FILE_TOO_LARGE": "الملف كبير جداً (الحد 15 ميجابايت).",
+      "UNSUPPORTED_TYPE": "استخدم PDF أو صورة (JPG أو PNG أو WebP).",
+      "STORAGE_FAILED": "تعذر تخزين الملف. حاول مرة أخرى.",
+      "DB_FAILED": "تعذر حفظ بيانات المستند. حاول مرة أخرى.",
+      "UNKNOWN": "حدث خطأ. حاول مرة أخرى."
+    }
+  },
+  "adminVerifications": {
+    "list": {
+      "title": "توثيق المنشآت — قيد الانتظار",
+      "lead": "مستخدمون أرفقوا المستندات الثلاثة وبانتظار الموافقة.",
+      "back": "← لوحة الإدارة",
+      "tableTitle": "طلبات قيد المراجعة",
+      "colUser": "المستخدم",
+      "colReviewed": "آخر مراجعة",
+      "empty": "لا طلبات قيد الانتظار.",
+      "loadError": "تعذر تحميل القائمة"
+    },
+    "detail": {
+      "title": "مراجعة التوثيق",
+      "back": "← قائمة الانتظار",
+      "editUser": "تعديل المستخدم (إدارة)",
+      "statusSection": "الحالة",
+      "statusLabel": "حالة التوثيق",
+      "lastNotes": "ملاحظات الإدارة",
+      "decisionHeading": "قرار",
+      "documentsHeading": "المستندات",
+      "noDocs": "لا مستندات مرفوعة.",
+      "open": "فتح",
+      "docType": {
+        "commercial_register": "السجل التجاري",
+        "tax_card": "البطاقة الضريبية",
+        "personal_id": "الهوية الشخصية"
+      },
+      "actions": {
+        "approve": "قبول",
+        "approving": "جاري القبول…",
+        "reject": "رفض",
+        "rejecting": "جاري الرفض…",
+        "rejectNotes": "ملاحظات للمستخدم (اختياري)",
+        "rejectPlaceholder": "سبب الرفض…"
+      }
+    },
+    "actions": {
+      "invalidUser": "مستخدم غير صالح.",
+      "approved": "تم اعتماد التوثيق.",
+      "rejected": "تم رفض الطلب."
+    }
   },
   "adminSubscriptions": {
     "enforcement": {
@@ -158,7 +252,8 @@
   "rfqPage": {
     "title": "طلب عرض سعر",
     "subtitle": "ارفع جداول (بنود) وملفات مرفقة. يتطلب تسجيل الدخول.",
-    "loginCta": "سجّل الدخول للمتابعة"
+    "loginCta": "سجّل الدخول للمتابعة",
+    "opportunitiesLink": "تصفّح طلبات مفتوحة من مشترين آخرين (عرض سعر كمورد)"
   },
   "rfqUpload": {
     "pickFiles": "اختر الملفات",
@@ -181,6 +276,7 @@
     "colUnit": "الوحدة",
     "colNotes": "ملاحظات",
     "openAttachment": "فتح",
+    "uploadLockedHint": "هذا الطلب مفتوح لاستقبال العروض — الرفع مغلق. يمكنك تحديث العنوان.",
     "errorsFallback": "خطأ: {code}",
     "status": {
       "queued": "في الانتظار",
@@ -211,7 +307,95 @@
       "SPREADSHEET_UNMAPPED_COLUMNS": "أعمدة غير معروفة وتم تجاهلها.",
       "UNKNOWN": "حدث خطأ غير معروف.",
       "NETWORK": "خطأ في الشبكة. أعد المحاولة.",
-      "SUBSCRIPTION_REQUIRED": "يتطلب طلب العروض اشتراكاً فعّالاً. تواصل مع الإدارة أو افتح صفحة معلومات الاشتراك."
+      "SUBSCRIPTION_REQUIRED": "يتطلب طلب العروض اشتراكاً فعّالاً. تواصل مع الإدارة أو افتح صفحة معلومات الاشتراك.",
+      "DRAFT_LOCKED": "لم يعد بالإمكان رفع ملفات لهذا الطلب. أنشئ مسودة جديدة أو اختر طلباً آخر من القائمة.",
+      "ITEMS_PERSIST_FAILED": "تم رفع الملفات لكن تعذر حفظ البنود في قاعدة البيانات."
+    }
+  },
+  "rfqDraft": {
+    "draftHeading": "تفاصيل الطلب",
+    "titleLabel": "العنوان (اختياري)",
+    "titlePlaceholder": "مثال: برج أ — حديد تسليح وخشب",
+    "saveTitle": "حفظ العنوان",
+    "publishHint": "عند الجاهزية، انشر الطلب ليستطيع الموردون المشتركون عرضه وتقديم مسودة عرض سعر.",
+    "publishButton": "فتح استقبال العروض",
+    "statusDraft": "مسودة",
+    "statusOpen": "مفتوح للعروض",
+    "statusEnded": "مغلق / مؤرشف",
+    "lockedUploadHint": "الرفع مغلق بينما الطلب مفتوحاً لاستقبال العروض.",
+    "myDrafts": {
+      "heading": "طلباتي",
+      "empty": "لا مسودات بعد. ارفع ملفات أدناه لإنشاء طلب.",
+      "newDraft": "طلب جديد",
+      "listAria": "مسودات طلبات العروض",
+      "untitled": "طلب بدون عنوان",
+      "badgeDraft": "مسودة",
+      "badgeOpen": "مفتوح"
+    },
+    "actions": {
+      "unauthorized": "يجب تسجيل الدخول.",
+      "subscriptionRequired": "يتطلب طلب العروض اشتراكاً فعّالاً.",
+      "invalidDraft": "طلب غير صالح.",
+      "saveFailed": "تعذر حفظ العنوان.",
+      "savedTitle": "تم حفظ العنوان.",
+      "saving": "جاري الحفظ…",
+      "notFound": "الطلب غير موجود.",
+      "alreadyPublished": "هذا الطلب منشور مسبقاً.",
+      "publishFailed": "تعذر نشر الطلب.",
+      "published": "الطلب مفتوح الآن لعروض الموردين.",
+      "publishing": "جاري النشر…",
+      "titleTooLong": "العنوان طويل جداً (حد أقصى ٥٠٠ حرف)."
+    }
+  },
+  "rfqOpportunity": {
+    "listTitle": "طلبات مفتوحة",
+    "listSubtitle": "طلبات منشورة من مشترين آخرين. يمكنك عرض البنود والمرفقات وتقديم مسودة عرض سعر.",
+    "backToMyRfqs": "طلباتي",
+    "loadError": "تعذر تحميل الطلبات.",
+    "empty": "لا توجد طلبات مفتوحة حالياً.",
+    "listAria": "قائمة الطلبات المفتوحة",
+    "untitled": "طلب بدون عنوان",
+    "updated": "آخر تحديث",
+    "detail": {
+      "untitled": "طلب بدون عنوان",
+      "buyerAnonymous": "هوية المشتري غير معروضة هنا.",
+      "back": "العودة للقائمة",
+      "itemsHeading": "البنود",
+      "noItems": "لا توجد بنود محفوظة لهذا الطلب.",
+      "colRow": "الصف",
+      "colDescription": "الوصف",
+      "colQty": "الكمية",
+      "colUnit": "الوحدة",
+      "colNotes": "ملاحظات",
+      "attachmentsHeading": "المرفقات",
+      "noAttachments": "لا مرفقات.",
+      "open": "فتح",
+      "yourBidHeading": "عرضك",
+      "bidStateDraft": "الحالة: مسودة",
+      "bidStateSubmitted": "الحالة: مُرسَل",
+      "bidStateWithdrawn": "الحالة: مُنسَحب",
+      "bidStateAccepted": "الحالة: مقبول",
+      "bidStateRejected": "الحالة: مرفوض",
+      "bidStateUnknown": "الحالة: غير معروفة"
+    },
+    "bidForm": {
+      "heading": "تقديم مسودة عرض سعر",
+      "hint": "يمكنك إضافة إجمالي اختياري وملاحظات. تسعير لكل بند يمكن إضافته لاحقاً.",
+      "amountLabel": "المبلغ الإجمالي (اختياري)",
+      "amountPlaceholder": "مثال: 150000",
+      "notesLabel": "ملاحظات (اختياري)",
+      "notesPlaceholder": "شروط التوريد، صلاحية العرض، إلخ.",
+      "submit": "حفظ مسودة العرض"
+    },
+    "bidActions": {
+      "unauthorized": "يجب تسجيل الدخول.",
+      "subscriptionRequired": "يتطلب اشتراكاً فعّالاً.",
+      "invalidDraft": "طلب غير صالح.",
+      "invalidAmount": "أدخل مبلغاً صالحاً.",
+      "bidExists": "لديك عرض مسبق على هذا الطلب.",
+      "bidFailed": "تعذر حفظ العرض (تأكد أن الطلب مفتوح لاستقبال العروض).",
+      "bidSaved": "تم حفظ مسودة العرض.",
+      "submitting": "جاري الحفظ…"
     }
   },
   "admin": {
@@ -224,7 +408,11 @@
     "chats": "مراقبة المحادثات",
     "categories": "التصنيفات",
     "subscriptionServices": "خدمات الاشتراك",
-    "site": "الموقع"
+    "rfqModeration": "مراجعة طلبات العروض",
+    "businessVerifications": "توثيق المنشآت",
+    "userActionsVerification": "التوثيق",
+    "site": "الموقع",
+    "overviewRfqModeration": "مراجعة RFQ — المسودات والبنود والعروض"
   },
   "adminSubscriptionsPage": {
     "title": "الاشتراكات",
@@ -263,6 +451,100 @@
     "enforcementOffTitle": "فرض الاشتراكات غير مفعّل",
     "enforcementOffBody": "إعدادات مجاني/مدفوع هنا لا تمنع أحداً حتى تفعّل الفرض. فعّله من صفحة الاشتراكات.",
     "enforcementOffCta": "افتح الاشتراكات وفعّل الفرض"
+  },
+  "adminRfq": {
+    "list": {
+      "title": "مراجعة طلبات العروض",
+      "lead": "راجع مسودات المشترين والبنود والمرفقات وعروض الموردين. غيّر حالة الطلب أو نتيجة العرض عند الحاجة.",
+      "backOverview": "العودة للنظرة العامة",
+      "loadError": "تعذر تحميل الطلبات",
+      "filterAll": "الكل",
+      "filterDraft": "مسودة",
+      "filterOpen": "مفتوح للعروض",
+      "filterSubmitted": "مُرسَل",
+      "filterClosed": "مغلق",
+      "filterArchived": "مؤرشف",
+      "filterAwarded": "مُسند",
+      "filtersAria": "تصفية حسب حالة الطلب",
+      "tableTitle": "مسودات RFQ",
+      "colTitle": "العنوان",
+      "colBuyer": "المشتري",
+      "colStatus": "الحالة",
+      "colUpdated": "آخر تحديث",
+      "empty": "لا طلبات تطابق التصفية.",
+      "untitled": "بدون عنوان",
+      "statusLabel": {
+        "draft": "مسودة",
+        "submitted": "مُرسَل",
+        "open_for_bids": "مفتوح للعروض",
+        "closed": "مغلق",
+        "archived": "مؤرشف",
+        "awarded": "مُسند"
+      }
+    },
+    "detail": {
+      "untitled": "طلب بدون عنوان",
+      "statusLine": "الحالة: {status}",
+      "idLabel": "المعرّف:",
+      "backList": "العودة لقائمة الطلبات",
+      "buyerSection": "المشتري",
+      "itemsHeading": "البنود",
+      "noItems": "لا بنود محفوظة.",
+      "colRow": "الصف",
+      "colDescription": "الوصف",
+      "colQty": "الكمية",
+      "colUnit": "الوحدة",
+      "colNotes": "ملاحظات",
+      "attachmentsHeading": "المرفقات",
+      "noAttachments": "لا مرفقات.",
+      "openAttachment": "فتح",
+      "bidsHeading": "عروض الموردين",
+      "noBids": "لا عروض بعد.",
+      "colSupplier": "المورد",
+      "colBidStatus": "حالة العرض",
+      "colAmount": "المبلغ",
+      "colBidNotes": "ملاحظات",
+      "colModerate": "إجراء",
+      "moderationForm": {
+        "heading": "إدارة الطلب",
+        "hint": "تغيير الحالة يؤثر على من يستطيع رفع ملفات ومن يرى الطلب في قائمة الفرص.",
+        "lastNote": "آخر ملاحظة إدارية",
+        "statusLabel": "حالة الطلب",
+        "statusOption": {
+          "draft": "مسودة",
+          "submitted": "مُرسَل",
+          "open_for_bids": "مفتوح للعروض",
+          "closed": "مغلق",
+          "archived": "مؤرشف",
+          "awarded": "مُسند"
+        },
+        "noteLabel": "ملاحظة داخلية (اختياري)",
+        "notePlaceholder": "للإدارة فقط (تُخزَّن في بيانات الطلب).",
+        "submit": "حفظ"
+      },
+      "bidForm": {
+        "statusLabel": "حالة العرض",
+        "statusOption": {
+          "draft": "مسودة",
+          "submitted": "مُرسَل",
+          "withdrawn": "مُنسَحب",
+          "accepted": "مقبول",
+          "rejected": "مرفوض"
+        },
+        "submit": "تحديث"
+      }
+    },
+    "actions": {
+      "invalidDraft": "معرّف الطلب غير صالح.",
+      "invalidStatus": "حالة غير صالحة.",
+      "notFound": "الطلب غير موجود.",
+      "draftUpdated": "تم تحديث الطلب.",
+      "invalidBid": "معرّف العرض غير صالح.",
+      "invalidBidStatus": "حالة عرض غير صالحة.",
+      "bidNotFound": "العرض غير موجود.",
+      "bidUpdated": "تم تحديث العرض.",
+      "saving": "جاري الحفظ…"
+    }
   },
   "adminCategories": {
     "requiresSubscription": "تصنيف مدفوع",

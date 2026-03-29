@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   banUserFromForm,
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
+  const tAdmin = useTranslations("admin");
   const [banState, banAction, banPending] = useActionState(banUserFromForm, null as AdminUserActionState | null);
   const [unbanState, unbanAction, unbanPending] = useActionState(
     unbanUserFromForm,
@@ -68,6 +70,12 @@ export function AdminUserActions({ userId, isAdmin, isBanned, isSelf }: Props) {
             تعديل
           </Link>
         ) : null}
+        <Link
+          className={`${adminUi.btnGhost} shrink-0 no-underline`}
+          href={`/admin/verifications/${userId}`}
+        >
+          {tAdmin("userActionsVerification")}
+        </Link>
         <Link
           className={`${adminUi.btnGhost} shrink-0 no-underline`}
           href={`/admin/users/${userId}/subscriptions`}

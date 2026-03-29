@@ -134,15 +134,109 @@
     "addListingCta": "Add a listing",
     "myListingsTitle": "My listings",
     "defaultDisplayName": "User",
-    "rfq": "RFQ — upload"
+    "rfq": "RFQ — upload",
+    "rfqOpportunities": "RFQ — open requests (quote)",
+    "emptyMyListingsRich": "No listings yet. <link>Add a listing</link>."
   },
   "subscriptionRequired": {
     "title": "Subscription required",
+    "titleVerification": "Business verification required",
     "bodyGeneric": "This area is limited while subscription enforcement is on. An admin must assign you an active subscription for the right feature (or “all features”). Listing categories can be set to free or paid in Admin → Categories; free categories stay open without premium.",
     "bodyWithFeature": "“{feature}” is not included in your current access while enforcement is on. Contact an administrator to activate a subscription.",
+    "bodyVerificationRfq": "Request for quotation (RFQ) is available only to verified businesses. Upload your commercial register, tax card, and personal ID in My account. An administrator will review your documents.",
+    "hintVerificationThenSubscription": "After verification, you may still need an active subscription for RFQ when subscription enforcement is on.",
     "hintAdmin": "Gated features:",
     "ctaHome": "Home",
     "ctaProfile": "My account"
+  },
+  "publicProfile": {
+    "galleryLink": "Browse gallery",
+    "allAdsLink": "All listings (newest first)",
+    "title": "User profile",
+    "verifiedBadgeAria": "Verified business",
+    "userType": {
+      "contractor": "Contractor / construction",
+      "supplier": "Supplier"
+    },
+    "memberSince": "Member since {date}",
+    "contactHint": "Use messages or listing contact details when available.",
+    "emptyListings": "No published listings from this user yet.",
+    "listingsTitle": "{name}’s listings"
+  },
+  "businessVerification": {
+    "heading": "Business verification",
+    "intro": "Upload the three required documents. When all are uploaded, your application is sent for admin review. RFQ is available only after approval.",
+    "badgeAria": "Verified business",
+    "statusVerified": "Your business is verified.",
+    "statusPending": "Documents received — pending review.",
+    "statusRejected": "Your application was not approved. You can upload new documents below.",
+    "statusNone": "Upload all three documents to submit for review.",
+    "rejectionPrefix": "Note from reviewer:",
+    "uploadSuccess": "File uploaded.",
+    "currentFile": "Current file",
+    "missing": "Not uploaded yet",
+    "uploading": "Uploading…",
+    "chooseFile": "Choose file",
+    "formatsHint": "PDF, JPG, PNG, or WebP — max 15 MB per file.",
+    "doc": {
+      "commercial_register": "Commercial register",
+      "tax_card": "Tax card",
+      "personal_id": "National ID (personal identification)"
+    },
+    "errors": {
+      "UNAUTHORIZED": "You must be signed in.",
+      "NOT_EDITABLE": "Verified accounts cannot replace documents here. Contact support if you need changes.",
+      "INVALID_FORM": "Invalid upload request.",
+      "INVALID_DOCUMENT_TYPE": "Unknown document type.",
+      "NO_FILE": "Choose a file to upload.",
+      "FILE_TOO_LARGE": "File is too large (max 15 MB).",
+      "UNSUPPORTED_TYPE": "Use PDF or an image (JPG, PNG, WebP).",
+      "STORAGE_FAILED": "Could not store the file. Try again.",
+      "DB_FAILED": "Could not save document metadata. Try again.",
+      "UNKNOWN": "Something went wrong. Try again."
+    }
+  },
+  "adminVerifications": {
+    "list": {
+      "title": "Business verification — pending",
+      "lead": "Users who submitted all three documents and are awaiting approval.",
+      "back": "← Admin overview",
+      "tableTitle": "Pending applications",
+      "colUser": "User",
+      "colReviewed": "Last reviewed",
+      "empty": "No pending applications.",
+      "loadError": "Could not load list"
+    },
+    "detail": {
+      "title": "Verification review",
+      "back": "← Pending list",
+      "editUser": "Edit user (admin)",
+      "statusSection": "Status",
+      "statusLabel": "Verification status",
+      "lastNotes": "Admin notes",
+      "decisionHeading": "Decision",
+      "documentsHeading": "Documents",
+      "noDocs": "No documents uploaded.",
+      "open": "Open",
+      "docType": {
+        "commercial_register": "Commercial register",
+        "tax_card": "Tax card",
+        "personal_id": "National ID"
+      },
+      "actions": {
+        "approve": "Approve",
+        "approving": "Approving…",
+        "reject": "Reject",
+        "rejecting": "Rejecting…",
+        "rejectNotes": "Notes to user (optional)",
+        "rejectPlaceholder": "Reason for rejection…"
+      }
+    },
+    "actions": {
+      "invalidUser": "Invalid user.",
+      "approved": "User marked as verified.",
+      "rejected": "Application rejected."
+    }
   },
   "adminSubscriptions": {
     "enforcement": {
@@ -158,7 +252,8 @@
   "rfqPage": {
     "title": "Request for quotation",
     "subtitle": "Upload spreadsheets (items) and supporting files. Sign in required.",
-    "loginCta": "Log in to continue"
+    "loginCta": "Log in to continue",
+    "opportunitiesLink": "Browse open RFQs from other buyers (quote as supplier)"
   },
   "rfqUpload": {
     "pickFiles": "Choose files",
@@ -181,6 +276,7 @@
     "colUnit": "Unit",
     "colNotes": "Notes",
     "openAttachment": "Open",
+    "uploadLockedHint": "This RFQ is open for bids — uploads are locked. You can still update the title.",
     "errorsFallback": "Error: {code}",
     "status": {
       "queued": "Queued",
@@ -211,7 +307,95 @@
       "SPREADSHEET_UNMAPPED_COLUMNS": "Some columns were not mapped and were ignored.",
       "UNKNOWN": "Something went wrong.",
       "NETWORK": "Network error. Try again.",
-      "SUBSCRIPTION_REQUIRED": "A subscription is required for RFQ. Contact an administrator or open the subscription info page."
+      "SUBSCRIPTION_REQUIRED": "A subscription is required for RFQ. Contact an administrator or open the subscription info page.",
+      "DRAFT_LOCKED": "This RFQ is no longer editable for uploads. Open a new draft or pick another one from the list.",
+      "ITEMS_PERSIST_FAILED": "Files uploaded but line items could not be saved to the database."
+    }
+  },
+  "rfqDraft": {
+    "draftHeading": "RFQ details",
+    "titleLabel": "Title (optional)",
+    "titlePlaceholder": "e.g. Tower A — rebar & formwork",
+    "saveTitle": "Save title",
+    "publishHint": "When you are ready, publish this RFQ so subscribed suppliers can view it and submit a draft bid.",
+    "publishButton": "Open for bids",
+    "statusDraft": "Draft",
+    "statusOpen": "Open for bids",
+    "statusEnded": "Closed / archived",
+    "lockedUploadHint": "Uploads are locked while the RFQ is open for bids.",
+    "myDrafts": {
+      "heading": "My RFQs",
+      "empty": "No drafts yet. Upload files below to create one.",
+      "newDraft": "New RFQ",
+      "listAria": "Your RFQ drafts",
+      "untitled": "Untitled RFQ",
+      "badgeDraft": "Draft",
+      "badgeOpen": "Open"
+    },
+    "actions": {
+      "unauthorized": "You must be signed in.",
+      "subscriptionRequired": "A subscription is required for RFQ.",
+      "invalidDraft": "Invalid RFQ.",
+      "saveFailed": "Could not save the title.",
+      "savedTitle": "Title saved.",
+      "saving": "Saving…",
+      "notFound": "RFQ not found.",
+      "alreadyPublished": "This RFQ is already published.",
+      "publishFailed": "Could not publish the RFQ.",
+      "published": "RFQ is now open for supplier bids.",
+      "publishing": "Publishing…",
+      "titleTooLong": "Title is too long (max 500 characters)."
+    }
+  },
+  "rfqOpportunity": {
+    "listTitle": "Open RFQs",
+    "listSubtitle": "RFQs published by other buyers. You can view line items and attachments and submit a draft bid.",
+    "backToMyRfqs": "My RFQs",
+    "loadError": "Could not load RFQs.",
+    "empty": "No open RFQs right now.",
+    "listAria": "Open RFQ list",
+    "untitled": "Untitled RFQ",
+    "updated": "Updated",
+    "detail": {
+      "untitled": "Untitled RFQ",
+      "buyerAnonymous": "Buyer identity is not shown here.",
+      "back": "Back to list",
+      "itemsHeading": "Line items",
+      "noItems": "No line items were saved for this RFQ.",
+      "colRow": "Row",
+      "colDescription": "Description",
+      "colQty": "Qty",
+      "colUnit": "Unit",
+      "colNotes": "Notes",
+      "attachmentsHeading": "Attachments",
+      "noAttachments": "No attachments.",
+      "open": "Open",
+      "yourBidHeading": "Your bid",
+      "bidStateDraft": "Status: draft",
+      "bidStateSubmitted": "Status: submitted",
+      "bidStateWithdrawn": "Status: withdrawn",
+      "bidStateAccepted": "Status: accepted",
+      "bidStateRejected": "Status: rejected",
+      "bidStateUnknown": "Status: unknown"
+    },
+    "bidForm": {
+      "heading": "Submit a draft bid",
+      "hint": "You can add an optional total and notes. Line-level pricing can be added later.",
+      "amountLabel": "Total amount (optional)",
+      "amountPlaceholder": "e.g. 150000",
+      "notesLabel": "Notes (optional)",
+      "notesPlaceholder": "Delivery terms, validity, etc.",
+      "submit": "Save draft bid"
+    },
+    "bidActions": {
+      "unauthorized": "You must be signed in.",
+      "subscriptionRequired": "A subscription is required.",
+      "invalidDraft": "Invalid RFQ.",
+      "invalidAmount": "Enter a valid amount.",
+      "bidExists": "You already have a bid on this RFQ.",
+      "bidFailed": "Could not save your bid (check the RFQ is open for bids).",
+      "bidSaved": "Draft bid saved.",
+      "submitting": "Saving…"
     }
   },
   "admin": {
@@ -224,7 +408,11 @@
     "chats": "Chat moderation",
     "categories": "Categories",
     "subscriptionServices": "Subscription services",
-    "site": "Site"
+    "rfqModeration": "RFQ moderation",
+    "businessVerifications": "Business verification",
+    "userActionsVerification": "Verification",
+    "site": "Site",
+    "overviewRfqModeration": "RFQ moderation — drafts, items, bids"
   },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",
@@ -263,6 +451,100 @@
     "enforcementOffTitle": "Subscription enforcement is OFF",
     "enforcementOffBody": "Free/paid flags here do not block users until you enable enforcement. Turn it on under Subscriptions.",
     "enforcementOffCta": "Open Subscriptions → turn on enforcement"
+  },
+  "adminRfq": {
+    "list": {
+      "title": "RFQ moderation",
+      "lead": "Review buyer drafts, line items, attachments, and supplier bids. Change RFQ status or bid outcome when needed.",
+      "backOverview": "Back to overview",
+      "loadError": "Could not load RFQs",
+      "filterAll": "All",
+      "filterDraft": "Draft",
+      "filterOpen": "Open for bids",
+      "filterSubmitted": "Submitted",
+      "filterClosed": "Closed",
+      "filterArchived": "Archived",
+      "filterAwarded": "Awarded",
+      "filtersAria": "Filter by RFQ status",
+      "tableTitle": "RFQ drafts",
+      "colTitle": "Title",
+      "colBuyer": "Buyer",
+      "colStatus": "Status",
+      "colUpdated": "Updated",
+      "empty": "No RFQs match this filter.",
+      "untitled": "Untitled",
+      "statusLabel": {
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "open_for_bids": "Open for bids",
+        "closed": "Closed",
+        "archived": "Archived",
+        "awarded": "Awarded"
+      }
+    },
+    "detail": {
+      "untitled": "Untitled RFQ",
+      "statusLine": "Status: {status}",
+      "idLabel": "ID:",
+      "backList": "Back to RFQ list",
+      "buyerSection": "Buyer",
+      "itemsHeading": "Line items",
+      "noItems": "No line items stored.",
+      "colRow": "Row",
+      "colDescription": "Description",
+      "colQty": "Qty",
+      "colUnit": "Unit",
+      "colNotes": "Notes",
+      "attachmentsHeading": "Attachments",
+      "noAttachments": "No attachments.",
+      "openAttachment": "Open",
+      "bidsHeading": "Supplier bids",
+      "noBids": "No bids yet.",
+      "colSupplier": "Supplier",
+      "colBidStatus": "Bid status",
+      "colAmount": "Amount",
+      "colBidNotes": "Notes",
+      "colModerate": "Moderate",
+      "moderationForm": {
+        "heading": "Moderate RFQ",
+        "hint": "Changing status affects who can upload files and who sees this RFQ in the opportunities list.",
+        "lastNote": "Last admin note",
+        "statusLabel": "RFQ status",
+        "statusOption": {
+          "draft": "Draft",
+          "submitted": "Submitted",
+          "open_for_bids": "Open for bids",
+          "closed": "Closed",
+          "archived": "Archived",
+          "awarded": "Awarded"
+        },
+        "noteLabel": "Internal note (optional)",
+        "notePlaceholder": "Visible to admins only (stored in draft metadata).",
+        "submit": "Save"
+      },
+      "bidForm": {
+        "statusLabel": "Bid status",
+        "statusOption": {
+          "draft": "Draft",
+          "submitted": "Submitted",
+          "withdrawn": "Withdrawn",
+          "accepted": "Accepted",
+          "rejected": "Rejected"
+        },
+        "submit": "Update"
+      }
+    },
+    "actions": {
+      "invalidDraft": "Invalid RFQ id.",
+      "invalidStatus": "Invalid status.",
+      "notFound": "RFQ not found.",
+      "draftUpdated": "RFQ updated.",
+      "invalidBid": "Invalid bid id.",
+      "invalidBidStatus": "Invalid bid status.",
+      "bidNotFound": "Bid not found.",
+      "bidUpdated": "Bid updated.",
+      "saving": "Saving…"
+    }
   },
   "adminCategories": {
     "requiresSubscription": "Paid category",

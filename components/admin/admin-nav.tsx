@@ -13,13 +13,26 @@ function navLinkClass(active: boolean): string {
   return `${base} border-[var(--admin-shell-border)] bg-gradient-to-b from-white to-[#dce8f2] text-[var(--admin-table-header-text)] hover:to-[#cfe0f0] dark:from-zinc-700 dark:to-zinc-800 dark:text-zinc-100 dark:hover:to-zinc-700`;
 }
 
-const NAV_ITEMS: { href: string; labelKey: "overview" | "listings" | "users" | "chats" | "categories" | "subscriptionServices" }[] = [
+const NAV_ITEMS: {
+  href: string;
+  labelKey:
+    | "overview"
+    | "listings"
+    | "users"
+    | "chats"
+    | "categories"
+    | "subscriptionServices"
+    | "rfqModeration"
+    | "businessVerifications";
+}[] = [
   { href: "/admin", labelKey: "overview" },
   { href: "/admin/listings", labelKey: "listings" },
   { href: "/admin/users", labelKey: "users" },
   { href: "/admin/messages", labelKey: "chats" },
   { href: "/admin/categories", labelKey: "categories" },
   { href: "/admin/subscription-services", labelKey: "subscriptionServices" },
+  { href: "/admin/rfq", labelKey: "rfqModeration" },
+  { href: "/admin/verifications", labelKey: "businessVerifications" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

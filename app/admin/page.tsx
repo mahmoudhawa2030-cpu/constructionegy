@@ -55,6 +55,11 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </li>
                 <li>
+                  <Link className={adminUi.objectLink} href="/admin/verifications" prefetch={true}>
+                    {tAdmin("businessVerifications")}
+                  </Link>
+                </li>
+                <li>
                   <Link className={adminUi.objectLink} href="/admin/messages">
                     مراقبة المحادثات
                   </Link>
@@ -67,6 +72,11 @@ export default async function AdminDashboardPage() {
                 <li>
                   <Link className={adminUi.objectLink} href="/admin/subscription-services">
                     {tAdmin("subscriptionServices")}
+                  </Link>
+                </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/rfq" prefetch={true}>
+                    {tAdmin("overviewRfqModeration")}
                   </Link>
                 </li>
               </ul>

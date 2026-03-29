@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { AdminUserEditForm } from "@/components/admin-user-edit-form";
 import { adminUi } from "@/lib/admin-ui";
@@ -13,6 +14,7 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function AdminUserEditPage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
+  const tAdmin = await getTranslations("admin");
 
   const {
     data: { user: currentUser },
@@ -51,6 +53,9 @@ export default async function AdminUserEditPage({ params }: PageProps) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className={adminUi.pageTitle}>تعديل مستخدم</h1>
         <div className="flex flex-wrap gap-2">
+          <Link className={adminUi.linkBack} href={`/admin/verifications/${id}`}>
+            {tAdmin("userActionsVerification")}
+          </Link>
           <Link className={adminUi.linkBack} href={`/admin/users/${id}/subscriptions`}>
             الاشتراكات
           </Link>
