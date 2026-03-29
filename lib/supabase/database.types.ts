@@ -439,9 +439,56 @@ export type Database = {
           },
         ]
       }
+      business_verification_documents: {
+        Row: {
+          byte_size: number
+          content_type: string | null
+          created_at: string
+          document_type: string
+          id: string
+          original_filename: string
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          byte_size: number
+          content_type?: string | null
+          created_at?: string
+          document_type: string
+          id?: string
+          original_filename: string
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          byte_size?: number
+          content_type?: string | null
+          created_at?: string
+          document_type?: string
+          id?: string
+          original_filename?: string
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_verification_documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          business_verification_admin_notes: string | null
+          business_verification_reviewed_at: string | null
+          business_verification_status: string
           created_at: string
           full_name: string
           id: string
@@ -456,6 +503,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          business_verification_admin_notes?: string | null
+          business_verification_reviewed_at?: string | null
+          business_verification_status?: string
           created_at?: string
           full_name: string
           id: string
@@ -470,6 +520,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          business_verification_admin_notes?: string | null
+          business_verification_reviewed_at?: string | null
+          business_verification_status?: string
           created_at?: string
           full_name?: string
           id?: string
@@ -593,10 +646,65 @@ export type Database = {
           },
         ]
       }
+      rfq_bids: {
+        Row: {
+          created_at: string
+          currency: string
+          draft_id: string
+          id: string
+          metadata: Json
+          status: string
+          supplier_notes: string | null
+          supplier_user_id: string
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          draft_id: string
+          id?: string
+          metadata?: Json
+          status?: string
+          supplier_notes?: string | null
+          supplier_user_id: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          draft_id?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          supplier_notes?: string | null
+          supplier_user_id?: string
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_bids_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_bids_supplier_user_id_fkey"
+            columns: ["supplier_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfq_drafts: {
         Row: {
           created_at: string
           id: string
+          metadata: Json
           status: string
           title: string | null
           updated_at: string
@@ -605,6 +713,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          metadata?: Json
           status?: string
           title?: string | null
           updated_at?: string
@@ -613,6 +722,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          metadata?: Json
           status?: string
           title?: string | null
           updated_at?: string
