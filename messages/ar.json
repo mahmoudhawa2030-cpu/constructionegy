@@ -279,6 +279,11 @@
     "colUnit": "الوحدة",
     "colNotes": "ملاحظات",
     "openAttachment": "فتح",
+    "legalCompanyNameLabel": "الاسم القانوني للشركة",
+    "legalCompanyNameHint": "الاسم الرسمي كما في السجل التجاري. مطلوب قبل الرفع وقبل نشر الطلب.",
+    "saveLegalCompanyOnly": "حفظ اسم الشركة",
+    "savingLegalCompany": "جاري الحفظ…",
+    "legalCompanyNameMissing": "غير محدد",
     "uploadLockedHint": "هذا الطلب مفتوح لاستقبال العروض — الرفع مغلق. يمكنك تحديث العنوان.",
     "errorsFallback": "خطأ: {code}",
     "status": {
@@ -312,7 +317,10 @@
       "NETWORK": "خطأ في الشبكة. أعد المحاولة.",
       "SUBSCRIPTION_REQUIRED": "يتطلب طلب العروض اشتراكاً فعّالاً. تواصل مع الإدارة أو افتح صفحة معلومات الاشتراك.",
       "DRAFT_LOCKED": "لم يعد بالإمكان رفع ملفات لهذا الطلب. أنشئ مسودة جديدة أو اختر طلباً آخر من القائمة.",
-      "ITEMS_PERSIST_FAILED": "تم رفع الملفات لكن تعذر حفظ البنود في قاعدة البيانات."
+      "ITEMS_PERSIST_FAILED": "تم رفع الملفات لكن تعذر حفظ البنود في قاعدة البيانات.",
+      "LEGAL_COMPANY_NAME_REQUIRED": "أدخل الاسم القانوني للشركة (فوق المرفقات) قبل الرفع.",
+      "LEGAL_COMPANY_NAME_TOO_LONG": "الاسم القانوني للشركة طويل جداً (الحد 300 حرف).",
+      "METADATA_SAVE_FAILED": "تعذر حفظ اسم الشركة. حاول مرة أخرى."
     }
   },
   "rfqDraft": {
@@ -347,7 +355,12 @@
       "publishFailed": "تعذر نشر الطلب.",
       "published": "الطلب مفتوح الآن لعروض الموردين.",
       "publishing": "جاري النشر…",
-      "titleTooLong": "العنوان طويل جداً (حد أقصى ٥٠٠ حرف)."
+      "titleTooLong": "العنوان طويل جداً (حد أقصى ٥٠٠ حرف).",
+      "legalCompanyInvalid": "أدخل الاسم القانوني للشركة (حرفان على الأقل).",
+      "legalCompanyTooLong": "الاسم القانوني للشركة طويل جداً (الحد 300 حرف).",
+      "legalCompanySaved": "تم حفظ اسم الشركة.",
+      "legalCompanySaveFailed": "تعذر حفظ اسم الشركة.",
+      "legalCompanyRequiredBeforePublish": "أضف واحفظ الاسم القانوني للشركة في قسم رفع طلب العروض (فوق المرفقات) قبل فتح الطلب للعروض."
     }
   },
   "rfqOpportunity": {

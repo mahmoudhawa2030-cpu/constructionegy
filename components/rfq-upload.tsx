@@ -2,8 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 
+import type { RfqDraftUiActionState } from "@/app/(tabs)/rfq/actions";
+import { saveRfqLegalCompanyNameAction } from "@/app/(tabs)/rfq/actions";
+import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rfq/domain";
 import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
 
 type LocalFile = {
@@ -34,23 +38,48 @@ const IMG_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 
 type Props = {
   initialDraftId?: string | null;
+  /** When set, we do not replace the URL after the first upload (already deep-linked). */
+  draftIdInUrl?: string | null;
+  initialLineItems?: RfqItemPreview[];
+  initialAttachments?: RfqAttachmentDto[];
+  /** When false, hide file upload (e.g. draft already open for bids). */
+  allowUpload?: boolean;
+  initialLegalCompanyName?: string;
 };
 
-export function RfqUpload({ initialDraftId = null }: Props) {
+export function RfqUpload({
+  initialDraftId = null,
+  draftIdInUrl = null,
+  initialLineItems = [],
+  initialAttachments = [],
+  allowUpload = true,
+  initialLegalCompanyName = "",
+}: Props) {
+  const router = useRouter();
   const t = useTranslations("rfqUpload");
   const te = useTranslations("rfqUpload.errors");
   const inputId = useId();
+  const legalCompanyInputId = useId();
   const filesRef = useRef<LocalFile[]>([]);
   const [draftId, setDraftId] = useState<string | null>(initialDraftId);
   const [replaceId, setReplaceId] = useState("");
   const [localFiles, setLocalFiles] = useState<LocalFile[]>([]);
-  const [parsedItems, setParsedItems] = useState<RfqItemPreview[]>([]);
-  const [attachments, setAttachments] = useState<RfqAttachmentDto[]>([]);
+  const [parsedItems, setParsedItems] = useState<RfqItemPreview[]>(initialLineItems);
+  const [attachments, setAttachments] = useState<RfqAttachmentDto[]>(initialAttachments);
   const [warnings, setWarnings] = useState<{ code: string; detail?: string }[]>([]);
   const [blockingErrors, setBlockingErrors] = useState<{ code: string; detail?: string }[]>([]);
   const [busy, setBusy] = useState(false);
+  const [legalCompanyName, setLegalCompanyName] = useState(initialLegalCompanyName);
+  const [legalSaveState, legalSaveAction, legalSavePending] = useActionState(
+    saveRfqLegalCompanyNameAction,
+    null as RfqDraftUiActionState | null,
+  );
 
   filesRef.current = localFiles;
+
+  useEffect(() => {
+    setLegalCompanyName(initialLegalCompanyName);
+  }, [initialLegalCompanyName]);
 
   useEffect(() => {
     return () => {
@@ -109,6 +138,16 @@ export function RfqUpload({ initialDraftId = null }: Props) {
         return te("NETWORK");
       case "SUBSCRIPTION_REQUIRED":
         return te("SUBSCRIPTION_REQUIRED");
+      case "DRAFT_LOCKED":
+        return te("DRAFT_LOCKED");
+      case "ITEMS_PERSIST_FAILED":
+        return te("ITEMS_PERSIST_FAILED");
+      case "LEGAL_COMPANY_NAME_REQUIRED":
+        return te("LEGAL_COMPANY_NAME_REQUIRED");
+      case "LEGAL_COMPANY_NAME_TOO_LONG":
+        return te("LEGAL_COMPANY_NAME_TOO_LONG");
+      case "METADATA_SAVE_FAILED":
+        return te("METADATA_SAVE_FAILED");
       default:
         return t("errorsFallback", { code: c });
     }
@@ -142,12 +181,22 @@ export function RfqUpload({ initialDraftId = null }: Props) {
 
   const submit = async () => {
     if (localFiles.length === 0 || busy) return;
+    const trimmedLegal = legalCompanyName.trim();
+    if (trimmedLegal.length < RFQ_LEGAL_COMPANY_NAME_MIN) {
+      setBlockingErrors([{ code: "LEGAL_COMPANY_NAME_REQUIRED" }]);
+      return;
+    }
+    if (trimmedLegal.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
+      setBlockingErrors([{ code: "LEGAL_COMPANY_NAME_TOO_LONG" }]);
+      return;
+    }
     setBusy(true);
     setBlockingErrors([]);
     setWarnings([]);
     setLocalFiles((prev) => prev.map((x) => ({ ...x, status: "uploading" as const })));
 
     const fd = new FormData();
+    fd.append("legalCompanyName", trimmedLegal);
     for (const lf of localFiles) {
       fd.append("files", lf.file);
     }
@@ -175,9 +224,24 @@ export function RfqUpload({ initialDraftId = null }: Props) {
       return;
     }
 
-    if (data.rfqDraftId) setDraftId(data.rfqDraftId);
-    setParsedItems(data.parsedItems ?? []);
-    setAttachments(data.attachments ?? []);
+    if (data.rfqDraftId) {
+      setDraftId(data.rfqDraftId);
+      if (!draftIdInUrl && data.rfqDraftId) {
+        router.replace(`/rfq?draft=${data.rfqDraftId}`);
+      }
+    }
+    const nextParsed = data.parsedItems ?? [];
+    if (nextParsed.length > 0) {
+      setParsedItems(nextParsed);
+    }
+    const nextAtt = data.attachments ?? [];
+    if (nextAtt.length > 0) {
+      setAttachments((prev) => {
+        const map = new Map(prev.map((a) => [a.id, a]));
+        for (const a of nextAtt) map.set(a.id, a);
+        return [...map.values()];
+      });
+    }
     setWarnings(data.warnings ?? []);
     setBlockingErrors(data.errors ?? []);
 
@@ -196,42 +260,53 @@ export function RfqUpload({ initialDraftId = null }: Props) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
-        <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={inputId}>
-          {t("pickFiles")}
-        </label>
-        <input
-          multiple
-          className="mt-2 block w-full text-sm text-zinc-600 file:me-4 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-900 dark:text-zinc-400 dark:file:bg-zinc-700 dark:file:text-zinc-100"
-          id={inputId}
-          type="file"
-          onChange={(e) => {
-            onPick(e.target.files);
-            e.target.value = "";
-          }}
-        />
-        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t("hint")}</p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
-          <label className="flex flex-1 flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
-            <span>{t("replaceOptional")}</span>
-            <input
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
-              placeholder={t("replacePlaceholder")}
-              type="text"
-              value={replaceId}
-              onChange={(e) => setReplaceId(e.target.value)}
-            />
+      {allowUpload ? (
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
+          <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={inputId}>
+            {t("pickFiles")}
           </label>
-          <button
-            className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-            disabled={busy || localFiles.length === 0}
-            type="button"
-            onClick={() => void submit()}
-          >
-            {busy ? t("uploading") : t("upload")}
-          </button>
+          <input
+            multiple
+            className="mt-2 block w-full text-sm text-zinc-600 file:me-4 file:rounded-lg file:border-0 file:bg-zinc-200 file:px-3 file:py-2 file:text-sm file:font-medium file:text-zinc-900 dark:text-zinc-400 dark:file:bg-zinc-700 dark:file:text-zinc-100"
+            id={inputId}
+            type="file"
+            onChange={(e) => {
+              onPick(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t("hint")}</p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+            <label className="flex flex-1 flex-col gap-1 text-xs text-zinc-600 dark:text-zinc-400">
+              <span>{t("replaceOptional")}</span>
+              <input
+                className="rounded-lg border border-zinc-300 bg-white px-2 py-1.5 font-mono text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                placeholder={t("replacePlaceholder")}
+                type="text"
+                value={replaceId}
+                onChange={(e) => setReplaceId(e.target.value)}
+              />
+            </label>
+            <button
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+              disabled={
+                busy ||
+                localFiles.length === 0 ||
+                legalCompanyName.trim().length < RFQ_LEGAL_COMPANY_NAME_MIN ||
+                legalCompanyName.trim().length > RFQ_LEGAL_COMPANY_NAME_MAX
+              }
+              type="button"
+              onClick={() => void submit()}
+            >
+              {busy ? t("uploading") : t("upload")}
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="rounded-xl border border-zinc-200 bg-zinc-50/80 px-4 py-3 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900/40 dark:text-zinc-400">
+          {t("uploadLockedHint")}
+        </p>
+      )}
 
       {draftId ? (
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -348,6 +423,65 @@ export function RfqUpload({ initialDraftId = null }: Props) {
           <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50" id="rfq-attach-heading">
             {t("sectionAttachments")}
           </h2>
+          {allowUpload ? (
+            <form
+              action={legalSaveAction}
+              className="mb-4 flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40"
+              onSubmit={(e) => {
+                if (!draftId) e.preventDefault();
+              }}
+            >
+              <input name="draft_id" type="hidden" value={draftId ?? ""} />
+              <label
+                className="text-sm font-medium text-zinc-800 dark:text-zinc-200"
+                htmlFor={legalCompanyInputId}
+              >
+                {t("legalCompanyNameLabel")}
+                <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>
+                  *
+                </span>
+              </label>
+              <input
+                aria-label={t("legalCompanyNameLabel")}
+                className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                id={legalCompanyInputId}
+                maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
+                name="legal_company_name"
+                onChange={(e) => setLegalCompanyName(e.target.value)}
+                type="text"
+                value={legalCompanyName}
+              />
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
+              {draftId ? (
+                <button
+                  className="self-start rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm font-medium text-zinc-900 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-100"
+                  disabled={legalSavePending}
+                  type="submit"
+                >
+                  {legalSavePending ? t("savingLegalCompany") : t("saveLegalCompanyOnly")}
+                </button>
+              ) : null}
+              {legalSaveState ? (
+                <p
+                  className={
+                    legalSaveState.ok
+                      ? "text-sm text-emerald-700 dark:text-emerald-400"
+                      : "text-sm text-red-700 dark:text-red-400"
+                  }
+                  role="status"
+                >
+                  {legalSaveState.message}
+                </p>
+              ) : null}
+            </form>
+          ) : (
+            <div className="mb-4 rounded-lg border border-zinc-200 bg-zinc-50/80 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
+              <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200">{t("legalCompanyNameLabel")}</p>
+              <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
+                {legalCompanyName.trim() ? legalCompanyName.trim() : t("legalCompanyNameMissing")}
+              </p>
+            </div>
+          )}
           {attachments.length === 0 ? (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("emptyAttachments")}</p>
           ) : (

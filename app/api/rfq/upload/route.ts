@@ -8,11 +8,11 @@ import {
   isSpreadsheetExt,
   normalizeFilename,
   RFQ_SIGNED_URL_TTL,
-  RFQ_UPLOAD_MAX_FILE_BYTES,
-  RFQ_UPLOAD_MAX_FILES,
-  RFQ_UPLOAD_MAX_TOTAL_BYTES,
 } from "@/lib/rfq/constants";
+import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rfq/domain";
+import { resolveRfqDraftForUpload, updateRfqDraftForOwner } from "@/lib/rfq/draft-service";
 import { parseRfqSpreadsheet } from "@/lib/rfq/parse-spreadsheet";
+import { validateRfqUploadFiles } from "@/lib/rfq/upload-validation";
 import type {
   RfqAttachmentDto,
   RfqItemPreview,
@@ -21,6 +21,7 @@ import type {
 } from "@/lib/rfq/types";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/supabase/database.types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -79,47 +80,67 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
     .getAll("files")
     .filter((v): v is File => typeof File !== "undefined" && v instanceof File);
 
-  if (files.length === 0) {
-    return err(400, { ok: false, errors: [{ code: "NO_FILES" }] });
-  }
-  if (files.length > RFQ_UPLOAD_MAX_FILES) {
-    return err(400, { ok: false, errors: [{ code: "TOO_MANY_FILES" }] });
+  const validated = validateRfqUploadFiles(files);
+  if (!validated.ok) {
+    return err(400, { ok: false, errors: validated.errors });
   }
 
-  let total = 0;
-  for (const f of files) {
-    total += f.size;
-    if (f.size > RFQ_UPLOAD_MAX_FILE_BYTES) {
-      return err(400, { ok: false, errors: [{ code: "FILE_TOO_LARGE", detail: f.name }] });
-    }
+  const resolved = await resolveRfqDraftForUpload(supabase, user.id, rfqDraftIdRaw || null);
+  if (!resolved.ok) {
+    const status = resolved.code === "DRAFT_FORBIDDEN" ? 403 : 500;
+    return err(status, {
+      ok: false,
+      errors: [{ code: resolved.code, detail: resolved.detail }],
+    });
   }
-  if (total > RFQ_UPLOAD_MAX_TOTAL_BYTES) {
-    return err(400, { ok: false, errors: [{ code: "TOTAL_TOO_LARGE" }] });
+  const draftId = resolved.draftId;
+
+  const { data: draftRow, error: draftStatusErr } = await supabase
+    .from("rfq_drafts")
+    .select("status")
+    .eq("id", draftId)
+    .maybeSingle();
+
+  if (draftStatusErr || !draftRow) {
+    return err(403, {
+      ok: false,
+      rfqDraftId: draftId,
+      errors: [{ code: "DRAFT_FORBIDDEN" }],
+    });
+  }
+  if (draftRow.status !== "draft") {
+    return err(403, {
+      ok: false,
+      rfqDraftId: draftId,
+      errors: [{ code: "DRAFT_LOCKED" }],
+    });
   }
 
-  let draftId = rfqDraftIdRaw;
-  if (!draftId) {
-    const { data: created, error: draftErr } = await supabase
-      .from("rfq_drafts")
-      .insert({ user_id: user.id })
-      .select("id")
-      .single();
-    if (draftErr || !created) {
-      return err(500, {
-        ok: false,
-        errors: [{ code: "DRAFT_CREATE_FAILED", detail: draftErr?.message }],
-      });
-    }
-    draftId = created.id;
-  } else {
-    const { data: draft, error: draftReadErr } = await supabase
-      .from("rfq_drafts")
-      .select("id, user_id")
-      .eq("id", draftId)
-      .maybeSingle();
-    if (draftReadErr || !draft || draft.user_id !== user.id) {
-      return err(403, { ok: false, errors: [{ code: "DRAFT_FORBIDDEN" }] });
-    }
+  const legalRaw = String(form.get("legalCompanyName") ?? "").trim();
+  if (legalRaw.length < RFQ_LEGAL_COMPANY_NAME_MIN) {
+    return err(400, {
+      ok: false,
+      rfqDraftId: draftId,
+      errors: [{ code: "LEGAL_COMPANY_NAME_REQUIRED" }],
+    });
+  }
+  if (legalRaw.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
+    return err(400, {
+      ok: false,
+      rfqDraftId: draftId,
+      errors: [{ code: "LEGAL_COMPANY_NAME_TOO_LONG" }],
+    });
+  }
+
+  const metaSaved = await updateRfqDraftForOwner(supabase, draftId, user.id, {
+    metadata: { legal_company_name: legalRaw },
+  });
+  if (!metaSaved.ok) {
+    return err(500, {
+      ok: false,
+      rfqDraftId: draftId,
+      errors: [{ code: "METADATA_SAVE_FAILED", detail: metaSaved.message }],
+    });
   }
 
   const parsedItems: RfqItemPreview[] = [];
@@ -339,6 +360,25 @@ export async function POST(request: Request): Promise<NextResponse<RfqUploadResp
 
   if (pendingReplaceId) {
     warnings.push({ code: "REPLACE_ATTACHMENT_UNUSED", detail: pendingReplaceId });
+  }
+
+  const spreadsheetOk = fileResults.some((r) => r.ok && r.kind === "spreadsheet");
+  if (spreadsheetOk && parsedItems.length > 0) {
+    await supabase.from("rfq_items").delete().eq("draft_id", draftId);
+    const itemRows = parsedItems.map((it) => ({
+      draft_id: draftId,
+      row_index: it.rowIndex,
+      description: it.description,
+      quantity: it.quantity,
+      unit: it.unit,
+      notes: it.notes,
+      raw: it as unknown as Json,
+      validation_errors: it.fieldErrors ? (it.fieldErrors as unknown as Json) : null,
+    }));
+    const { error: itemsErr } = await supabase.from("rfq_items").insert(itemRows);
+    if (itemsErr) {
+      warnings.push({ code: "ITEMS_PERSIST_FAILED", detail: itemsErr.message });
+    }
   }
 
   const anyFileOk = fileResults.some((r) => r.ok);

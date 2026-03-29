@@ -279,6 +279,11 @@
     "colUnit": "Unit",
     "colNotes": "Notes",
     "openAttachment": "Open",
+    "legalCompanyNameLabel": "Legal company name",
+    "legalCompanyNameHint": "Official registered name as on your commercial register. Required before upload and to publish.",
+    "saveLegalCompanyOnly": "Save company name",
+    "savingLegalCompany": "Saving…",
+    "legalCompanyNameMissing": "Not provided",
     "uploadLockedHint": "This RFQ is open for bids — uploads are locked. You can still update the title.",
     "errorsFallback": "Error: {code}",
     "status": {
@@ -312,7 +317,10 @@
       "NETWORK": "Network error. Try again.",
       "SUBSCRIPTION_REQUIRED": "A subscription is required for RFQ. Contact an administrator or open the subscription info page.",
       "DRAFT_LOCKED": "This RFQ is no longer editable for uploads. Open a new draft or pick another one from the list.",
-      "ITEMS_PERSIST_FAILED": "Files uploaded but line items could not be saved to the database."
+      "ITEMS_PERSIST_FAILED": "Files uploaded but line items could not be saved to the database.",
+      "LEGAL_COMPANY_NAME_REQUIRED": "Enter your legal company name (above attachments) before uploading.",
+      "LEGAL_COMPANY_NAME_TOO_LONG": "Legal company name is too long (max 300 characters).",
+      "METADATA_SAVE_FAILED": "Could not save company name. Try again."
     }
   },
   "rfqDraft": {
@@ -347,7 +355,12 @@
       "publishFailed": "Could not publish the RFQ.",
       "published": "RFQ is now open for supplier bids.",
       "publishing": "Publishing…",
-      "titleTooLong": "Title is too long (max 500 characters)."
+      "titleTooLong": "Title is too long (max 500 characters).",
+      "legalCompanyInvalid": "Enter the legal company name (at least 2 characters).",
+      "legalCompanyTooLong": "Legal company name is too long (max 300 characters).",
+      "legalCompanySaved": "Company name saved.",
+      "legalCompanySaveFailed": "Could not save company name.",
+      "legalCompanyRequiredBeforePublish": "Add and save your legal company name in the RFQ upload section (above attachments) before opening for bids."
     }
   },
   "rfqOpportunity": {

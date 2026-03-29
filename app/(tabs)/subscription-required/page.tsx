@@ -43,6 +43,15 @@ export default async function SubscriptionRequiredPage({ searchParams }: PagePro
   const services = await getSubscriptionServicesOrdered();
   const listForUi = services.filter((s) => s.feature_key !== "all");
 
+  const { data: accessProfile } = await supabase
+    .from("profiles")
+    .select("business_verification_status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const rfqNeedsVerification =
+    featureKey === "rfq" && accessProfile?.business_verification_status !== "verified";
+
   const row = featureKey ? services.find((s) => s.feature_key === featureKey) : null;
   const featureTitle = row
     ? loc === "en"
@@ -54,20 +63,33 @@ export default async function SubscriptionRequiredPage({ searchParams }: PagePro
 
   return (
     <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 px-4 py-8">
-      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-2xl">{t("title")}</h1>
-      <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-        {featureTitle ? t("bodyWithFeature", { feature: featureTitle }) : t("bodyGeneric")}
-      </p>
-      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{t("hintAdmin")}</p>
-      <ul className="list-inside list-disc text-xs text-zinc-500 dark:text-zinc-400">
-        {listForUi.length > 0
-          ? listForUi.map((s) => (
-              <li key={s.feature_key}>{loc === "en" ? s.label_en : s.label_ar}</li>
-            ))
-          : ["rfq", "live_map", "premium_listings"].map((k) => (
-              <li key={k}>{featureLabel(k, loc)}</li>
-            ))}
-      </ul>
+      <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 sm:text-2xl">
+        {rfqNeedsVerification ? t("titleVerification") : t("title")}
+      </h1>
+      {rfqNeedsVerification ? (
+        <>
+          <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{t("bodyVerificationRfq")}</p>
+          <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{t("hintVerificationThenSubscription")}</p>
+        </>
+      ) : (
+        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {featureTitle ? t("bodyWithFeature", { feature: featureTitle }) : t("bodyGeneric")}
+        </p>
+      )}
+      {!rfqNeedsVerification ? (
+        <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-500">{t("hintAdmin")}</p>
+      ) : null}
+      {!rfqNeedsVerification ? (
+        <ul className="list-inside list-disc text-xs text-zinc-500 dark:text-zinc-400">
+          {listForUi.length > 0
+            ? listForUi.map((s) => (
+                <li key={s.feature_key}>{loc === "en" ? s.label_en : s.label_ar}</li>
+              ))
+            : ["rfq", "live_map", "premium_listings"].map((k) => (
+                <li key={k}>{featureLabel(k, loc)}</li>
+              ))}
+        </ul>
+      ) : null}
       <div className="flex flex-wrap gap-3 pt-2">
         <Link
           className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
