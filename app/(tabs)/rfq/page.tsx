@@ -7,6 +7,7 @@ import { RfqMyDraftsList } from "@/components/rfq-my-drafts-list";
 import { RfqUpload } from "@/components/rfq-upload";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
 import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
+import { createRfqDraft } from "@/lib/rfq/draft-service";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
 
@@ -105,8 +106,17 @@ export default async function RfqPage({ searchParams }: PageProps) {
   }
 
   const firstDraft = drafts?.[0];
-  if (!activeDraftId && !wantNewDraft && firstDraft) {
-    redirect(`/rfq?draft=${firstDraft.id}`);
+  if (!activeDraftId) {
+    if (firstDraft) {
+      if (!wantNewDraft) {
+        redirect(`/rfq?draft=${firstDraft.id}`);
+      }
+    } else {
+      const created = await createRfqDraft(supabase, user.id);
+      if (created.ok) {
+        redirect(`/rfq?draft=${created.id}`);
+      }
+    }
   }
 
   const allowUpload = !activeDraftId || initialStatus === "draft";
