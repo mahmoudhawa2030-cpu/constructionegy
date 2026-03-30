@@ -26,7 +26,7 @@ export async function RfqMyDraftsList({ drafts }: { drafts: RfqDraftListRow[] })
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{t("heading")}</h2>
         <Link
           className="text-xs font-medium text-zinc-700 underline dark:text-zinc-300"
-          href="/rfq"
+          href="/rfq?new=1"
           prefetch={true}
         >
           {t("newDraft")}
