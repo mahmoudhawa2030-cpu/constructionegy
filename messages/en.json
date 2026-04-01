@@ -51,7 +51,12 @@
     "intro": "A web app and marketplace for scaffolding: photos, bookings, and secure access with Supabase. Use the tabs below or the links to sign in.",
     "login": "Log in",
     "signup": "Create account",
-    "gallery": "Gallery"
+    "gallery": "Gallery",
+    "cmsEmpty": "Homepage content is not configured yet. Sign in, browse the gallery, or ask an admin to add sections.",
+    "carouselDotAria": "Go to slide {n}",
+    "slideLinkAria": "Open: {title}",
+    "cardLinkAria": "Open: {title}",
+    "desktopHomeHint": "On large screens this simplified link bar is shown. Configure the rich card layout for phones in Admin → Homepage (it appears on small screens)."
   },
   "auth": {
     "loginTitle": "Log in",
@@ -451,6 +456,80 @@
       "submitting": "Saving…"
     }
   },
+  "adminHomepage": {
+    "title": "Homepage (mobile guest)",
+    "lead": "Manage carousel and grid sections for the logged-out home tab. Arabic and English fields are stored per row; the app picks text by the visitor’s language.",
+    "backAdmin": "Back to overview",
+    "backList": "Back to homepage sections",
+    "loadError": "Could not load homepage configuration.",
+    "mobileNote": "Visitors on phones and small tablets see this configurable layout. Signed-in users still go to “My ads”. Theme (light / dark / system) is unchanged.",
+    "sectionsTableTitle": "Sections",
+    "colOrder": "Order",
+    "colSlug": "Slug",
+    "colType": "Type",
+    "colTitles": "Titles (AR / EN)",
+    "colItems": "Items",
+    "colEnabled": "On",
+    "colActions": "Actions",
+    "typeGrid": "Grid",
+    "typeCarousel": "Carousel",
+    "yes": "Yes",
+    "no": "No",
+    "edit": "Edit",
+    "emptySections": "No sections yet. Create one below.",
+    "itemsTitle": "Section items",
+    "itemsLead": "Slides (carousel) or cards (grid). Use relative paths for links (e.g. /gallery). Emoji icons work well on the grid.",
+    "emptyItems": "No items in this section yet.",
+    "forms": {
+      "createSectionTitle": "New section",
+      "slug": "Slug (latin)",
+      "sectionType": "Type",
+      "sortOrder": "Sort order",
+      "enabled": "Enabled",
+      "titleAr": "Title (Arabic)",
+      "titleEn": "Title (English)",
+      "subtitleAr": "Subtitle (Arabic)",
+      "subtitleEn": "Subtitle (English)",
+      "createSection": "Create section",
+      "creating": "Saving…",
+      "editSectionTitle": "Edit section",
+      "saveSection": "Save section",
+      "saveItem": "Save item",
+      "saving": "Saving…",
+      "backToList": "Back to list",
+      "deleteSection": "Delete section",
+      "deleting": "Deleting…",
+      "confirmDeleteSection": "Delete this section and all its items?",
+      "createItemTitle": "New item",
+      "descriptionAr": "Description (Arabic)",
+      "descriptionEn": "Description (English)",
+      "href": "Link path",
+      "iconEmoji": "Icon emoji",
+      "imageUrl": "Image URL (carousel)",
+      "badgeCount": "Badge number",
+      "badgeLabelAr": "Badge text (Arabic)",
+      "badgeLabelEn": "Badge text (English)",
+      "createItem": "Add item",
+      "itemHint": "At least one title (Arabic or English) is required. Badge number takes precedence over badge text when both are set.",
+      "deleteItem": "Delete",
+      "confirmDeleteItem": "Delete this item?"
+    },
+    "actions": {
+      "invalidSlug": "Invalid slug (use lowercase latin, numbers, underscore).",
+      "invalidType": "Invalid section type.",
+      "slugTaken": "That slug is already used.",
+      "sectionCreated": "Section created.",
+      "sectionSaved": "Section saved.",
+      "sectionDeleted": "Section deleted.",
+      "invalidId": "Invalid id.",
+      "titleRequired": "Enter at least one title (Arabic or English).",
+      "invalidBadge": "Badge must be a non-negative integer.",
+      "itemCreated": "Item added.",
+      "itemSaved": "Item saved.",
+      "itemDeleted": "Item deleted.",
+      "notFound": "Not found."
+    }
+  },
   "admin": {
     "navAria": "Administration navigation",
     "shellSubtitle": "Enterprise console",
@@ -465,7 +544,8 @@
     "businessVerifications": "Business verification",
     "userActionsVerification": "Verification",
     "site": "Site",
-    "overviewRfqModeration": "RFQ moderation — drafts, items, bids"
+    "overviewRfqModeration": "RFQ moderation — drafts, items, bids",
+    "homepage": "Homepage (guest)"
   },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",
@@ -681,6 +761,7 @@
     "receiptRead": "Read"
   },
   "common": {
-    "brandAlt": "Next.js logo"
+    "brandAlt": "Next.js logo",
+    "brandName": "construction-egy"
   }
 }

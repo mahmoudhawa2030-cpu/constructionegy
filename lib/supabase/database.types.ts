@@ -78,6 +78,113 @@ export type Database = {
           },
         ]
       }
+      homepage_section_items: {
+        Row: {
+          badge_count: number | null
+          badge_label_ar: string | null
+          badge_label_en: string | null
+          created_at: string
+          description_ar: string | null
+          description_en: string | null
+          enabled: boolean
+          href: string
+          icon_emoji: string | null
+          id: string
+          image_url: string | null
+          section_id: string
+          sort_order: number
+          title_ar: string
+          title_en: string
+          updated_at: string
+        }
+        Insert: {
+          badge_count?: number | null
+          badge_label_ar?: string | null
+          badge_label_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          enabled?: boolean
+          href?: string
+          icon_emoji?: string | null
+          id?: string
+          image_url?: string | null
+          section_id: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Update: {
+          badge_count?: number | null
+          badge_label_ar?: string | null
+          badge_label_en?: string | null
+          created_at?: string
+          description_ar?: string | null
+          description_en?: string | null
+          enabled?: boolean
+          href?: string
+          icon_emoji?: string | null
+          id?: string
+          image_url?: string | null
+          section_id?: string
+          sort_order?: number
+          title_ar?: string
+          title_en?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homepage_section_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "homepage_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homepage_sections: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          section_type: string
+          slug: string
+          sort_order: number
+          subtitle_ar: string | null
+          subtitle_en: string | null
+          title_ar: string | null
+          title_en: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          section_type: string
+          slug: string
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          section_type?: string
+          slug?: string
+          sort_order?: number
+          subtitle_ar?: string | null
+          subtitle_en?: string | null
+          title_ar?: string | null
+          title_en?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string

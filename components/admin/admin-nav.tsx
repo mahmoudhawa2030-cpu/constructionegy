@@ -23,7 +23,8 @@ const NAV_ITEMS: {
     | "categories"
     | "subscriptionServices"
     | "rfqModeration"
-    | "businessVerifications";
+    | "businessVerifications"
+    | "homepage";
 }[] = [
   { href: "/admin", labelKey: "overview" },
   { href: "/admin/listings", labelKey: "listings" },
@@ -33,6 +34,7 @@ const NAV_ITEMS: {
   { href: "/admin/subscription-services", labelKey: "subscriptionServices" },
   { href: "/admin/rfq", labelKey: "rfqModeration" },
   { href: "/admin/verifications", labelKey: "businessVerifications" },
+  { href: "/admin/homepage", labelKey: "homepage" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

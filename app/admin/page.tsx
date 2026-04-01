@@ -101,6 +101,11 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </li>
                 <li>
+                  <Link className={adminUi.objectLink} href="/admin/homepage" prefetch={true}>
+                    {tAdmin("homepage")}
+                  </Link>
+                </li>
+                <li>
                   <Link className={adminUi.objectLink} href="/listings/new">
                     إضافة إعلان
                   </Link>

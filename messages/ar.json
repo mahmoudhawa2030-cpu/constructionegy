@@ -51,7 +51,12 @@
     "intro": "تطبيق ويب ومتجر للسقالات: صور، حجوزات، ووصول آمن عبر Supabase. استخدم التبويبات بالأسفل أو الروابط للمصادقة.",
     "login": "تسجيل الدخول",
     "signup": "إنشاء حساب",
-    "gallery": "المعرض"
+    "gallery": "المعرض",
+    "cmsEmpty": "لم يُضبط محتوى الصفحة الرئيسية بعد. سجّل الدخول أو تصفّح المعرض، أو اطلب من المشرف إضافة أقسام.",
+    "carouselDotAria": "الانتقال إلى الشريحة {n}",
+    "slideLinkAria": "فتح: {title}",
+    "cardLinkAria": "فتح: {title}",
+    "desktopHomeHint": "على الشاشات الكبيرة يظهر شريط روابط مبسّط. الصفحة الغنية بالبطاقات تُضبط من الإدارة ← الصفحة الرئيسية وتظهر على الجوال."
   },
   "auth": {
     "loginTitle": "تسجيل الدخول",
@@ -451,6 +456,80 @@
       "submitting": "جاري الحفظ…"
     }
   },
+  "adminHomepage": {
+    "title": "الصفحة الرئيسية (زائر / جوال)",
+    "lead": "إدارة أقسام الدوّار والشبكة لصفحة التبويب بدون تسجيل. الحقول العربية والإنجليزية تُخزَّن لكل صف؛ التطبيق يعرض النص حسب لغة الزائر.",
+    "backAdmin": "العودة للنظرة العامة",
+    "backList": "العودة لقائمة الأقسام",
+    "loadError": "تعذر تحميل إعدادات الصفحة الرئيسية.",
+    "mobileNote": "الزائر على الجوال والأجهزة الصغيرة يرى هذا التصميم. المستخدم المسجّل يبقى يُوجَّه لـ «إعلاناتي». المظهر (فاتح / داكن / النظام) كما هو.",
+    "sectionsTableTitle": "الأقسام",
+    "colOrder": "الترتيب",
+    "colSlug": "المعرف",
+    "colType": "النوع",
+    "colTitles": "العناوين (ع / إ)",
+    "colItems": "العناصر",
+    "colEnabled": "مفعّل",
+    "colActions": "إجراءات",
+    "typeGrid": "شبكة",
+    "typeCarousel": "دوّار",
+    "yes": "نعم",
+    "no": "لا",
+    "edit": "تعديل",
+    "emptySections": "لا أقسام بعد. أنشئ أدناه.",
+    "itemsTitle": "عناصر القسم",
+    "itemsLead": "شرائح (دوّار) أو بطاقات (شبكة). استخدم مسارات نسبية للروابط (مثال: /gallery). الرموز التعبيرية مناسبة لأيقونات الشبكة.",
+    "emptyItems": "لا عناصر في هذا القسم بعد.",
+    "forms": {
+      "createSectionTitle": "قسم جديد",
+      "slug": "المعرف (لاتيني)",
+      "sectionType": "النوع",
+      "sortOrder": "ترتيب العرض",
+      "enabled": "مفعّل",
+      "titleAr": "العنوان (عربي)",
+      "titleEn": "العنوان (إنجليزي)",
+      "subtitleAr": "العنوان الفرعي (عربي)",
+      "subtitleEn": "العنوان الفرعي (إنجليزي)",
+      "createSection": "إنشاء القسم",
+      "creating": "جاري الحفظ…",
+      "editSectionTitle": "تعديل القسم",
+      "saveSection": "حفظ القسم",
+      "saveItem": "حفظ العنصر",
+      "saving": "جاري الحفظ…",
+      "backToList": "العودة للقائمة",
+      "deleteSection": "حذف القسم",
+      "deleting": "جاري الحذف…",
+      "confirmDeleteSection": "حذف هذا القسم وجميع عناصره؟",
+      "createItemTitle": "عنصر جديد",
+      "descriptionAr": "الوصف (عربي)",
+      "descriptionEn": "الوصف (إنجليزي)",
+      "href": "مسار الرابط",
+      "iconEmoji": "أيقونة (إيموجي)",
+      "imageUrl": "رابط الصورة (الدوّار)",
+      "badgeCount": "رقم الشارة",
+      "badgeLabelAr": "نص الشارة (عربي)",
+      "badgeLabelEn": "نص الشارة (إنجليزي)",
+      "createItem": "إضافة عنصر",
+      "itemHint": "يلزم عنوان عربي أو إنجليزي على الأقل. رقم الشارة يتقدّم على نص الشارة إذا وُجد الاثنان.",
+      "deleteItem": "حذف",
+      "confirmDeleteItem": "حذف هذا العنصر؟"
+    },
+    "actions": {
+      "invalidSlug": "معرف غير صالح (أحرف لاتينية صغيرة وأرقام و _ فقط).",
+      "invalidType": "نوع القسم غير صالح.",
+      "slugTaken": "هذا المعرف مستخدم بالفعل.",
+      "sectionCreated": "تم إنشاء القسم.",
+      "sectionSaved": "تم حفظ القسم.",
+      "sectionDeleted": "تم حذف القسم.",
+      "invalidId": "معرّف غير صالح.",
+      "titleRequired": "أدخل عنواناً عربياً أو إنجليزياً على الأقل.",
+      "invalidBadge": "الشارة يجب أن تكون عدداً صحيحاً غير سالب.",
+      "itemCreated": "تمت إضافة العنصر.",
+      "itemSaved": "تم حفظ العنصر.",
+      "itemDeleted": "تم حذف العنصر.",
+      "notFound": "غير موجود."
+    }
+  },
   "admin": {
     "navAria": "التنقل في الإدارة",
     "shellSubtitle": "واجهة إدارية للمؤسسات",
@@ -465,7 +544,8 @@
     "businessVerifications": "توثيق المنشآت",
     "userActionsVerification": "التوثيق",
     "site": "الموقع",
-    "overviewRfqModeration": "مراجعة RFQ — المسودات والبنود والعروض"
+    "overviewRfqModeration": "مراجعة RFQ — المسودات والبنود والعروض",
+    "homepage": "الصفحة الرئيسية (زائر)"
   },
   "adminSubscriptionsPage": {
     "title": "الاشتراكات",
@@ -681,6 +761,7 @@
     "receiptRead": "تمت القراءة"
   },
   "common": {
-    "brandAlt": "Next.js logo"
+    "brandAlt": "Next.js logo",
+    "brandName": "construction-egy"
   }
 }
