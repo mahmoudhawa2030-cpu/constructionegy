@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { RfqBidAddFilesForm } from "@/components/rfq-bid-add-files-form";
 import { RfqOpportunityBidForm } from "@/components/rfq-opportunity-bid-form";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
@@ -37,6 +38,7 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
   const t = await getTranslations("rfqOpportunity.detail");
 
   const tOpp = await getTranslations("rfqOpportunity");
+  const tBidAtt = await getTranslations("rfqOpportunity.bidAttachments");
 
   const { data: draft, error } = await supabase
     .from("rfq_drafts")
@@ -89,6 +91,26 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
     .eq("draft_id", draft.id)
     .eq("supplier_user_id", user.id)
     .maybeSingle();
+
+  const bidAttachments: { id: string; name: string; url: string | null; byteSize: number }[] = [];
+  if (myBid) {
+    const { data: bidAttRows } = await supabase
+      .from("rfq_bid_attachments")
+      .select("id, original_filename, byte_size, storage_path")
+      .eq("bid_id", myBid.id)
+      .order("created_at", { ascending: false });
+    for (const a of bidAttRows ?? []) {
+      const { data: signed } = await supabase.storage
+        .from("rfq-attachments")
+        .createSignedUrl(a.storage_path, RFQ_SIGNED_URL_TTL);
+      bidAttachments.push({
+        id: a.id,
+        name: a.original_filename,
+        url: signed?.signedUrl ?? null,
+        byteSize: a.byte_size,
+      });
+    }
+  }
 
   const profile = draft.profiles as { id: string; full_name: string | null } | null;
   const creatorName = profile?.full_name?.trim() || tOpp("creatorFallbackName");
@@ -221,6 +243,53 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
           {myBid.supplier_notes ? (
             <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{myBid.supplier_notes}</p>
           ) : null}
+          <h3 className="mt-4 text-xs font-semibold text-zinc-900 dark:text-zinc-50">{tBidAtt("heading")}</h3>
+          {bidAttachments.length === 0 ? (
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{tBidAtt("empty")}</p>
+          ) : (
+            <ul className="mt-2 flex flex-col gap-2" aria-label={tBidAtt("fileListAria")}>
+              {bidAttachments.map((a) => {
+                const ext = extOf(a.name);
+                const isImg = IMG_EXT.has(ext);
+                return (
+                  <li
+                    key={a.id}
+                    className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-600 dark:bg-zinc-950"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-zinc-100 text-[10px] font-bold uppercase text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                      {a.url && isImg ? (
+                        <Image
+                          alt=""
+                          className="h-full w-full object-cover"
+                          height={48}
+                          src={a.url}
+                          unoptimized
+                          width={48}
+                        />
+                      ) : (
+                        ext || "file"
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-50">{a.name}</p>
+                      <p className="text-xs text-zinc-500">{a.byteSize} B</p>
+                      {a.url ? (
+                        <a
+                          className="text-xs font-medium text-zinc-700 underline dark:text-zinc-300"
+                          href={a.url}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {tBidAtt("open")}
+                        </a>
+                      ) : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {myBid.status === "draft" ? <RfqBidAddFilesForm bidId={myBid.id} /> : null}
         </div>
       ) : (
         <RfqOpportunityBidForm draftId={draft.id} />

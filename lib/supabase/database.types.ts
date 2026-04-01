@@ -652,6 +652,60 @@ export type Database = {
           },
         ]
       }
+      rfq_bid_attachments: {
+        Row: {
+          bid_id: string
+          byte_size: number
+          content_hash: string | null
+          content_type: string | null
+          created_at: string
+          id: string
+          original_filename: string
+          storage_path: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          bid_id: string
+          byte_size: number
+          content_hash?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          original_filename: string
+          storage_path: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          bid_id?: string
+          byte_size?: number
+          content_hash?: string | null
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          original_filename?: string
+          storage_path?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_bid_attachments_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "rfq_bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_bid_attachments_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rfq_bids: {
         Row: {
           created_at: string

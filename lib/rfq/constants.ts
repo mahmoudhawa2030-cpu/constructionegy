@@ -2,6 +2,11 @@
 export const RFQ_UPLOAD_MAX_FILES = 20;
 export const RFQ_UPLOAD_MAX_FILE_BYTES = 25 * 1024 * 1024;
 export const RFQ_UPLOAD_MAX_TOTAL_BYTES = 100 * 1024 * 1024;
+
+/** Limits for supplier bid attachment uploads (server-enforced). */
+export const RFQ_BID_UPLOAD_MAX_FILES = 10;
+export const RFQ_BID_UPLOAD_MAX_FILE_BYTES = RFQ_UPLOAD_MAX_FILE_BYTES;
+export const RFQ_BID_UPLOAD_MAX_TOTAL_BYTES = 50 * 1024 * 1024;
 export const RFQ_SPREADSHEET_MAX_ROWS = 2000;
 
 export const SPREADSHEET_MAPPING_VERSION = 1;

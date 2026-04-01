@@ -419,16 +419,35 @@
       "amountPlaceholder": "e.g. 150000",
       "notesLabel": "Notes (optional)",
       "notesPlaceholder": "Delivery terms, validity, etc.",
+      "filesLabel": "Attachments (optional)",
+      "filesHint": "PDF, Word, images, ZIP, CAD, etc. Up to 10 files (max 25 MB each).",
+      "filesAria": "Bid attachment files",
       "submit": "Save draft bid"
+    },
+    "bidAttachments": {
+      "heading": "Your attachments",
+      "empty": "No files attached yet.",
+      "open": "Open",
+      "addHeading": "Add files",
+      "addHint": "While your bid is a draft you can attach offers, catalogs, or other documents.",
+      "addSubmit": "Upload files",
+      "addSubmitting": "Uploading…",
+      "fileListAria": "Bid attachment list"
     },
     "bidActions": {
       "unauthorized": "You must be signed in.",
       "subscriptionRequired": "A subscription is required.",
       "invalidDraft": "Invalid RFQ.",
+      "invalidBid": "Invalid bid.",
       "invalidAmount": "Enter a valid amount.",
       "bidExists": "You already have a bid on this RFQ.",
       "bidFailed": "Could not save your bid (check the RFQ is open for bids).",
       "bidSaved": "Draft bid saved.",
+      "bidFilesPartialFail": "Your bid was saved, but some files could not be uploaded. Add them below.",
+      "noBidFiles": "Choose at least one file.",
+      "bidNotEditable": "This bid can no longer be edited.",
+      "uploadFailed": "Upload failed. Check file types and sizes.",
+      "attachmentsAdded": "Files uploaded.",
       "submitting": "Saving…"
     }
   },

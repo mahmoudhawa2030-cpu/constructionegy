@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { createSupplierBidDraft } from "@/lib/rfq/bid-service";
+import { persistBidAttachmentFiles } from "@/lib/rfq/persist-bid-attachments";
 import {
   getLegalCompanyNameFromDraftMetadata,
   RFQ_LEGAL_COMPANY_NAME_MAX,
@@ -177,6 +178,10 @@ export async function submitRfqDraftForBidsAction(
 
 export type RfqBidActionState = RfqDraftUiActionState;
 
+function bidFilesFromFormData(formData: FormData): File[] {
+  return formData.getAll("bid_files").filter((v): v is File => typeof File !== "undefined" && v instanceof File);
+}
+
 export async function createRfqBidDraftAction(
   _prev: RfqBidActionState | null,
   formData: FormData,
@@ -210,6 +215,8 @@ export async function createRfqBidDraftAction(
     total_amount = n;
   }
 
+  const files = bidFilesFromFormData(formData);
+
   const created = await createSupplierBidDraft(supabase, user.id, parsedId.data, {
     supplier_notes: notes,
     total_amount,
@@ -223,7 +230,66 @@ export async function createRfqBidDraftAction(
     return { ok: false, message: t("bidFailed") };
   }
 
+  if (files.length > 0) {
+    const persisted = await persistBidAttachmentFiles(supabase, user.id, created.bidId, files);
+    if (!persisted.ok) {
+      revalidatePath("/rfq/opportunities");
+      revalidatePath(`/rfq/opportunities/${parsedId.data}`);
+      return { ok: false, message: t("bidFilesPartialFail") };
+    }
+  }
+
   revalidatePath("/rfq/opportunities");
   revalidatePath(`/rfq/opportunities/${parsedId.data}`);
   return { ok: true, message: t("bidSaved") };
+}
+
+export async function addRfqBidDraftAttachmentsAction(
+  _prev: RfqBidActionState | null,
+  formData: FormData,
+): Promise<RfqBidActionState> {
+  const t = await getTranslations("rfqOpportunity.bidActions");
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { ok: false, message: t("unauthorized") };
+  }
+  if (!(await canAccessFeature(user.id, "rfq"))) {
+    return { ok: false, message: t("subscriptionRequired") };
+  }
+
+  const bidId = String(formData.get("bid_id") ?? "").trim();
+  const parsedBid = UUID.safeParse(bidId);
+  if (!parsedBid.success) {
+    return { ok: false, message: t("invalidBid") };
+  }
+
+  const files = bidFilesFromFormData(formData);
+  if (files.length === 0) {
+    return { ok: false, message: t("noBidFiles") };
+  }
+
+  const { data: bid, error: bidErr } = await supabase
+    .from("rfq_bids")
+    .select("id, supplier_user_id, status, draft_id")
+    .eq("id", parsedBid.data)
+    .maybeSingle();
+
+  if (bidErr || !bid || bid.supplier_user_id !== user.id) {
+    return { ok: false, message: t("invalidBid") };
+  }
+  if (bid.status !== "draft") {
+    return { ok: false, message: t("bidNotEditable") };
+  }
+
+  const persisted = await persistBidAttachmentFiles(supabase, user.id, bid.id, files);
+  if (!persisted.ok) {
+    return { ok: false, message: t("uploadFailed") };
+  }
+
+  revalidatePath("/rfq/opportunities");
+  revalidatePath(`/rfq/opportunities/${bid.draft_id}`);
+  return { ok: true, message: t("attachmentsAdded") };
 }

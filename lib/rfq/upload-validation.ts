@@ -1,4 +1,7 @@
 import {
+  RFQ_BID_UPLOAD_MAX_FILE_BYTES,
+  RFQ_BID_UPLOAD_MAX_FILES,
+  RFQ_BID_UPLOAD_MAX_TOTAL_BYTES,
   RFQ_UPLOAD_MAX_FILE_BYTES,
   RFQ_UPLOAD_MAX_FILES,
   RFQ_UPLOAD_MAX_TOTAL_BYTES,
@@ -27,6 +30,35 @@ export function validateRfqUploadFiles(files: File[]): { ok: true } | { ok: fals
     }
   }
   if (total > RFQ_UPLOAD_MAX_TOTAL_BYTES) {
+    errors.push({ code: "TOTAL_TOO_LARGE" });
+  }
+
+  if (errors.length > 0) {
+    return { ok: false, errors };
+  }
+  return { ok: true };
+}
+
+/**
+ * Validates bid reply file count/size (documents / PDFs / etc.).
+ */
+export function validateRfqBidUploadFiles(
+  files: File[],
+): { ok: true } | { ok: false; errors: RfqUploadValidationError[] } {
+  const errors: RfqUploadValidationError[] = [];
+
+  if (files.length > RFQ_BID_UPLOAD_MAX_FILES) {
+    errors.push({ code: "TOO_MANY_FILES" });
+  }
+
+  let total = 0;
+  for (const f of files) {
+    total += f.size;
+    if (f.size > RFQ_BID_UPLOAD_MAX_FILE_BYTES) {
+      errors.push({ code: "FILE_TOO_LARGE", detail: f.name });
+    }
+  }
+  if (total > RFQ_BID_UPLOAD_MAX_TOTAL_BYTES) {
     errors.push({ code: "TOTAL_TOO_LARGE" });
   }
 

@@ -419,16 +419,35 @@
       "amountPlaceholder": "مثال: 150000",
       "notesLabel": "ملاحظات (اختياري)",
       "notesPlaceholder": "شروط التوريد، صلاحية العرض، إلخ.",
+      "filesLabel": "مرفقات (اختياري)",
+      "filesHint": "PDF وWord وصور وZIP وCAD وغيرها. حتى 10 ملفات (حد أقصى 25 ميجابايت لكل ملف).",
+      "filesAria": "ملفات مرفقة بعرض السعر",
       "submit": "حفظ مسودة العرض"
+    },
+    "bidAttachments": {
+      "heading": "مرفقاتك",
+      "empty": "لا مرفقات بعد.",
+      "open": "فتح",
+      "addHeading": "إضافة ملفات",
+      "addHint": "طالما العرض مسودة يمكنك إرفاق عروض أسعار أو كتالوجات أو مستندات.",
+      "addSubmit": "رفع الملفات",
+      "addSubmitting": "جاري الرفع…",
+      "fileListAria": "قائمة مرفقات العرض"
     },
     "bidActions": {
       "unauthorized": "يجب تسجيل الدخول.",
       "subscriptionRequired": "يتطلب اشتراكاً فعّالاً.",
       "invalidDraft": "طلب غير صالح.",
+      "invalidBid": "عرض غير صالح.",
       "invalidAmount": "أدخل مبلغاً صالحاً.",
       "bidExists": "لديك عرض مسبق على هذا الطلب.",
       "bidFailed": "تعذر حفظ العرض (تأكد أن الطلب مفتوح لاستقبال العروض).",
       "bidSaved": "تم حفظ مسودة العرض.",
+      "bidFilesPartialFail": "تم حفظ العرض، لكن تعذر رفع بعض الملفات. أضفها أدناه.",
+      "noBidFiles": "اختر ملفاً واحداً على الأقل.",
+      "bidNotEditable": "لم يعد بالإمكان تعديل هذا العرض.",
+      "uploadFailed": "فشل الرفع. تحقق من نوع وحجم الملفات.",
+      "attachmentsAdded": "تم رفع الملفات.",
       "submitting": "جاري الحفظ…"
     }
   },
