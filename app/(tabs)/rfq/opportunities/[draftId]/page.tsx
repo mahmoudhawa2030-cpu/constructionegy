@@ -36,9 +36,13 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
 
   const t = await getTranslations("rfqOpportunity.detail");
 
+  const tOpp = await getTranslations("rfqOpportunity");
+
   const { data: draft, error } = await supabase
     .from("rfq_drafts")
-    .select("id, title, status, user_id, updated_at")
+    .select(
+      "id, title, status, user_id, updated_at, profiles!rfq_drafts_user_id_fkey ( id, full_name )",
+    )
     .eq("id", draftId)
     .maybeSingle();
 
@@ -86,6 +90,9 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
     .eq("supplier_user_id", user.id)
     .maybeSingle();
 
+  const profile = draft.profiles as { id: string; full_name: string | null } | null;
+  const creatorName = profile?.full_name?.trim() || tOpp("creatorFallbackName");
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 px-3 py-5 sm:px-4 sm:py-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -93,7 +100,17 @@ export default async function RfqOpportunityDetailPage({ params }: PageProps) {
           <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl dark:text-zinc-50">
             {draft.title?.trim() || t("untitled")}
           </h1>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{t("buyerAnonymous")}</p>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
+            <span>{tOpp("postedByLabel")} </span>
+            <Link
+              className="font-medium text-zinc-800 underline dark:text-zinc-200"
+              href={`/profile/${draft.user_id}`}
+              prefetch={true}
+              aria-label={tOpp("viewCreatorProfileAria", { name: creatorName })}
+            >
+              {creatorName}
+            </Link>
+          </p>
         </div>
         <Link
           className="shrink-0 text-sm font-medium text-zinc-800 underline dark:text-zinc-200"

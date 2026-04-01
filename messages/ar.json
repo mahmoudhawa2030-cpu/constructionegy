@@ -388,9 +388,11 @@
     "listAria": "قائمة الطلبات المفتوحة",
     "untitled": "طلب بدون عنوان",
     "updated": "آخر تحديث",
+    "postedByLabel": "منشور بواسطة",
+    "creatorFallbackName": "عضو",
+    "viewCreatorProfileAria": "عرض الملف العام لـ {name}",
     "detail": {
       "untitled": "طلب بدون عنوان",
-      "buyerAnonymous": "هوية المشتري غير معروضة هنا.",
       "back": "العودة للقائمة",
       "itemsHeading": "البنود",
       "noItems": "لا توجد بنود محفوظة لهذا الطلب.",

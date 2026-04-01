@@ -388,9 +388,11 @@
     "listAria": "Open RFQ list",
     "untitled": "Untitled RFQ",
     "updated": "Updated",
+    "postedByLabel": "Posted by",
+    "creatorFallbackName": "Member",
+    "viewCreatorProfileAria": "View {name}'s public profile",
     "detail": {
       "untitled": "Untitled RFQ",
-      "buyerAnonymous": "Buyer identity is not shown here.",
       "back": "Back to list",
       "itemsHeading": "Line items",
       "noItems": "No line items were saved for this RFQ.",
