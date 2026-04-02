@@ -38,7 +38,7 @@ function useTabItems(
 
 type Props = {
   hasUser?: boolean;
-  /** Landing for guests is `/`; signed-in users use `/users/myads` for “الرئيسية”. */
+  /** Home tab destination (CMS homepage for all users). */
   homeHref?: string;
   /** Unread incoming messages (shown on Messages tab). */
   messageUnreadCount?: number;

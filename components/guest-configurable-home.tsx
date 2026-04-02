@@ -8,15 +8,18 @@ import { createClient } from "@/lib/supabase/server";
 
 type Props = {
   showDesktopFallback?: boolean;
+  /** When CMS is empty or on desktop fallback, signed-in users get My ads / profile instead of login / signup. */
+  isSignedIn?: boolean;
 };
 
-export async function GuestConfigurableHome({ showDesktopFallback = true }: Props) {
+export async function GuestConfigurableHome({ showDesktopFallback = true, isSignedIn = false }: Props) {
   const supabase = await createClient();
   const { sections, itemsBySectionId } = await fetchGuestHomepageContent(supabase);
   const localeRaw = await getLocale();
   const loc = localeRaw === "en" ? "en" : "ar";
   const t = await getTranslations("home");
   const tc = await getTranslations("common");
+  const tn = await getTranslations("nav");
 
   const hasCms = sections.length > 0 && sections.some((s) => (itemsBySectionId.get(s.id) ?? []).length > 0);
 
@@ -24,24 +27,49 @@ export async function GuestConfigurableHome({ showDesktopFallback = true }: Prop
     <div className="flex flex-col gap-6 px-4 py-8">
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">{t("cmsEmpty")}</p>
       <nav className="flex flex-col gap-3 font-medium">
-        <Link
-          className="flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 px-5 text-white dark:bg-zinc-100 dark:text-zinc-900"
-          href="/login"
-        >
-          {t("login")}
-        </Link>
-        <Link
-          className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
-          href="/signup"
-        >
-          {t("signup")}
-        </Link>
-        <Link
-          className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
-          href="/gallery"
-        >
-          {t("gallery")}
-        </Link>
+        {isSignedIn ? (
+          <>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 px-5 text-white dark:bg-zinc-100 dark:text-zinc-900"
+              href="/gallery"
+            >
+              {t("gallery")}
+            </Link>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              href="/users/myads"
+            >
+              {t("myAds")}
+            </Link>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              href="/profile"
+            >
+              {tn("profile")}
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 px-5 text-white dark:bg-zinc-100 dark:text-zinc-900"
+              href="/login"
+            >
+              {t("login")}
+            </Link>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              href="/signup"
+            >
+              {t("signup")}
+            </Link>
+            <Link
+              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              href="/gallery"
+            >
+              {t("gallery")}
+            </Link>
+          </>
+        )}
       </nav>
     </div>
   ) : (
@@ -109,24 +137,43 @@ export async function GuestConfigurableHome({ showDesktopFallback = true }: Prop
             <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
             <p className="mt-4 max-w-md text-center text-zinc-600 dark:text-zinc-400">{t("intro")}</p>
             <nav className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                className="rounded-full bg-zinc-900 px-6 py-3 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                href="/login"
-              >
-                {t("login")}
-              </Link>
-              <Link
-                className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
-                href="/signup"
-              >
-                {t("signup")}
-              </Link>
-              <Link
-                className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
-                href="/gallery"
-              >
-                {t("gallery")}
-              </Link>
+              {isSignedIn ? (
+                <>
+                  <Link
+                    className="rounded-full bg-zinc-900 px-6 py-3 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    href="/gallery"
+                  >
+                    {t("gallery")}
+                  </Link>
+                  <Link className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600" href="/users/myads">
+                    {t("myAds")}
+                  </Link>
+                  <Link className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600" href="/profile">
+                    {tn("profile")}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    className="rounded-full bg-zinc-900 px-6 py-3 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    href="/login"
+                  >
+                    {t("login")}
+                  </Link>
+                  <Link
+                    className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
+                    href="/signup"
+                  >
+                    {t("signup")}
+                  </Link>
+                  <Link
+                    className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
+                    href="/gallery"
+                  >
+                    {t("gallery")}
+                  </Link>
+                </>
+              )}
             </nav>
             <p className="mt-8 text-center text-xs text-zinc-500">{t("desktopHomeHint")}</p>
           </main>

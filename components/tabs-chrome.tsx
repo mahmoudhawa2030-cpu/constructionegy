@@ -74,7 +74,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
       </div>
       <MobileTabBar
         hasUser={hasUser}
-        homeHref={hasUser ? "/users/myads" : "/"}
+        homeHref="/"
         messageUnreadCount={unreadTotal}
       />
       <MobileChromeMenuDrawer hasUser={hasUser} />
