@@ -26,9 +26,12 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
   const tc = await getTranslations("common");
   const tn = await getTranslations("nav");
 
-  const hasCms = sections.length > 0 && sections.some((s) => (itemsBySectionId.get(s.id) ?? []).length > 0);
+  const hasSectionCms =
+    sections.length > 0 && sections.some((s) => (itemsBySectionId.get(s.id) ?? []).length > 0);
+  const hasDesktopCategoryCms = desktopCategories.length > 0;
+  const hasAnyHomeContent = hasSectionCms || hasDesktopCategoryCms;
 
-  const mobileInner = !hasCms ? (
+  const mobileInner = !hasAnyHomeContent ? (
     <div className="flex flex-col gap-6 px-4 py-8">
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">{t("cmsEmpty")}</p>
       <nav className="flex flex-col gap-3 font-medium">
@@ -79,46 +82,56 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
     </div>
   ) : (
     <div className="flex flex-col gap-8 px-3 pb-10 pt-4 sm:px-4">
-      {sections.map((section) => {
-        const items = itemsBySectionId.get(section.id) ?? [];
-        if (items.length === 0) return null;
-        const secTitle =
-          loc === "ar"
-            ? section.title_ar?.trim() || section.title_en?.trim()
-            : section.title_en?.trim() || section.title_ar?.trim();
-        const secSub =
-          loc === "ar"
-            ? section.subtitle_ar?.trim() || section.subtitle_en?.trim()
-            : section.subtitle_en?.trim() || section.subtitle_ar?.trim();
+      {hasSectionCms
+        ? sections.map((section) => {
+            const items = itemsBySectionId.get(section.id) ?? [];
+            if (items.length === 0) return null;
+            const secTitle =
+              loc === "ar"
+                ? section.title_ar?.trim() || section.title_en?.trim()
+                : section.title_en?.trim() || section.title_ar?.trim();
+            const secSub =
+              loc === "ar"
+                ? section.subtitle_ar?.trim() || section.subtitle_en?.trim()
+                : section.subtitle_en?.trim() || section.subtitle_ar?.trim();
 
-        return (
-          <section key={section.id} aria-labelledby={secTitle ? `home-sec-${section.id}` : undefined}>
-            {secTitle ? (
-              <div className="mb-3">
-                <h2
-                  className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:text-lg"
-                  id={`home-sec-${section.id}`}
-                >
-                  {secTitle}
-                </h2>
-                {secSub ? (
-                  <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{secSub}</p>
+            return (
+              <section key={section.id} aria-labelledby={secTitle ? `home-sec-${section.id}` : undefined}>
+                {secTitle ? (
+                  <div className="mb-3">
+                    <h2
+                      className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:text-lg"
+                      id={`home-sec-${section.id}`}
+                    >
+                      {secTitle}
+                    </h2>
+                    {secSub ? (
+                      <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{secSub}</p>
+                    ) : null}
+                  </div>
                 ) : null}
-              </div>
-            ) : null}
-            {section.section_type === "carousel" ? (
-              <HomepageCarousel
-                dotLabel={(n) => t("carouselDotAria", { n })}
-                items={items}
-                locale={loc}
-                slideAria={(title) => t("slideLinkAria", { title })}
-              />
-            ) : (
-              <HomepageServiceGrid cardAria={(title) => t("cardLinkAria", { title })} items={items} locale={loc} />
-            )}
-          </section>
-        );
-      })}
+                {section.section_type === "carousel" ? (
+                  <HomepageCarousel
+                    dotLabel={(n) => t("carouselDotAria", { n })}
+                    items={items}
+                    locale={loc}
+                    slideAria={(title) => t("slideLinkAria", { title })}
+                  />
+                ) : (
+                  <HomepageServiceGrid cardAria={(title) => t("cardLinkAria", { title })} items={items} locale={loc} />
+                )}
+              </section>
+            );
+          })
+        : null}
+      {hasDesktopCategoryCms ? (
+        <DesktopHomeCategoryGrid
+          cardAria={(name) => t("desktopCategoryCardAria", { category: name })}
+          categories={desktopCategories}
+          locale={loc}
+          sectionTitle={t("desktopCategoriesTitle")}
+        />
+      ) : null}
     </div>
   );
 

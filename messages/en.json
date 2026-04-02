@@ -53,7 +53,7 @@
     "signup": "Create account",
     "gallery": "Gallery",
     "myAds": "My ads",
-    "cmsEmpty": "Homepage content is not configured yet. Sign in, browse the gallery, or ask an admin to add sections.",
+    "cmsEmpty": "Homepage content is not configured yet. Ask an admin to add homepage sections (Admin → Homepage) or desktop category cards with icons. You can still use the gallery and your account below.",
     "carouselDotAria": "Go to slide {n}",
     "slideLinkAria": "Open: {title}",
     "cardLinkAria": "Open: {title}",
