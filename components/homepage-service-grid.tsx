@@ -33,23 +33,23 @@ export function HomepageServiceGrid({ items, locale, cardAria }: Props) {
           <li key={item.id}>
             <Link
               aria-label={cardAria(title)}
-              className="relative flex min-h-[4.5rem] flex-col items-center justify-center gap-0.5 rounded-lg border border-zinc-200 bg-white px-0.5 py-2 text-center shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 sm:min-h-[5rem] sm:gap-1 sm:rounded-xl sm:px-1 sm:py-2.5"
+              className="relative flex min-h-[5.85rem] flex-col items-center justify-center gap-[0.1625rem] rounded-lg border border-zinc-200 bg-white px-[0.1625rem] py-[0.65rem] text-center shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 sm:min-h-[6.5rem] sm:gap-1.5 sm:rounded-xl sm:px-[0.325rem] sm:py-[0.8125rem]"
               href={itemHref}
               prefetch={true}
             >
-              <span aria-hidden className="absolute start-1 top-1 h-1 w-1 rounded-full bg-amber-500 sm:start-1.5 sm:top-1.5 sm:h-1.5 sm:w-1.5" />
+              <span aria-hidden className="absolute start-1 top-1 h-[0.1625rem] w-[0.1625rem] rounded-full bg-amber-500 sm:start-1.5 sm:top-1.5 sm:h-1.5 sm:w-1.5" />
               {badge ? (
-                <span className="absolute end-0.5 top-0.5 max-w-[2.25rem] truncate rounded bg-violet-100 px-0.5 py-px text-[8px] font-semibold leading-none text-violet-900 dark:bg-violet-950/80 dark:text-violet-100 sm:end-1 sm:top-1 sm:max-w-[3rem] sm:px-1 sm:py-0.5 sm:text-[10px]">
+                <span className="absolute end-0.5 top-0.5 max-w-[2.925rem] truncate rounded bg-violet-100 px-0.5 py-px text-[10.4px] font-semibold leading-none text-violet-900 dark:bg-violet-950/80 dark:text-violet-100 sm:end-1 sm:top-1 sm:max-w-[3.9rem] sm:px-1 sm:py-0.5 sm:text-[13px]">
                   {badge}
                 </span>
               ) : null}
               <HomepageItemIcon
-                className="h-6 w-6 text-zinc-700 dark:text-zinc-200 sm:h-7 sm:w-7"
-                emojiClassName="text-lg leading-none sm:text-xl md:text-2xl"
+                className="h-[1.95rem] w-[1.95rem] text-zinc-700 dark:text-zinc-200 sm:h-[2.275rem] sm:w-[2.275rem]"
+                emojiClassName="text-[1.17rem] leading-none sm:text-[1.3675rem] md:text-[1.95rem]"
                 iconEmoji={item.icon_emoji}
                 iconKey={item.icon_key}
               />
-              <span className="line-clamp-2 text-[9px] font-medium leading-tight text-zinc-900 dark:text-zinc-50 sm:text-[11px] md:text-xs">
+              <span className="line-clamp-2 text-[11.7px] font-medium leading-tight text-zinc-900 dark:text-zinc-50 sm:text-[14.3px] md:text-[0.975rem]">
                 {title}
               </span>
             </Link>
