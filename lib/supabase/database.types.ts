@@ -200,30 +200,33 @@ export type Database = {
       }
       homepage_desktop_category_cards: {
         Row: {
-          category_slug: string
+          category_slug: string | null
           created_at: string
           enabled: boolean
           id: string
           image_storage_path: string
           sort_order: number
+          subscription_feature_key: string | null
           updated_at: string
         }
         Insert: {
-          category_slug: string
+          category_slug?: string | null
           created_at?: string
           enabled?: boolean
           id?: string
           image_storage_path: string
           sort_order?: number
+          subscription_feature_key?: string | null
           updated_at?: string
         }
         Update: {
-          category_slug?: string
+          category_slug?: string | null
           created_at?: string
           enabled?: boolean
           id?: string
           image_storage_path?: string
           sort_order?: number
+          subscription_feature_key?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -233,6 +236,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "homepage_desktop_category_cards_subscription_feature_key_fkey"
+            columns: ["subscription_feature_key"]
+            isOneToOne: false
+            referencedRelation: "subscription_services"
+            referencedColumns: ["feature_key"]
           },
         ]
       }

@@ -4,7 +4,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { DesktopHomeCategoryGrid } from "@/components/desktop-home-category-grid";
 import { HomepageCarousel } from "@/components/homepage-carousel";
 import { HomepageServiceGrid } from "@/components/homepage-service-grid";
-import { fetchDesktopHomeCategories } from "@/lib/categories/desktop-home-queries";
+import { fetchDesktopHomeCards } from "@/lib/categories/desktop-home-queries";
 import { fetchGuestHomepageContent } from "@/lib/homepage/guest-data";
 import { createClient } from "@/lib/supabase/server";
 
@@ -16,9 +16,9 @@ type Props = {
 
 export async function GuestConfigurableHome({ showDesktopFallback = true, isSignedIn = false }: Props) {
   const supabase = await createClient();
-  const [{ sections, itemsBySectionId }, desktopCategories] = await Promise.all([
+  const [{ sections, itemsBySectionId }, desktopHomeCards] = await Promise.all([
     fetchGuestHomepageContent(supabase),
-    fetchDesktopHomeCategories(supabase),
+    fetchDesktopHomeCards(supabase),
   ]);
   const localeRaw = await getLocale();
   const loc = localeRaw === "en" ? "en" : "ar";
@@ -28,8 +28,8 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
 
   const hasSectionCms =
     sections.length > 0 && sections.some((s) => (itemsBySectionId.get(s.id) ?? []).length > 0);
-  const hasDesktopCategoryCms = desktopCategories.length > 0;
-  const hasAnyHomeContent = hasSectionCms || hasDesktopCategoryCms;
+  const hasDesktopHomeCardsCms = desktopHomeCards.length > 0;
+  const hasAnyHomeContent = hasSectionCms || hasDesktopHomeCardsCms;
 
   const mobileInner = !hasAnyHomeContent ? (
     <div className="flex flex-col gap-6 px-4 py-8">
@@ -124,10 +124,10 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
             );
           })
         : null}
-      {hasDesktopCategoryCms ? (
+      {hasDesktopHomeCardsCms ? (
         <DesktopHomeCategoryGrid
           cardAria={(name) => t("desktopCategoryCardAria", { category: name })}
-          categories={desktopCategories}
+          categories={desktopHomeCards}
           locale={loc}
           sectionTitle={t("desktopCategoriesTitle")}
         />
@@ -158,7 +158,7 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
             </div>
             <DesktopHomeCategoryGrid
               cardAria={(name) => t("desktopCategoryCardAria", { category: name })}
-              categories={desktopCategories}
+              categories={desktopHomeCards}
               locale={loc}
               sectionTitle={t("desktopCategoriesTitle")}
             />

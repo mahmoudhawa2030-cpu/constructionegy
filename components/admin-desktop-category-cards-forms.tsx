@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -17,18 +17,34 @@ type CardRow = Database["public"]["Tables"]["homepage_desktop_category_cards"]["
 
 export type DesktopCategoryOption = { slug: string; label_ar: string };
 
-export function AdminCreateDesktopCategoryCardForm({ options }: { options: DesktopCategoryOption[] }) {
+export type DesktopServiceOption = { feature_key: string; label_ar: string; label_en: string };
+
+export function AdminCreateDesktopCategoryCardForm({
+  categoryOptions,
+  serviceOptions,
+}: {
+  categoryOptions: DesktopCategoryOption[];
+  serviceOptions: DesktopServiceOption[];
+}) {
   const t = useTranslations("adminHomepage.desktopCategories");
   const [state, formAction, pending] = useActionState(
     createDesktopCategoryCardAction,
     null as DesktopCategoryCardActionState | null,
   );
 
-  if (options.length === 0) {
+  const [target, setTarget] = useState<"category" | "service">(() =>
+    categoryOptions.length > 0 ? "category" : "service",
+  );
+
+  if (categoryOptions.length === 0 && serviceOptions.length === 0) {
     return (
-      <p className={`${adminUi.card} p-4 text-sm text-[var(--admin-text-secondary)]`}>{t("noCategoriesAvailable")}</p>
+      <p className={`${adminUi.card} p-4 text-sm text-[var(--admin-text-secondary)]`}>{t("noTargetsAvailable")}</p>
     );
   }
+
+  const showTargetToggle = categoryOptions.length > 0 && serviceOptions.length > 0;
+  const onlyCategory = categoryOptions.length > 0 && serviceOptions.length === 0;
+  const onlyService = serviceOptions.length > 0 && categoryOptions.length === 0;
 
   return (
     <form
@@ -38,17 +54,72 @@ export function AdminCreateDesktopCategoryCardForm({ options }: { options: Deskt
       dir="ltr"
     >
       <h2 className={`${adminUi.sectionTitle} text-sm`}>{t("createTitle")}</h2>
+
+      {showTargetToggle ? (
+        <fieldset className="flex flex-wrap gap-4 text-sm">
+          <legend className="mb-1 text-[var(--admin-text-secondary)]">{t("targetTypeLegend")}</legend>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              checked={target === "category"}
+              className={adminUi.checkbox}
+              name="card_target"
+              onChange={() => setTarget("category")}
+              type="radio"
+              value="category"
+            />
+            <span>{t("targetCategory")}</span>
+          </label>
+          <label className="flex cursor-pointer items-center gap-2">
+            <input
+              checked={target === "service"}
+              className={adminUi.checkbox}
+              name="card_target"
+              onChange={() => setTarget("service")}
+              type="radio"
+              value="service"
+            />
+            <span>{t("targetService")}</span>
+          </label>
+        </fieldset>
+      ) : null}
+      {onlyCategory ? <input name="card_target" type="hidden" value="category" /> : null}
+      {onlyService ? <input name="card_target" type="hidden" value="service" /> : null}
+
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className={adminUi.label}>{t("category")}</span>
-          <select className={adminUi.select} name="category_slug" required>
-            {options.map((o) => (
-              <option key={o.slug} value={o.slug}>
-                {o.label_ar} ({o.slug})
-              </option>
-            ))}
-          </select>
-        </label>
+        {categoryOptions.length > 0 ? (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className={adminUi.label}>{t("category")}</span>
+            <select
+              className={adminUi.select}
+              disabled={!onlyCategory && target !== "category"}
+              name="category_slug"
+              required={onlyCategory || target === "category"}
+            >
+              {categoryOptions.map((o) => (
+                <option key={o.slug} value={o.slug}>
+                  {o.label_ar} ({o.slug})
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
+        {serviceOptions.length > 0 ? (
+          <label className="flex flex-col gap-1 text-sm">
+            <span className={adminUi.label}>{t("subscriptionService")}</span>
+            <select
+              className={adminUi.select}
+              disabled={!onlyService && target !== "service"}
+              name="subscription_feature_key"
+              required={onlyService || target === "service"}
+            >
+              {serviceOptions.map((o) => (
+                <option key={o.feature_key} value={o.feature_key}>
+                  {o.label_ar} ({o.feature_key})
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <label className="flex flex-col gap-1 text-sm">
           <span className={adminUi.label}>{t("sortOrder")}</span>
           <input className={adminUi.input} defaultValue={0} name="sort_order" type="number" />
@@ -76,11 +147,11 @@ export function AdminCreateDesktopCategoryCardForm({ options }: { options: Deskt
 
 export function AdminEditDesktopCategoryCardForm({
   card,
-  categoryLabel,
+  targetLabel,
   imagePublicUrl,
 }: {
   card: CardRow;
-  categoryLabel: string;
+  targetLabel: string;
   imagePublicUrl: string;
 }) {
   const t = useTranslations("adminHomepage.desktopCategories");
@@ -98,7 +169,7 @@ export function AdminEditDesktopCategoryCardForm({
     >
       <input name="id" type="hidden" value={card.id} />
       <p className="text-xs font-medium text-[var(--admin-text-primary)]">
-        {t("category")}: {categoryLabel}
+        {card.category_slug ? t("targetCategory") : t("targetService")}: {targetLabel}
       </p>
       <div className="flex items-center gap-3">
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-[var(--admin-shell-border)] bg-white">
