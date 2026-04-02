@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/admin";
+import { isHomepageIconKey } from "@/lib/homepage/icons";
 import { createClient } from "@/lib/supabase/server";
 
 const slugSchema = z
@@ -13,11 +15,30 @@ const slugSchema = z
 
 export type CategoryActionState = { ok: true; message?: string } | { ok: false; message: string };
 
+function parseLabelEn(
+  formData: FormData,
+): { ok: true; value: string | null } | { ok: false; messageKey: "labelEnTooLong" } {
+  const s = String(formData.get("label_en") ?? "").trim();
+  if (s.length === 0) return { ok: true, value: null };
+  if (s.length > 200) return { ok: false, messageKey: "labelEnTooLong" };
+  return { ok: true, value: s };
+}
+
+function parseDesktopHomeIcon(
+  formData: FormData,
+): { ok: true; value: string | null } | { ok: false; message: "invalidDesktopIcon" } {
+  const iconRaw = String(formData.get("homepage_desktop_icon_key") ?? "").trim();
+  if (!iconRaw) return { ok: true, value: null };
+  if (!isHomepageIconKey(iconRaw)) return { ok: false, message: "invalidDesktopIcon" };
+  return { ok: true, value: iconRaw };
+}
+
 export async function createCategoryFromForm(
   _prev: CategoryActionState | null,
   formData: FormData,
 ): Promise<CategoryActionState> {
   await requireAdmin();
+  const t = await getTranslations("adminCategories");
   const supabase = await createClient();
 
   const raw = {
@@ -27,6 +48,15 @@ export async function createCategoryFromForm(
     is_active: formData.get("is_active") === "on",
     requires_subscription: formData.get("requires_subscription") === "on",
   };
+
+  const labelEnParsed = parseLabelEn(formData);
+  if (!labelEnParsed.ok) {
+    return { ok: false, message: t(labelEnParsed.messageKey) };
+  }
+  const iconParsed = parseDesktopHomeIcon(formData);
+  if (!iconParsed.ok) {
+    return { ok: false, message: t("invalidDesktopIcon") };
+  }
 
   const slugParsed = slugSchema.safeParse(raw.slug);
   if (!slugParsed.success) {
@@ -42,6 +72,8 @@ export async function createCategoryFromForm(
   const { error } = await supabase.from("categories").insert({
     slug: slugParsed.data,
     label_ar: raw.label_ar,
+    label_en: labelEnParsed.value,
+    homepage_desktop_icon_key: iconParsed.value,
     sort_order: sortNum,
     is_active: raw.is_active,
     requires_subscription: raw.requires_subscription,
@@ -57,6 +89,7 @@ export async function createCategoryFromForm(
   revalidatePath("/admin/categories");
   revalidatePath("/gallery");
   revalidatePath("/listings/new");
+  revalidatePath("/");
   return { ok: true, message: "تم إضافة التصنيف." };
 }
 
@@ -65,6 +98,7 @@ export async function updateCategoryFromForm(
   formData: FormData,
 ): Promise<CategoryActionState> {
   await requireAdmin();
+  const t = await getTranslations("adminCategories");
   const supabase = await createClient();
 
   const id = String(formData.get("id") ?? "");
@@ -79,6 +113,15 @@ export async function updateCategoryFromForm(
     is_active: formData.get("is_active") === "on",
     requires_subscription: formData.get("requires_subscription") === "on",
   };
+
+  const labelEnParsed = parseLabelEn(formData);
+  if (!labelEnParsed.ok) {
+    return { ok: false, message: t(labelEnParsed.messageKey) };
+  }
+  const iconParsed = parseDesktopHomeIcon(formData);
+  if (!iconParsed.ok) {
+    return { ok: false, message: t("invalidDesktopIcon") };
+  }
 
   const slugParsed = slugSchema.safeParse(raw.slug);
   if (!slugParsed.success) {
@@ -96,6 +139,8 @@ export async function updateCategoryFromForm(
     .update({
       slug: slugParsed.data,
       label_ar: raw.label_ar,
+      label_en: labelEnParsed.value,
+      homepage_desktop_icon_key: iconParsed.value,
       sort_order: sortNum,
       is_active: raw.is_active,
       requires_subscription: raw.requires_subscription,
@@ -112,6 +157,7 @@ export async function updateCategoryFromForm(
   revalidatePath("/admin/categories");
   revalidatePath("/gallery");
   revalidatePath("/listings/new");
+  revalidatePath("/");
   return { ok: true, message: "تم حفظ التصنيف." };
 }
 
@@ -141,5 +187,6 @@ export async function deleteCategoryFromForm(
 
   revalidatePath("/admin/categories");
   revalidatePath("/gallery");
+  revalidatePath("/");
   return { ok: true, message: "تم حذف التصنيف." };
 }

@@ -57,7 +57,9 @@
     "carouselDotAria": "Go to slide {n}",
     "slideLinkAria": "Open: {title}",
     "cardLinkAria": "Open: {title}",
-    "desktopHomeHint": "On large screens this simplified link bar is shown. Configure the rich card layout for phones in Admin → Homepage (it appears on small screens)."
+    "desktopCategoriesTitle": "Browse by category",
+    "desktopCategoryCardAria": "Open {category} in the gallery",
+    "desktopHomeHint": "Category cards use icons set in Admin → Categories (desktop home). The detailed mobile layout is in Admin → Homepage."
   },
   "auth": {
     "loginTitle": "Log in",
@@ -709,7 +711,15 @@
     "requiresSubscription": "Paid category",
     "requiresSubscriptionHint": "When subscription enforcement is on, only users with premium listings (or “all”) can post in this category. New categories stay free until you enable this.",
     "badgeFree": "Free",
-    "badgePaid": "Paid"
+    "badgePaid": "Paid",
+    "labelEn": "Name (English)",
+    "labelEnPlaceholder": "e.g. Scaffolding",
+    "labelEnHint": "Shown on the English desktop home when this category has a desktop icon.",
+    "desktopHomeIcon": "Desktop home icon",
+    "desktopHomeIconNone": "None — hide from desktop home",
+    "desktopHomeIconHint": "Large-screen home shows one card per active category that has an icon; the card links to the gallery filtered by this category.",
+    "invalidDesktopIcon": "Invalid desktop home icon.",
+    "labelEnTooLong": "English name must be at most 200 characters."
   },
   "listingForm": {
     "categoryPaidTag": "(paid)",

@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { DesktopHomeCategoryGrid } from "@/components/desktop-home-category-grid";
 import { HomepageCarousel } from "@/components/homepage-carousel";
 import { HomepageServiceGrid } from "@/components/homepage-service-grid";
+import { fetchDesktopHomeCategories } from "@/lib/categories/desktop-home-queries";
 import { fetchGuestHomepageContent } from "@/lib/homepage/guest-data";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,7 +16,10 @@ type Props = {
 
 export async function GuestConfigurableHome({ showDesktopFallback = true, isSignedIn = false }: Props) {
   const supabase = await createClient();
-  const { sections, itemsBySectionId } = await fetchGuestHomepageContent(supabase);
+  const [{ sections, itemsBySectionId }, desktopCategories] = await Promise.all([
+    fetchGuestHomepageContent(supabase),
+    fetchDesktopHomeCategories(supabase),
+  ]);
   const localeRaw = await getLocale();
   const loc = localeRaw === "en" ? "en" : "ar";
   const t = await getTranslations("home");
@@ -133,10 +138,18 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
 
       {showDesktopFallback ? (
         <div className="hidden min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-black lg:flex" dir={loc === "ar" ? "rtl" : "ltr"}>
-          <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center px-8 py-16">
-            <h1 className="text-center text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
-            <p className="mt-4 max-w-md text-center text-zinc-600 dark:text-zinc-400">{t("intro")}</p>
-            <nav className="mt-8 flex flex-wrap justify-center gap-3">
+          <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-10 px-8 py-16">
+            <div className="flex flex-col items-center text-center">
+              <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
+              <p className="mt-4 max-w-md text-zinc-600 dark:text-zinc-400">{t("intro")}</p>
+            </div>
+            <DesktopHomeCategoryGrid
+              cardAria={(name) => t("desktopCategoryCardAria", { category: name })}
+              categories={desktopCategories}
+              locale={loc}
+              sectionTitle={t("desktopCategoriesTitle")}
+            />
+            <nav className="flex flex-wrap justify-center gap-3">
               {isSignedIn ? (
                 <>
                   <Link
@@ -175,7 +188,7 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
                 </>
               )}
             </nav>
-            <p className="mt-8 text-center text-xs text-zinc-500">{t("desktopHomeHint")}</p>
+            <p className="text-center text-xs text-zinc-500">{t("desktopHomeHint")}</p>
           </main>
         </div>
       ) : null}

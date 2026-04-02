@@ -201,9 +201,11 @@ export type Database = {
       categories: {
         Row: {
           created_at: string
+          homepage_desktop_icon_key: string | null
           id: string
           is_active: boolean
           label_ar: string
+          label_en: string | null
           requires_subscription: boolean
           slug: string
           sort_order: number
@@ -211,9 +213,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          homepage_desktop_icon_key?: string | null
           id?: string
           is_active?: boolean
           label_ar: string
+          label_en?: string | null
           requires_subscription?: boolean
           slug: string
           sort_order?: number
@@ -221,9 +225,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          homepage_desktop_icon_key?: string | null
           id?: string
           is_active?: boolean
           label_ar?: string
+          label_en?: string | null
           requires_subscription?: boolean
           slug?: string
           sort_order?: number
