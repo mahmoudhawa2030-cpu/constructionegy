@@ -10,6 +10,7 @@ import {
   AdminEditHomepageSectionForm,
 } from "@/components/admin-homepage-forms";
 import { adminUi } from "@/lib/admin-ui";
+import { getCategoriesForListingForm } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -39,6 +40,11 @@ export default async function AdminHomepageSectionDetailPage({ params }: PagePro
     .eq("section_id", section.id)
     .order("sort_order", { ascending: true });
 
+  const categoryExtraSlugs = (items ?? [])
+    .map((i) => i.category_slug)
+    .filter((s): s is string => typeof s === "string" && s.trim().length > 0);
+  const categories = await getCategoriesForListingForm(categoryExtraSlugs);
+
   return (
     <div className={adminUi.page}>
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -63,7 +69,7 @@ export default async function AdminHomepageSectionDetailPage({ params }: PagePro
             className="flex flex-col gap-2 border-b border-[var(--admin-shell-border)] pb-4 lg:flex-row lg:items-start"
           >
             <div className="min-w-0 flex-1">
-              <AdminEditHomepageItemForm item={item} />
+              <AdminEditHomepageItemForm categories={categories} item={item} />
             </div>
             <div className="shrink-0">
               <AdminDeleteHomepageItemInline itemId={item.id} />
@@ -76,7 +82,7 @@ export default async function AdminHomepageSectionDetailPage({ params }: PagePro
         <p className="mt-4 text-sm text-[var(--admin-text-secondary)]">{t("emptyItems")}</p>
       ) : null}
 
-      <AdminCreateHomepageItemForm sectionId={section.id} />
+      <AdminCreateHomepageItemForm categories={categories} sectionId={section.id} />
     </div>
   );
 }

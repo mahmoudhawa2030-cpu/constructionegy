@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import type { GuestHomepageItem } from "@/lib/homepage/guest-data";
+import { resolveHomepageItemHref, type GuestHomepageItem } from "@/lib/homepage/guest-data";
 
 type Props = {
   items: GuestHomepageItem[];
@@ -51,6 +51,7 @@ export function HomepageCarousel({ items, locale, dotLabel, slideAria }: Props) 
             locale === "ar"
               ? item.description_ar || item.description_en
               : item.description_en || item.description_ar;
+          const itemHref = resolveHomepageItemHref(item);
           return (
             <div
               key={item.id}
@@ -59,7 +60,7 @@ export function HomepageCarousel({ items, locale, dotLabel, slideAria }: Props) 
               <Link
                 aria-label={slideAria(title)}
                 className="flex min-h-[11rem] flex-col justify-between rounded-2xl border border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-4 shadow-sm transition hover:border-zinc-300 dark:border-zinc-700 dark:from-zinc-900 dark:to-zinc-950 dark:hover:border-zinc-600"
-                href={item.href}
+                href={itemHref}
                 prefetch={true}
               >
                 {item.image_url ? (

@@ -17,12 +17,25 @@ export type GuestHomepageItem = Pick<
   | "description_ar"
   | "description_en"
   | "href"
+  | "category_slug"
   | "icon_emoji"
+  | "icon_key"
   | "image_url"
   | "badge_count"
   | "badge_label_ar"
   | "badge_label_en"
 >;
+
+/** Public link: marketplace category overrides stored `href`. */
+export function resolveHomepageItemHref(item: GuestHomepageItem): string {
+  const cat = item.category_slug?.trim();
+  if (cat) {
+    return `/gallery?category=${encodeURIComponent(cat)}`;
+  }
+  const h = item.href?.trim();
+  if (!h) return "/";
+  return h.startsWith("/") ? h : `/${h}`;
+}
 
 export async function fetchGuestHomepageContent(client: SupabaseClient<Database>): Promise<{
   sections: GuestHomepageSection[];
@@ -42,7 +55,7 @@ export async function fetchGuestHomepageContent(client: SupabaseClient<Database>
   const { data: items } = await client
     .from("homepage_section_items")
     .select(
-      "id, section_id, sort_order, title_ar, title_en, description_ar, description_en, href, icon_emoji, image_url, badge_count, badge_label_ar, badge_label_en",
+      "id, section_id, sort_order, title_ar, title_en, description_ar, description_en, href, category_slug, icon_emoji, icon_key, image_url, badge_count, badge_label_ar, badge_label_en",
     )
     .in("section_id", ids)
     .eq("enabled", true)

@@ -14,6 +14,8 @@ import {
   updateHomepageSectionAction,
 } from "@/app/admin/homepage/actions";
 import { adminUi } from "@/lib/admin-ui";
+import type { CategoryOption } from "@/lib/categories/queries";
+import { HOMEPAGE_ICON_KEYS } from "@/lib/homepage/icons";
 import type { Database } from "@/lib/supabase/database.types";
 
 type SectionRow = Database["public"]["Tables"]["homepage_sections"]["Row"];
@@ -166,7 +168,13 @@ export function AdminEditHomepageSectionForm({ section }: { section: SectionRow 
   );
 }
 
-export function AdminCreateHomepageItemForm({ sectionId }: { sectionId: string }) {
+export function AdminCreateHomepageItemForm({
+  sectionId,
+  categories,
+}: {
+  sectionId: string;
+  categories: CategoryOption[];
+}) {
   const t = useTranslations("adminHomepage.forms");
   const [state, formAction, pending] = useActionState(
     createHomepageItemAction,
@@ -194,17 +202,41 @@ export function AdminCreateHomepageItemForm({ sectionId }: { sectionId: string }
           <span className={adminUi.label}>{t("descriptionEn")}</span>
           <input className={adminUi.input} name="description_en" type="text" />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+          <span className={adminUi.label}>{t("categorySlug")}</span>
+          <select className={adminUi.select} defaultValue="" name="category_slug">
+            <option value="">{t("categoryNone")}</option>
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.label_ar} ({c.slug})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
           <span className={adminUi.label}>{t("href")}</span>
           <input className={adminUi.inputMono} defaultValue="/" name="href" placeholder="/gallery" type="text" />
+          <span className="text-xs text-[var(--admin-text-secondary)]">{t("hrefHint")}</span>
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className={adminUi.label}>{t("sortOrder")}</span>
           <input className={adminUi.input} defaultValue={0} name="sort_order" type="number" />
         </label>
-        <label className="flex flex-col gap-1 text-sm">
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+          <span className={adminUi.label}>{t("iconKey")}</span>
+          <select className={adminUi.select} defaultValue="" name="icon_key">
+            <option value="">{t("iconKeyNone")}</option>
+            {HOMEPAGE_ICON_KEYS.map((key) => (
+              <option key={key} value={key}>
+                {t(`iconKeys.${key}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
           <span className={adminUi.label}>{t("iconEmoji")}</span>
           <input className={adminUi.input} name="icon_emoji" placeholder="📁" type="text" />
+          <span className="text-xs text-[var(--admin-text-secondary)]">{t("iconEmojiHint")}</span>
         </label>
         <label className="flex flex-col gap-1 text-sm">
           <span className={adminUi.label}>{t("imageUrl")}</span>
@@ -239,7 +271,7 @@ export function AdminCreateHomepageItemForm({ sectionId }: { sectionId: string }
   );
 }
 
-export function AdminEditHomepageItemForm({ item }: { item: ItemRow }) {
+export function AdminEditHomepageItemForm({ item, categories }: { item: ItemRow; categories: CategoryOption[] }) {
   const t = useTranslations("adminHomepage.forms");
   const [state, formAction, pending] = useActionState(
     updateHomepageItemAction,
@@ -258,13 +290,37 @@ export function AdminEditHomepageItemForm({ item }: { item: ItemRow }) {
           <span className={adminUi.label}>{t("titleEn")}</span>
           <input className={adminUi.input} defaultValue={item.title_en} name="title_en" type="text" />
         </label>
-        <label className="flex flex-col gap-0.5 text-xs">
+        <label className="flex flex-col gap-0.5 text-xs sm:col-span-2 lg:col-span-3">
+          <span className={adminUi.label}>{t("categorySlug")}</span>
+          <select className={adminUi.select} defaultValue={item.category_slug ?? ""} name="category_slug">
+            <option value="">{t("categoryNone")}</option>
+            {categories.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.label_ar} ({c.slug})
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
           <span className={adminUi.label}>{t("href")}</span>
           <input className={adminUi.inputMono} defaultValue={item.href} name="href" type="text" />
+          <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("hrefHint")}</span>
         </label>
-        <label className="flex flex-col gap-0.5 text-xs">
+        <label className="flex flex-col gap-0.5 text-xs sm:col-span-2 lg:col-span-3">
+          <span className={adminUi.label}>{t("iconKey")}</span>
+          <select className={adminUi.select} defaultValue={item.icon_key ?? ""} name="icon_key">
+            <option value="">{t("iconKeyNone")}</option>
+            {HOMEPAGE_ICON_KEYS.map((key) => (
+              <option key={key} value={key}>
+                {t(`iconKeys.${key}`)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
           <span className={adminUi.label}>{t("iconEmoji")}</span>
           <input className={adminUi.input} defaultValue={item.icon_emoji ?? ""} name="icon_emoji" type="text" />
+          <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("iconEmojiHint")}</span>
         </label>
         <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
           <span className={adminUi.label}>{t("imageUrl")}</span>

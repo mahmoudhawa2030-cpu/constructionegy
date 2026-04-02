@@ -83,12 +83,14 @@ export type Database = {
           badge_count: number | null
           badge_label_ar: string | null
           badge_label_en: string | null
+          category_slug: string | null
           created_at: string
           description_ar: string | null
           description_en: string | null
           enabled: boolean
           href: string
           icon_emoji: string | null
+          icon_key: string | null
           id: string
           image_url: string | null
           section_id: string
@@ -101,12 +103,14 @@ export type Database = {
           badge_count?: number | null
           badge_label_ar?: string | null
           badge_label_en?: string | null
+          category_slug?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
           enabled?: boolean
           href?: string
           icon_emoji?: string | null
+          icon_key?: string | null
           id?: string
           image_url?: string | null
           section_id: string
@@ -119,12 +123,14 @@ export type Database = {
           badge_count?: number | null
           badge_label_ar?: string | null
           badge_label_en?: string | null
+          category_slug?: string | null
           created_at?: string
           description_ar?: string | null
           description_en?: string | null
           enabled?: boolean
           href?: string
           icon_emoji?: string | null
+          icon_key?: string | null
           id?: string
           image_url?: string | null
           section_id?: string
@@ -134,6 +140,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "homepage_section_items_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
           {
             foreignKeyName: "homepage_section_items_section_id_fkey"
             columns: ["section_id"]

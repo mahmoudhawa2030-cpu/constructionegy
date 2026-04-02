@@ -479,7 +479,7 @@
     "edit": "Edit",
     "emptySections": "No sections yet. Create one below.",
     "itemsTitle": "Section items",
-    "itemsLead": "Slides (carousel) or cards (grid). Use relative paths for links (e.g. /gallery). Emoji icons work well on the grid.",
+    "itemsLead": "Slides (carousel) or cards (grid). Pick a marketplace category to link straight to the gallery filter, or leave it empty and set a custom path. Grid cards can use a named icon or an emoji.",
     "emptyItems": "No items in this section yet.",
     "forms": {
       "createSectionTitle": "New section",
@@ -504,8 +504,31 @@
       "createItemTitle": "New item",
       "descriptionAr": "Description (Arabic)",
       "descriptionEn": "Description (English)",
-      "href": "Link path",
-      "iconEmoji": "Icon emoji",
+      "categorySlug": "Marketplace category",
+      "categoryNone": "None — custom link below",
+      "href": "Custom link path",
+      "hrefHint": "Used when no category is selected. If a category is selected, the saved link becomes /gallery?category=… automatically.",
+      "iconKey": "Icon (preset)",
+      "iconKeyNone": "None — emoji or dot",
+      "iconKeys": {
+        "building": "Building",
+        "blocks": "Blocks / materials",
+        "package": "Package",
+        "truck": "Truck / delivery",
+        "wrench": "Tools",
+        "layers": "Layers / stacks",
+        "grid": "Grid",
+        "clipboard": "List / clipboard",
+        "map_pin": "Location",
+        "hard_hat": "Safety / construction",
+        "ruler": "Measure",
+        "factory": "Factory / plant",
+        "shopping": "Shopping cart",
+        "fence": "Fence / barrier",
+        "hammer": "Hammer"
+      },
+      "iconEmoji": "Icon emoji (optional)",
+      "iconEmojiHint": "Shown when no preset icon is chosen. Preset icon takes precedence.",
       "imageUrl": "Image URL (carousel)",
       "badgeCount": "Badge number",
       "badgeLabelAr": "Badge text (Arabic)",
@@ -528,7 +551,9 @@
       "itemCreated": "Item added.",
       "itemSaved": "Item saved.",
       "itemDeleted": "Item deleted.",
-      "notFound": "Not found."
+      "notFound": "Not found.",
+      "invalidCategorySlug": "Invalid category slug.",
+      "invalidIconKey": "Invalid icon choice."
     }
   },
   "admin": {

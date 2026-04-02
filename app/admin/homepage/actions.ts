@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/admin";
+import { isHomepageIconKey } from "@/lib/homepage/icons";
 import { createClient } from "@/lib/supabase/server";
 
 const slugSchema = z
@@ -164,7 +165,29 @@ export async function createHomepageItemAction(
 
   const sort_order = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
   const enabled = formData.get("enabled") === "on";
-  const href = hrefNormalize(String(formData.get("href") ?? ""));
+
+  const catRaw = String(formData.get("category_slug") ?? "").trim();
+  let category_slug: string | null = null;
+  if (catRaw) {
+    const cp = slugSchema.safeParse(catRaw);
+    if (!cp.success) {
+      return { ok: false, message: t("invalidCategorySlug") };
+    }
+    category_slug = cp.data;
+  }
+
+  const iconRaw = String(formData.get("icon_key") ?? "").trim();
+  let icon_key: string | null = null;
+  if (iconRaw) {
+    if (!isHomepageIconKey(iconRaw)) {
+      return { ok: false, message: t("invalidIconKey") };
+    }
+    icon_key = iconRaw;
+  }
+
+  const href = category_slug
+    ? `/gallery?category=${encodeURIComponent(category_slug)}`
+    : hrefNormalize(String(formData.get("href") ?? ""));
   const badgeRaw = String(formData.get("badge_count") ?? "").trim();
   let badge_count: number | null = null;
   if (badgeRaw.length > 0) {
@@ -184,7 +207,9 @@ export async function createHomepageItemAction(
     description_ar: String(formData.get("description_ar") ?? "").trim() || null,
     description_en: String(formData.get("description_en") ?? "").trim() || null,
     href,
+    category_slug,
     icon_emoji: String(formData.get("icon_emoji") ?? "").trim() || null,
+    icon_key,
     image_url: String(formData.get("image_url") ?? "").trim() || null,
     badge_count,
     badge_label_ar: String(formData.get("badge_label_ar") ?? "").trim() || null,
@@ -222,7 +247,29 @@ export async function updateHomepageItemAction(
 
   const sort_order = Number.parseInt(String(formData.get("sort_order") ?? "0"), 10) || 0;
   const enabled = formData.get("enabled") === "on";
-  const href = hrefNormalize(String(formData.get("href") ?? ""));
+
+  const catRaw = String(formData.get("category_slug") ?? "").trim();
+  let category_slug: string | null = null;
+  if (catRaw) {
+    const cp = slugSchema.safeParse(catRaw);
+    if (!cp.success) {
+      return { ok: false, message: t("invalidCategorySlug") };
+    }
+    category_slug = cp.data;
+  }
+
+  const iconRaw = String(formData.get("icon_key") ?? "").trim();
+  let icon_key: string | null = null;
+  if (iconRaw) {
+    if (!isHomepageIconKey(iconRaw)) {
+      return { ok: false, message: t("invalidIconKey") };
+    }
+    icon_key = iconRaw;
+  }
+
+  const href = category_slug
+    ? `/gallery?category=${encodeURIComponent(category_slug)}`
+    : hrefNormalize(String(formData.get("href") ?? ""));
   const badgeRaw = String(formData.get("badge_count") ?? "").trim();
   let badge_count: number | null = null;
   if (badgeRaw.length > 0) {
@@ -253,7 +300,9 @@ export async function updateHomepageItemAction(
       description_ar: String(formData.get("description_ar") ?? "").trim() || null,
       description_en: String(formData.get("description_en") ?? "").trim() || null,
       href,
+      category_slug,
       icon_emoji: String(formData.get("icon_emoji") ?? "").trim() || null,
+      icon_key,
       image_url: String(formData.get("image_url") ?? "").trim() || null,
       badge_count,
       badge_label_ar: String(formData.get("badge_label_ar") ?? "").trim() || null,

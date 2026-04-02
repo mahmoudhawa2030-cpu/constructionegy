@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import type { GuestHomepageItem } from "@/lib/homepage/guest-data";
+import { resolveHomepageItemHref, type GuestHomepageItem } from "@/lib/homepage/guest-data";
+import { HomepageItemIcon } from "@/lib/homepage/icons";
 
 type Props = {
   items: GuestHomepageItem[];
@@ -27,13 +28,13 @@ export function HomepageServiceGrid({ items, locale, cardAria }: Props) {
       {items.map((item) => {
         const title = locale === "ar" ? item.title_ar || item.title_en : item.title_en || item.title_ar;
         const badge = badgeText(item, locale);
-        const icon = item.icon_emoji?.trim() || "·";
+        const itemHref = resolveHomepageItemHref(item);
         return (
           <li key={item.id}>
             <Link
               aria-label={cardAria(title)}
               className="relative flex min-h-[5.5rem] flex-col items-center justify-center gap-1 rounded-xl border border-zinc-200 bg-white px-1 py-3 text-center shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600 dark:hover:bg-zinc-900"
-              href={item.href}
+              href={itemHref}
               prefetch={true}
             >
               <span aria-hidden className="absolute start-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-amber-500" />
@@ -42,9 +43,7 @@ export function HomepageServiceGrid({ items, locale, cardAria }: Props) {
                   {badge}
                 </span>
               ) : null}
-              <span className="text-2xl leading-none" aria-hidden>
-                {icon}
-              </span>
+              <HomepageItemIcon iconEmoji={item.icon_emoji} iconKey={item.icon_key} />
               <span className="line-clamp-2 text-[11px] font-medium leading-tight text-zinc-900 dark:text-zinc-50 sm:text-xs">
                 {title}
               </span>
