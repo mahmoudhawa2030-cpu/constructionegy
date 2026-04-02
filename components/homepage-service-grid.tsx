@@ -44,8 +44,8 @@ export function HomepageServiceGrid({ items, locale, cardAria }: Props) {
                 </span>
               ) : null}
               <HomepageItemIcon
-                className="h-[1.95rem] w-[1.95rem] text-zinc-700 dark:text-zinc-200 sm:h-[2.275rem] sm:w-[2.275rem]"
-                emojiClassName="text-[1.17rem] leading-none sm:text-[1.3675rem] md:text-[1.95rem]"
+                className="h-[2.34rem] w-[2.34rem] text-zinc-700 dark:text-zinc-200 sm:h-[2.73rem] sm:w-[2.73rem]"
+                emojiClassName="text-[1.404rem] leading-none sm:text-[1.641rem] md:text-[2.34rem]"
                 iconEmoji={item.icon_emoji}
                 iconKey={item.icon_key}
               />

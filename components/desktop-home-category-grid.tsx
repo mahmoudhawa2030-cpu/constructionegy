@@ -33,12 +33,12 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
                 href={href}
                 prefetch={true}
               >
-                <span className="relative flex h-[2.925rem] w-[2.925rem] items-center justify-center sm:h-[3.25rem] sm:w-[3.25rem] md:h-[3.9rem] md:w-[3.9rem]">
+                <span className="relative flex h-[3.51rem] w-[3.51rem] items-center justify-center sm:h-[3.9rem] sm:w-[3.9rem] md:h-[4.68rem] md:w-[4.68rem]">
                   <Image
                     alt=""
                     className="object-contain"
                     fill
-                    sizes="(max-width: 640px) 47px, (max-width: 768px) 52px, 62px"
+                    sizes="(max-width: 640px) 56px, (max-width: 768px) 62px, 75px"
                     src={cat.image_public_url}
                     unoptimized={cat.image_public_url.startsWith("http")}
                   />
