@@ -1,7 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { categoryTitleForLocale, type DesktopHomeCategoryRow } from "@/lib/categories/desktop-home-queries";
-import { HomepageItemIcon, isHomepageIconKey } from "@/lib/homepage/icons";
 
 type Props = {
   categories: DesktopHomeCategoryRow[];
@@ -25,9 +25,6 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
         {categories.map((cat) => {
           const title = categoryTitleForLocale(cat, locale);
           const href = `/gallery?category=${encodeURIComponent(cat.slug)}`;
-          const iconKey = isHomepageIconKey(cat.homepage_desktop_icon_key)
-            ? cat.homepage_desktop_icon_key
-            : "package";
           return (
             <li key={cat.slug}>
               <Link
@@ -36,7 +33,16 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
                 href={href}
                 prefetch={true}
               >
-                <HomepageItemIcon className="h-8 w-8 text-zinc-700 dark:text-zinc-200" iconEmoji={null} iconKey={iconKey} />
+                <span className="relative flex h-12 w-12 items-center justify-center">
+                  <Image
+                    alt=""
+                    className="object-contain"
+                    height={48}
+                    src={cat.image_public_url}
+                    unoptimized={cat.image_public_url.startsWith("http")}
+                    width={48}
+                  />
+                </span>
                 <span className="line-clamp-2 text-xs font-medium leading-tight text-zinc-900 dark:text-zinc-50 sm:text-sm">
                   {title}
                 </span>

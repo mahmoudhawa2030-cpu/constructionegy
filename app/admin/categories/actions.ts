@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/admin";
-import { isHomepageIconKey } from "@/lib/homepage/icons";
+import { DESKTOP_CATEGORY_ICON_BUCKET } from "@/lib/supabase/desktop-category-icon-url";
 import { createClient } from "@/lib/supabase/server";
 
 const slugSchema = z
@@ -22,15 +22,6 @@ function parseLabelEn(
   if (s.length === 0) return { ok: true, value: null };
   if (s.length > 200) return { ok: false, messageKey: "labelEnTooLong" };
   return { ok: true, value: s };
-}
-
-function parseDesktopHomeIcon(
-  formData: FormData,
-): { ok: true; value: string | null } | { ok: false; message: "invalidDesktopIcon" } {
-  const iconRaw = String(formData.get("homepage_desktop_icon_key") ?? "").trim();
-  if (!iconRaw) return { ok: true, value: null };
-  if (!isHomepageIconKey(iconRaw)) return { ok: false, message: "invalidDesktopIcon" };
-  return { ok: true, value: iconRaw };
 }
 
 export async function createCategoryFromForm(
@@ -53,10 +44,6 @@ export async function createCategoryFromForm(
   if (!labelEnParsed.ok) {
     return { ok: false, message: t(labelEnParsed.messageKey) };
   }
-  const iconParsed = parseDesktopHomeIcon(formData);
-  if (!iconParsed.ok) {
-    return { ok: false, message: t("invalidDesktopIcon") };
-  }
 
   const slugParsed = slugSchema.safeParse(raw.slug);
   if (!slugParsed.success) {
@@ -73,7 +60,6 @@ export async function createCategoryFromForm(
     slug: slugParsed.data,
     label_ar: raw.label_ar,
     label_en: labelEnParsed.value,
-    homepage_desktop_icon_key: iconParsed.value,
     sort_order: sortNum,
     is_active: raw.is_active,
     requires_subscription: raw.requires_subscription,
@@ -118,10 +104,6 @@ export async function updateCategoryFromForm(
   if (!labelEnParsed.ok) {
     return { ok: false, message: t(labelEnParsed.messageKey) };
   }
-  const iconParsed = parseDesktopHomeIcon(formData);
-  if (!iconParsed.ok) {
-    return { ok: false, message: t("invalidDesktopIcon") };
-  }
 
   const slugParsed = slugSchema.safeParse(raw.slug);
   if (!slugParsed.success) {
@@ -140,7 +122,6 @@ export async function updateCategoryFromForm(
       slug: slugParsed.data,
       label_ar: raw.label_ar,
       label_en: labelEnParsed.value,
-      homepage_desktop_icon_key: iconParsed.value,
       sort_order: sortNum,
       is_active: raw.is_active,
       requires_subscription: raw.requires_subscription,
@@ -173,6 +154,18 @@ export async function deleteCategoryFromForm(
     return { ok: false, message: "معرف غير صالح." };
   }
 
+  const { data: catRow } = await supabase.from("categories").select("slug").eq("id", id).maybeSingle();
+  if (catRow?.slug) {
+    const { data: desktopCards } = await supabase
+      .from("homepage_desktop_category_cards")
+      .select("image_storage_path")
+      .eq("category_slug", catRow.slug);
+    const paths = (desktopCards ?? []).map((c) => c.image_storage_path).filter(Boolean);
+    if (paths.length > 0) {
+      await supabase.storage.from(DESKTOP_CATEGORY_ICON_BUCKET).remove(paths);
+    }
+  }
+
   const { error } = await supabase.from("categories").delete().eq("id", id);
 
   if (error) {
@@ -186,6 +179,7 @@ export async function deleteCategoryFromForm(
   }
 
   revalidatePath("/admin/categories");
+  revalidatePath("/admin/homepage/desktop-categories");
   revalidatePath("/gallery");
   revalidatePath("/");
   return { ok: true, message: "تم حذف التصنيف." };

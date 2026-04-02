@@ -11,11 +11,9 @@ import {
 } from "@/app/admin/categories/actions";
 import type { CategoryRow } from "@/lib/categories/admin-queries";
 import { adminUi } from "@/lib/admin-ui";
-import { HOMEPAGE_ICON_KEYS } from "@/lib/homepage/icons";
 
 export function CreateCategoryForm() {
   const t = useTranslations("adminCategories");
-  const tHomeIcons = useTranslations("adminHomepage.forms");
   const [state, formAction, pending] = useActionState(createCategoryFromForm, null as CategoryActionState | null);
 
   return (
@@ -61,18 +59,6 @@ export function CreateCategoryForm() {
           <input className={adminUi.input} dir="ltr" name="label_en" placeholder={t("labelEnPlaceholder")} type="text" />
           <span className="text-xs text-[var(--admin-text-secondary)]">{t("labelEnHint")}</span>
         </label>
-        <label className="flex flex-col gap-1 text-sm sm:col-span-2">
-          <span className={adminUi.label}>{t("desktopHomeIcon")}</span>
-          <select className={adminUi.select} defaultValue="" name="homepage_desktop_icon_key">
-            <option value="">{t("desktopHomeIconNone")}</option>
-            {HOMEPAGE_ICON_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {tHomeIcons(`iconKeys.${key}`)}
-              </option>
-            ))}
-          </select>
-          <span className="text-xs text-[var(--admin-text-secondary)]">{t("desktopHomeIconHint")}</span>
-        </label>
       </div>
       {state?.ok === false ? (
         <p className="text-sm text-red-600 dark:text-red-400">{state.message}</p>
@@ -89,7 +75,6 @@ export function CreateCategoryForm() {
 
 export function EditCategoryForm({ row }: { row: CategoryRow }) {
   const t = useTranslations("adminCategories");
-  const tHomeIcons = useTranslations("adminHomepage.forms");
   const [state, formAction, pending] = useActionState(updateCategoryFromForm, null as CategoryActionState | null);
 
   return (
@@ -144,7 +129,7 @@ export function EditCategoryForm({ row }: { row: CategoryRow }) {
             {pending ? "…" : "حفظ"}
           </button>
         </div>
-        <div className="grid gap-2 border-t border-[var(--admin-shell-border)] pt-2 sm:grid-cols-2">
+        <div className="border-t border-[var(--admin-shell-border)] pt-2">
           <label className="flex min-w-0 flex-col gap-0.5 text-xs">
             <span className={adminUi.label}>{t("labelEn")}</span>
             <input
@@ -155,24 +140,9 @@ export function EditCategoryForm({ row }: { row: CategoryRow }) {
               placeholder={t("labelEnPlaceholder")}
               type="text"
             />
-          </label>
-          <label className="flex min-w-0 flex-col gap-0.5 text-xs">
-            <span className={adminUi.label}>{t("desktopHomeIcon")}</span>
-            <select
-              className={adminUi.select}
-              defaultValue={row.homepage_desktop_icon_key ?? ""}
-              name="homepage_desktop_icon_key"
-            >
-              <option value="">{t("desktopHomeIconNone")}</option>
-              {HOMEPAGE_ICON_KEYS.map((key) => (
-                <option key={key} value={key}>
-                  {tHomeIcons(`iconKeys.${key}`)}
-                </option>
-              ))}
-            </select>
+            <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("labelEnHint")}</span>
           </label>
         </div>
-        <p className="text-[10px] text-[var(--admin-text-secondary)]">{t("desktopHomeIconHint")}</p>
       </form>
       {state?.ok === false ? (
         <p className="mt-1 truncate text-xs text-red-600 dark:text-red-400" title={state.message}>

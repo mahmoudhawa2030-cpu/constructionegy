@@ -198,10 +198,47 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_desktop_category_cards: {
+        Row: {
+          category_slug: string
+          created_at: string
+          enabled: boolean
+          id: string
+          image_storage_path: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_slug: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          image_storage_path: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_slug?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          image_storage_path?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homepage_desktop_category_cards_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
-          homepage_desktop_icon_key: string | null
           id: string
           is_active: boolean
           label_ar: string
@@ -213,7 +250,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          homepage_desktop_icon_key?: string | null
           id?: string
           is_active?: boolean
           label_ar: string
@@ -225,7 +261,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          homepage_desktop_icon_key?: string | null
           id?: string
           is_active?: boolean
           label_ar?: string

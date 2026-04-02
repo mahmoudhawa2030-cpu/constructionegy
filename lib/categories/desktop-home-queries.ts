@@ -1,40 +1,54 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import type { Database } from "@/lib/supabase/database.types";
+import { desktopCategoryIconPublicUrl } from "@/lib/supabase/desktop-category-icon-url";
 
 export type DesktopHomeCategoryRow = {
   slug: string;
   label_ar: string;
   label_en: string | null;
-  homepage_desktop_icon_key: string;
+  image_public_url: string;
 };
 
-/** Active categories that have a desktop home icon (large-screen home cards). */
+/** Desktop home cards: enabled rows joined to active categories; order from card sort_order. */
 export async function fetchDesktopHomeCategories(
   client: SupabaseClient<Database>,
 ): Promise<DesktopHomeCategoryRow[]> {
-  const { data, error } = await client
-    .from("categories")
-    .select("slug, label_ar, label_en, homepage_desktop_icon_key")
-    .eq("is_active", true)
-    .not("homepage_desktop_icon_key", "is", null)
+  const { data: cards, error: cErr } = await client
+    .from("homepage_desktop_category_cards")
+    .select("category_slug, image_storage_path, sort_order")
+    .eq("enabled", true)
     .order("sort_order", { ascending: true });
 
-  if (error || !data?.length) {
+  if (cErr || !cards?.length) {
     return [];
   }
 
+  const slugs = [...new Set(cards.map((c) => c.category_slug))];
+  const { data: cats, error: catErr } = await client
+    .from("categories")
+    .select("slug, label_ar, label_en")
+    .in("slug", slugs)
+    .eq("is_active", true);
+
+  if (catErr || !cats?.length) {
+    return [];
+  }
+
+  const catMap = new Map(cats.map((c) => [c.slug, c]));
   const out: DesktopHomeCategoryRow[] = [];
-  for (const row of data) {
-    const key = row.homepage_desktop_icon_key?.trim();
-    if (!key) continue;
+
+  for (const card of cards) {
+    const cat = catMap.get(card.category_slug);
+    if (!cat) continue;
     out.push({
-      slug: row.slug,
-      label_ar: row.label_ar,
-      label_en: row.label_en,
-      homepage_desktop_icon_key: key,
+      slug: card.category_slug,
+      label_ar: cat.label_ar,
+      label_en: cat.label_en,
+      image_public_url: desktopCategoryIconPublicUrl(card.image_storage_path),
     });
   }
+
   return out;
 }
 

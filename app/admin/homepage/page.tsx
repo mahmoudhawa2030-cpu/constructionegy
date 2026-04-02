@@ -51,6 +51,16 @@ export default async function AdminHomepageListPage() {
         <p className="text-sm">{t("mobileNote")}</p>
       </div>
 
+      <div className={`${adminUi.widget} mb-6`}>
+        <div className={adminUi.widgetHeader}>{t("desktopCategoriesLinkTitle")}</div>
+        <div className={`${adminUi.widgetBodyFlush} p-4`}>
+          <p className="text-sm text-[var(--admin-text-secondary)]">{t("desktopCategoriesLinkLead")}</p>
+          <Link className={`${adminUi.btnPrimary} mt-3 inline-block px-4 py-2 text-sm`} href="/admin/homepage/desktop-categories">
+            {t("desktopCategoriesManage")}
+          </Link>
+        </div>
+      </div>
+
       <AdminCreateHomepageSectionForm />
 
       <div className={adminUi.widget}>
