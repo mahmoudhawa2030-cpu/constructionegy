@@ -26,6 +26,14 @@ export function FeedTopbar() {
 
       {/* Actions */}
       <div className="flex items-center gap-1.5">
+        <Link
+          href="/posts/new"
+          prefetch
+          aria-label={t("composePostAria")}
+          className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
+        >
+          ✏️
+        </Link>
         {/* Bell */}
         <Link
           href="/messages"

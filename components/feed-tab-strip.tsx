@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 import { FeedPostCard } from "@/components/feed-post-card";
 import type { FeedRfqItem } from "@/components/feed-rfq-card";
@@ -70,7 +71,17 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
       <div className="px-3 pb-8 pt-3">
         {feed}
-        {!hasAny ? <p className="py-10 text-center text-sm text-[var(--bina-muted)]">{t("empty")}</p> : null}
+        {!hasAny ? (
+          <div className="flex flex-col items-center gap-4 py-10 text-center">
+            <p className="text-sm text-[var(--bina-muted)]">{t("empty")}</p>
+            <Link
+              href="/posts/new"
+              className="font-bina-display rounded-full bg-[var(--bina-or)] px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-white"
+            >
+              {t("createPostCta")}
+            </Link>
+          </div>
+        ) : null}
       </div>
     </div>
   );

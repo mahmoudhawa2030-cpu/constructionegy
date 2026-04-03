@@ -24,6 +24,7 @@
     "messagesLinkAria": "الرسائل",
     "messagesTabAriaWithUnread": "الرسائل · {count} غير مقروء",
     "newListingAria": "نشر إعلان جديد",
+    "composePostAria": "كتابة منشور في التغذية",
     "menuTitle": "القائمة",
     "menuNavAria": "قائمة التطبيق",
     "closeMenuAria": "إغلاق القائمة",
@@ -55,10 +56,34 @@
     "latest": "الأحدث",
     "nearMe": "قريب مني",
     "empty": "لا منشورات بعد. تفقّد لاحقاً.",
+    "createPostCta": "اكتب أول منشور",
     "postKind": "منشور",
     "openPostAria": "فتح المنشور: {title}",
     "backToFeed": "العودة للتغذية",
     "postNotFound": "المنشور غير متاح أو تمت إزالته."
+  },
+  "feedPost": {
+    "pageTitle": "منشور جديد",
+    "intro": "شارك تحديثاً أو نصيحة أو خبراً مع المجتمع. هذا ليس إعلاناً للبيع—استخدم زر + لبيع أو إيجار المعدات.",
+    "backToFeed": "العودة للتغذية",
+    "titleLabel": "العنوان",
+    "titlePlaceholder": "عنوان قصير",
+    "bodyLabel": "ماذا تريد أن تشارك؟",
+    "bodyPlaceholder": "اكتب منشورك…",
+    "locationLabel": "الموقع (اختياري)",
+    "locationPlaceholder": "مثال: الإسكندرية",
+    "submit": "نشر",
+    "submitting": "جاري النشر…",
+    "cancel": "إلغاء",
+    "errors": {
+      "unauthorized": "سجّل الدخول لنشر منشور.",
+      "saveFailed": "تعذّر حفظ المنشور. حاول مرة أخرى.",
+      "titleRequired": "أضف عنواناً.",
+      "titleTooLong": "العنوان طويل جداً (حد أقصى 200 حرف).",
+      "bodyRequired": "اكتب نص المنشور.",
+      "bodyTooLong": "المنشور طويل جداً (حد أقصى 8000 حرف).",
+      "locationTooLong": "الموقع طويل جداً (حد أقصى 120 حرف)."
+    }
   },
   "home": {
     "title": "construction-egy",
