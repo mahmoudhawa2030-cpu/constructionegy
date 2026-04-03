@@ -10,11 +10,16 @@ import { FeedRfqCard } from "@/components/feed-rfq-card";
 import { FeedVeteransCard } from "@/components/feed-veterans-card";
 
 type Props = {
+  /** Chronological pool (all tabs derive from the same snapshot). */
   items: FeedListingItem[];
+  /** Personalized order for signed-in users; recency-only for guests. */
+  forYouItems: FeedListingItem[];
+  /** Location-scoped when profile has a place; else same as Latest. */
+  nearMeItems: FeedListingItem[];
   rfqItems: FeedRfqItem[];
 };
 
-export function FeedTabStrip({ items, rfqItems }: Props) {
+export function FeedTabStrip({ items, forYouItems, nearMeItems, rfqItems }: Props) {
   const t = useTranslations("feed");
   const [tab, setTab] = useState<"forYou" | "latest" | "nearMe">("forYou");
 
@@ -25,7 +30,11 @@ export function FeedTabStrip({ items, rfqItems }: Props) {
   ];
 
   const sorted =
-    tab === "latest" ? [...items].sort((a, b) => b.created_at.localeCompare(a.created_at)) : items;
+    tab === "latest"
+      ? [...items].sort((a, b) => b.created_at.localeCompare(a.created_at))
+      : tab === "forYou"
+        ? forYouItems
+        : nearMeItems;
 
   // Build interleaved feed: every ~3 normal cards, inject a special card
   const feed: React.ReactNode[] = [];

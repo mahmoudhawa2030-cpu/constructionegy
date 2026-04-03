@@ -13,6 +13,7 @@ export type FeedListingItem = {
   price_unit: string;
   location: string | null;
   images: string[];
+  view_count: number;
   created_at: string;
   user_id: string;
   seller_name: string;
@@ -26,7 +27,7 @@ export async function fetchFeedItems(
 ): Promise<FeedListingItem[]> {
   const { data: listings, error } = await client
     .from("listings")
-    .select("id,title,description,category,type,condition,price,price_unit,location,images,created_at,user_id")
+    .select("id,title,description,category,type,condition,price,price_unit,location,images,view_count,created_at,user_id")
     .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -54,6 +55,7 @@ export async function fetchFeedItems(
       price_unit: l.price_unit,
       location: l.location,
       images: l.images ?? [],
+      view_count: l.view_count ?? 0,
       created_at: l.created_at,
       user_id: l.user_id,
       seller_name: p?.full_name ?? "—",
