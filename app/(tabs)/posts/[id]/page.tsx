@@ -47,7 +47,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
       <p className="font-bina-display mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--bina-muted)]">
         {t("postKind")}
       </p>
-      <h1 className="font-bina-display mb-2 text-lg font-bold text-[var(--bina-text)]">{post.title}</h1>
+      <h1 className="sr-only">{post.title}</h1>
       <p className="font-bina-display mb-4 text-[11px] text-[var(--bina-muted)]">
         {author} · {role}
         {post.location ? ` · ${post.location}` : ""}

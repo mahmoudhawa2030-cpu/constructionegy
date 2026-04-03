@@ -38,28 +38,10 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
 
       <label className="flex flex-col gap-1">
         <span className="font-bina-display text-[11px] font-semibold uppercase tracking-wide text-[var(--bina-muted)]">
-          {t("titleLabel")}
-        </span>
-        <input
-          className="rounded-[var(--bina-r)] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-sm text-[var(--bina-text)] outline-none ring-[var(--bina-or)] focus:ring-2"
-          name="title"
-          required
-          maxLength={200}
-          type="text"
-          autoComplete="off"
-          placeholder={t("titlePlaceholder")}
-        />
-        {fieldErrors?.title ? (
-          <span className="text-xs text-[var(--bina-red)]">{fieldErrors.title}</span>
-        ) : null}
-      </label>
-
-      <label className="flex flex-col gap-1">
-        <span className="font-bina-display text-[11px] font-semibold uppercase tracking-wide text-[var(--bina-muted)]">
           {t("bodyLabel")}
         </span>
         <textarea
-          className="min-h-[140px] resize-y rounded-[var(--bina-r)] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-sm text-[var(--bina-text)] outline-none ring-[var(--bina-or)] focus:ring-2"
+          className="min-h-[180px] resize-y rounded-[var(--bina-r)] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-sm text-[var(--bina-text)] outline-none ring-[var(--bina-or)] focus:ring-2"
           name="body"
           required
           maxLength={8000}

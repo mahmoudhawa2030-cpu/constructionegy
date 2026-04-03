@@ -66,8 +66,6 @@
     "pageTitle": "New post",
     "intro": "Share an update, tip, or site story with the community. This is not a marketplace listing—use the + tab to sell or rent equipment.",
     "backToFeed": "Back to feed",
-    "titleLabel": "Title",
-    "titlePlaceholder": "Short headline",
     "bodyLabel": "What do you want to share?",
     "bodyPlaceholder": "Write your post…",
     "locationLabel": "Location (optional)",
@@ -78,8 +76,6 @@
     "errors": {
       "unauthorized": "Sign in to publish a post.",
       "saveFailed": "Could not save your post. Try again.",
-      "titleRequired": "Add a title.",
-      "titleTooLong": "Title is too long (max 200 characters).",
       "bodyRequired": "Write something in the post body.",
       "bodyTooLong": "Post is too long (max 8000 characters).",
       "locationTooLong": "Location is too long (max 120 characters)."
