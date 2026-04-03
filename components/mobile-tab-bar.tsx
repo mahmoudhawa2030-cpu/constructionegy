@@ -1,143 +1,104 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
-import { useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
-import { useIsMobileNav } from "@/lib/hooks/use-is-mobile-nav";
-
-type TabItem =
-  | { kind: "link"; href: string; label: string; aria?: string }
-  | { kind: "verify"; href: string; label: string; aria: string }
-  | { kind: "profile-menu"; href: "/profile"; label: string };
-
-function useTabItems(
-  homeHref: string,
-  hasUser: boolean,
-  t: ReturnType<typeof useTranslations<"nav">>,
-): TabItem[] {
-  const items: TabItem[] = [
-    { kind: "link", href: homeHref, label: t("home") },
-    { kind: "link", href: "/gallery", label: t("gallery") },
-    { kind: "link", href: "/map", label: t("map") },
-    { kind: "link", href: "/messages", label: t("messages") },
-  ];
-  if (hasUser) {
-    items.push({
-      kind: "verify",
-      href: "/profile#business-verification",
-      label: t("verificationTab"),
-      aria: t("verificationTabAria"),
-    });
-  }
-  items.push({ kind: "profile-menu", href: "/profile", label: t("profile") });
-  return items;
-}
+import { useMessageNotifications } from "@/components/message-notifications-provider";
 
 type Props = {
   hasUser?: boolean;
-  /** Home tab destination (CMS homepage for all users). */
   homeHref?: string;
-  /** Unread incoming messages (shown on Messages tab). */
   messageUnreadCount?: number;
 };
 
-export function MobileTabBar({
-  hasUser = false,
-  homeHref = "/",
-  messageUnreadCount = 0,
-}: Props) {
+export function MobileTabBar({ hasUser = false, homeHref = "/", messageUnreadCount = 0 }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
-  const tabs = useTabItems(homeHref, hasUser, t);
-  const isMobile = useIsMobileNav();
-  const { openMenu } = useMobileChromeMenu();
-  const [hash, setHash] = useState("");
 
-  useEffect(() => {
-    setHash(typeof window !== "undefined" ? window.location.hash : "");
-    const onHash = () => setHash(window.location.hash);
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
+  function isActive(href: string) {
+    if (href === homeHref) return pathname === homeHref;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
+
+  const cls = (href: string) =>
+    `flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[3rem] cursor-pointer select-none transition-colors ${
+      isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"
+    }`;
+
+  const icon = (emoji: string, href: string) => (
+    <span
+      className={`flex h-[22px] w-[22px] items-center justify-center text-[16px] leading-none transition-colors ${isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"}`}
+    >
+      {emoji}
+    </span>
+  );
+
+  const label = (text: string, href: string) => (
+    <span
+      className={`font-bina-display text-[8px] font-semibold uppercase tracking-[0.06em] leading-none ${isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"}`}
+    >
+      {text}
+    </span>
+  );
 
   return (
     <nav
       aria-label={t("mainNavAria")}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-bina-border bg-bina-steel2/98 pt-2 shadow-[0_-8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_-8px_32px_rgba(0,0,0,0.45)]"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
-      <ul className="mx-auto flex max-w-lg items-stretch justify-around gap-0.5 px-1 sm:px-2">
-        {tabs.map((item) => {
-          if (item.kind === "profile-menu") {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
-            const profileOpensMenu = isMobile;
+      <ul className="flex items-center justify-around px-1 pt-2">
 
-            if (profileOpensMenu) {
-              return (
-                <li key="profile-menu" className="min-w-0 flex-1">
-                  <button
-                    className={`font-bina-display relative flex min-h-[3rem] w-full flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
-                      active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
-                    }`}
-                    type="button"
-                    aria-label={item.label}
-                    onClick={() => openMenu()}
-                  >
-                    <span className="line-clamp-2 break-words">{item.label}</span>
-                  </button>
-                </li>
-              );
-            }
+        {/* FEED */}
+        <li className={cls(homeHref)}>
+          <Link href={homeHref} className={cls(homeHref)} aria-label={t("feed")} prefetch>
+            {icon("🏠", homeHref)}
+            {label(t("feed"), homeHref)}
+          </Link>
+        </li>
 
-            return (
-              <li key="profile-link" className="min-w-0 flex-1">
-                <Link
-                  className={`font-bina-display relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
-                    active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
-                  }`}
-                  href={item.href}
-                  prefetch={true}
-                  aria-label={item.label}
-                >
-                  <span className="line-clamp-2 break-words">{item.label}</span>
-                </Link>
-              </li>
-            );
-          }
+        {/* MARKET */}
+        <li className={cls("/gallery")}>
+          <Link href="/gallery" className={cls("/gallery")} aria-label={t("market")} prefetch>
+            {icon("🏪", "/gallery")}
+            {label(t("market"), "/gallery")}
+          </Link>
+        </li>
 
-          const href = item.href;
-          const showMsgBadge = href === "/messages" && messageUnreadCount > 0;
-          const active =
-            item.kind === "verify"
-              ? pathname === "/profile" && hash === "#business-verification"
-              : href === homeHref
-                ? pathname === homeHref
-                : pathname === href || pathname.startsWith(`${href}/`);
+        {/* CENTER + FAB */}
+        <li className="flex min-w-0 flex-1 flex-col items-center justify-center">
+          <Link
+            href="/listings/new"
+            aria-label={t("newListingAria")}
+            prefetch
+            className="relative -mt-4 flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[var(--bina-or)] text-white shadow-[0_0_0_3px_var(--bina-steel2),0_0_0_5px_var(--bina-or-dk)] transition-transform active:scale-95"
+          >
+            <span className="text-[22px] font-light leading-none">+</span>
+          </Link>
+        </li>
 
-          return (
-            <li key={`${item.kind}-${href}`} className="min-w-0 flex-1">
-              <Link
-                className={`font-bina-display relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
-                  active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
-                }`}
-                href={href}
-                prefetch={true}
-                aria-label={item.kind === "verify" ? item.aria : item.aria ?? item.label}
-              >
-                <span className="line-clamp-2 break-words">{item.label}</span>
-                {showMsgBadge ? (
-                  <span className="font-bina-display absolute end-1 top-0.5 flex h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-bina-or px-1 text-[10px] font-bold leading-none text-white">
-                    {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          );
-        })}
+        {/* NEARBY */}
+        <li className={cls("/map")}>
+          <Link href="/map" className={cls("/map")} aria-label={t("nearby")} prefetch>
+            {icon("📍", "/map")}
+            {label(t("nearby"), "/map")}
+          </Link>
+        </li>
+
+        {/* PROFILE */}
+        <li className={cls("/profile")}>
+          <Link href="/profile" className={cls("/profile")} aria-label={t("profile")} prefetch>
+            {icon("👤", "/profile")}
+            {label(t("profile"), "/profile")}
+            {messageUnreadCount > 0 && !isActive("/messages") ? (
+              <span className="font-bina-display absolute -right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--bina-or)] px-1 text-[9px] font-bold leading-none text-white">
+                {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
+              </span>
+            ) : null}
+          </Link>
+        </li>
+
       </ul>
     </nav>
   );

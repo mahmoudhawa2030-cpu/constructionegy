@@ -9,10 +9,13 @@
   },
   "nav": {
     "home": "Home",
+    "feed": "Feed",
+    "market": "Market",
+    "nearby": "Nearby",
     "gallery": "Gallery",
     "map": "Map",
     "messages": "Messages",
-    "profile": "My account",
+    "profile": "Profile",
     "businessVerification": "Business verification",
     "verificationTab": "Verify",
     "verificationTabAria": "Business verification — documents",
@@ -20,6 +23,7 @@
     "mainNavAria": "Primary navigation",
     "messagesLinkAria": "Messages",
     "messagesTabAriaWithUnread": "Messages · {count} unread",
+    "newListingAria": "Post new listing",
     "menuTitle": "Menu",
     "menuNavAria": "App menu",
     "closeMenuAria": "Close menu",
@@ -45,6 +49,12 @@
     "toastOpen": "Open",
     "toastDismiss": "Dismiss",
     "notificationTitle": "New message"
+  },
+  "feed": {
+    "forYou": "For You",
+    "latest": "Latest",
+    "nearMe": "Near Me",
+    "empty": "No listings yet. Be the first to post."
   },
   "home": {
     "title": "construction-egy",

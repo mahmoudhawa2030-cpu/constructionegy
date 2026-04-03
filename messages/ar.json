@@ -9,6 +9,9 @@
   },
   "nav": {
     "home": "الرئيسية",
+    "feed": "التغذية",
+    "market": "السوق",
+    "nearby": "قريب",
     "gallery": "المعرض",
     "map": "الخريطة",
     "messages": "الرسائل",
@@ -20,6 +23,7 @@
     "mainNavAria": "التنقل الرئيسي",
     "messagesLinkAria": "الرسائل",
     "messagesTabAriaWithUnread": "الرسائل · {count} غير مقروء",
+    "newListingAria": "نشر إعلان جديد",
     "menuTitle": "القائمة",
     "menuNavAria": "قائمة التطبيق",
     "closeMenuAria": "إغلاق القائمة",
@@ -45,6 +49,12 @@
     "toastOpen": "فتح",
     "toastDismiss": "إغلاق",
     "notificationTitle": "رسالة جديدة"
+  },
+  "feed": {
+    "forYou": "لك",
+    "latest": "الأحدث",
+    "nearMe": "قريب مني",
+    "empty": "لا إعلانات بعد. كن أول من ينشر."
   },
   "home": {
     "title": "construction-egy",
