@@ -54,7 +54,11 @@
     "forYou": "For You",
     "latest": "Latest",
     "nearMe": "Near Me",
-    "empty": "No listings yet. Be the first to post."
+    "empty": "No posts yet. Check back soon.",
+    "postKind": "Post",
+    "openPostAria": "Open post: {title}",
+    "backToFeed": "Back to feed",
+    "postNotFound": "This post is unavailable or was removed."
   },
   "home": {
     "title": "construction-egy",

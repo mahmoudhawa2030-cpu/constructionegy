@@ -78,6 +78,56 @@ export type Database = {
           },
         ]
       }
+      feed_posts: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          images: string[]
+          is_veterans_corner: boolean
+          location: string | null
+          status: Database["public"]["Enums"]["feed_post_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          is_veterans_corner?: boolean
+          location?: string | null
+          status?: Database["public"]["Enums"]["feed_post_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          images?: string[]
+          is_veterans_corner?: boolean
+          location?: string | null
+          status?: Database["public"]["Enums"]["feed_post_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feed_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homepage_section_items: {
         Row: {
           badge_count: number | null
@@ -1087,6 +1137,7 @@ export type Database = {
       }
     }
     Enums: {
+      feed_post_status: "published" | "hidden"
       listing_condition: "new" | "used"
       listing_status: "pending" | "active" | "sold" | "rented" | "paused"
       listing_type: "rent" | "sell"
@@ -1226,6 +1277,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      feed_post_status: ["published", "hidden"],
       listing_condition: ["new", "used"],
       listing_status: ["pending", "active", "sold", "rented", "paused"],
       listing_type: ["rent", "sell"],

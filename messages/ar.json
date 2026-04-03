@@ -54,7 +54,11 @@
     "forYou": "لك",
     "latest": "الأحدث",
     "nearMe": "قريب مني",
-    "empty": "لا إعلانات بعد. كن أول من ينشر."
+    "empty": "لا منشورات بعد. تفقّد لاحقاً.",
+    "postKind": "منشور",
+    "openPostAria": "فتح المنشور: {title}",
+    "backToFeed": "العودة للتغذية",
+    "postNotFound": "المنشور غير متاح أو تمت إزالته."
   },
   "home": {
     "title": "construction-egy",
