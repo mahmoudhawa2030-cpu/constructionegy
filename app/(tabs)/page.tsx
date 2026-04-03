@@ -18,7 +18,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   const [postPool, rfqRes, veteranPost, ctx] = await Promise.all([
-    fetchFeedPostPool(supabase, FEED_POST_LIMIT),
+    fetchFeedPostPool(supabase, FEED_POST_LIMIT, user?.id ?? null),
     supabase
       .from("rfq_drafts")
       .select("id,title,created_at,metadata")
@@ -53,6 +53,7 @@ export default async function HomePage() {
           nearMePosts={nearMePosts}
           veteranPost={veteranPost}
           latestRfq={latestRfq}
+          viewerId={user?.id ?? null}
         />
       </div>
     </div>

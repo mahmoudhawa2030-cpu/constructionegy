@@ -60,7 +60,23 @@
     "postKind": "منشور",
     "openPostAria": "فتح المنشور: {title}",
     "backToFeed": "العودة للتغذية",
-    "postNotFound": "المنشور غير متاح أو تمت إزالته."
+    "postNotFound": "المنشور غير متاح أو تمت إزالته.",
+    "social": {
+      "loginRequired": "سجّل الدخول للمتابعة.",
+      "genericError": "حدث خطأ. حاول مرة أخرى.",
+      "linkCopied": "تم نسخ الرابط",
+      "commentsHeading": "التعليقات",
+      "noComments": "لا تعليقات بعد.",
+      "loginToComment": "سجّل الدخول لإضافة تعليق.",
+      "commentLabel": "تعليقك",
+      "commentPlaceholder": "اكتب تعليقاً…",
+      "commentSubmit": "نشر التعليق",
+      "commentSubmitting": "جاري النشر…",
+      "commentErrors": {
+        "bodyRequired": "اكتب تعليقاً.",
+        "bodyTooLong": "التعليق طويل جداً (حد أقصى 2000 حرف)."
+      }
+    }
   },
   "feedPost": {
     "pageTitle": "منشور جديد",

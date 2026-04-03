@@ -16,9 +16,10 @@ type Props = {
   nearMePosts: FeedPostItem[];
   veteranPost: FeedPostItem | null;
   latestRfq: FeedRfqItem | null;
+  viewerId: string | null;
 };
 
-export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, latestRfq }: Props) {
+export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, latestRfq, viewerId }: Props) {
   const t = useTranslations("feed");
   const [tab, setTab] = useState<"forYou" | "latest" | "nearMe">("forYou");
 
@@ -38,14 +39,14 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
   const feed: React.ReactNode[] = [];
 
   if (veteranPost) {
-    feed.push(<FeedVeteransCard key={`veteran-${veteranPost.id}`} item={veteranPost} />);
+    feed.push(<FeedVeteransCard key={`veteran-${veteranPost.id}`} item={veteranPost} viewerId={viewerId} />);
   }
   if (latestRfq) {
     feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
   }
 
   sorted.forEach((item, i) => {
-    feed.push(<FeedPostCard key={item.id} item={item} priority={i === 0} />);
+    feed.push(<FeedPostCard key={item.id} item={item} viewerId={viewerId} priority={i === 0} />);
   });
 
   const hasAny = feed.length > 0;

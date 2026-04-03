@@ -1,20 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
+import type { FeedPostItem } from "@/lib/feed/feed-post-types";
 import type { Database } from "@/lib/supabase/database.types";
 
-export type FeedPostItem = {
-  id: string;
-  user_id: string;
-  title: string;
-  body: string;
-  images: string[];
-  location: string | null;
-  view_count: number;
-  created_at: string;
-  author_name: string;
-  author_role: string;
-  is_pro: boolean;
-};
+export type { FeedPostItem } from "@/lib/feed/feed-post-types";
 
 type FeedPostRow = Database["public"]["Tables"]["feed_posts"]["Row"];
 
@@ -38,6 +28,10 @@ function mapRows(rows: FeedPostRow[], profileMap: Map<string, ProfileMini>): Fee
       author_name: p?.full_name ?? "—",
       author_role: p?.user_type ?? "contractor",
       is_pro: p?.business_verification_status === "verified",
+      likeCount: 0,
+      commentCount: 0,
+      likedByViewer: false,
+      savedByViewer: false,
     };
   });
 }
@@ -57,6 +51,7 @@ async function attachProfiles(client: SupabaseClient<Database>, rows: FeedPostRo
 export async function fetchFeedPostPool(
   client: SupabaseClient<Database>,
   limit = 60,
+  viewerId: string | null = null,
 ): Promise<FeedPostItem[]> {
   const { data: posts, error } = await client
     .from("feed_posts")
@@ -67,11 +62,16 @@ export async function fetchFeedPostPool(
     .limit(limit);
 
   if (error || !posts?.length) return [];
-  return attachProfiles(client, posts);
+  const items = await attachProfiles(client, posts);
+  await enrichFeedPostsSocial(client, items, viewerId);
+  return items;
 }
 
 /** Latest published Veterans Corner post (admin-flagged), if any. */
-export async function fetchLatestVeteransPost(client: SupabaseClient<Database>): Promise<FeedPostItem | null> {
+export async function fetchLatestVeteransPost(
+  client: SupabaseClient<Database>,
+  viewerId: string | null = null,
+): Promise<FeedPostItem | null> {
   const { data: row, error } = await client
     .from("feed_posts")
     .select("*")
@@ -82,6 +82,9 @@ export async function fetchLatestVeteransPost(client: SupabaseClient<Database>):
     .maybeSingle();
 
   if (error || !row) return null;
-  const [item] = await attachProfiles(client, [row]);
-  return item ?? null;
+  const items = await attachProfiles(client, [row]);
+  const item = items[0];
+  if (!item) return null;
+  await enrichFeedPostsSocial(client, [item], viewerId);
+  return item;
 }

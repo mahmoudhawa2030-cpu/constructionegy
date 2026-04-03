@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
+import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
 
 function relativeAge(iso: string, locale: string) {
@@ -39,13 +40,13 @@ function avStyle(userId: string) {
 
 type Props = {
   item: FeedPostItem;
+  viewerId: string | null;
   priority?: boolean;
 };
 
-export function FeedPostCard({ item, priority }: Props) {
-  const locale = useLocale();
-  const isAr = locale === "ar";
+export function FeedPostCard({ item, viewerId, priority }: Props) {
   const t = useTranslations("feed");
+  const locale = useLocale();
   const av = avStyle(item.user_id);
   const age = relativeAge(item.created_at, locale);
   const thumb = item.images?.[0];
@@ -124,26 +125,15 @@ export function FeedPostCard({ item, priority }: Props) {
         ) : null}
       </div>
 
-      <div className="mt-1 flex border-t border-[var(--bina-border)]">
-        {(
-          [
-            { icon: "👍", label_en: "Like", label_ar: "إعجاب", primary: false },
-            { icon: "💬", label_en: "Comment", label_ar: "تعليق", primary: false },
-            { icon: "📤", label_en: "Share", label_ar: "مشاركة", primary: false },
-            { icon: "🔖", label_en: "Save", label_ar: "حفظ", primary: true },
-          ] as const
-        ).map(({ icon, label_en, label_ar, primary }) => (
-          <div
-            key={label_en}
-            className={`flex flex-1 cursor-pointer items-center justify-center gap-1 border-r border-[var(--bina-border)] py-[7px] font-bina-display text-[9px] font-semibold last:border-r-0 transition-opacity active:opacity-60 ${
-              primary ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"
-            }`}
-          >
-            <span className="text-[11px]">{icon}</span>
-            {isAr ? label_ar : label_en}
-          </div>
-        ))}
-      </div>
+      <FeedPostSocialBar
+        postId={item.id}
+        title={item.title}
+        initialLikeCount={item.likeCount}
+        initialCommentCount={item.commentCount}
+        initialLiked={item.likedByViewer}
+        initialSaved={item.savedByViewer}
+        viewerId={viewerId}
+      />
     </div>
   );
 }

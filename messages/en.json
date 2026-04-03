@@ -60,7 +60,23 @@
     "postKind": "Post",
     "openPostAria": "Open post: {title}",
     "backToFeed": "Back to feed",
-    "postNotFound": "This post is unavailable or was removed."
+    "postNotFound": "This post is unavailable or was removed.",
+    "social": {
+      "loginRequired": "Sign in to continue.",
+      "genericError": "Something went wrong. Try again.",
+      "linkCopied": "Link copied",
+      "commentsHeading": "Comments",
+      "noComments": "No comments yet.",
+      "loginToComment": "Sign in to add a comment.",
+      "commentLabel": "Your comment",
+      "commentPlaceholder": "Write a comment…",
+      "commentSubmit": "Post comment",
+      "commentSubmitting": "Posting…",
+      "commentErrors": {
+        "bodyRequired": "Write a comment.",
+        "bodyTooLong": "Comment is too long (max 2000 characters)."
+      }
+    }
   },
   "feedPost": {
     "pageTitle": "New post",

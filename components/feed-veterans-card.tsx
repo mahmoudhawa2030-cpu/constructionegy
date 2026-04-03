@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLocale } from "next-intl";
 
+import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
 
 function initials(name: string) {
@@ -25,9 +26,13 @@ function relativeAge(iso: string, locale: string) {
   return rtf.format(-Math.floor(h / 24), "day");
 }
 
-export function FeedVeteransCard({ item }: { item: FeedPostItem }) {
+type Props = {
+  item: FeedPostItem;
+  viewerId: string | null;
+};
+
+export function FeedVeteransCard({ item, viewerId }: Props) {
   const locale = useLocale();
-  const isAr = locale === "ar";
   const age = relativeAge(item.created_at, locale);
 
   return (
@@ -84,17 +89,16 @@ export function FeedVeteransCard({ item }: { item: FeedPostItem }) {
         <p className="line-clamp-2 text-[10px] leading-relaxed text-[var(--bina-muted)]">{item.body}</p>
       </div>
 
-      <div className="flex border-t border-[#604010]">
-        <div className="flex flex-1 cursor-pointer items-center justify-center gap-1 border-r border-[#604010] py-[7px] font-bina-display text-[9px] font-semibold text-[var(--bina-muted)]">
-          <span className="text-[11px]">👏</span> {isAr ? "إعجاب" : "Like"}
-        </div>
-        <div className="flex flex-1 cursor-pointer items-center justify-center gap-1 border-r border-[#604010] py-[7px] font-bina-display text-[9px] font-semibold text-[var(--bina-muted)]">
-          <span className="text-[11px]">💬</span> {isAr ? "تعليق" : "Comment"}
-        </div>
-        <div className="flex flex-1 cursor-pointer items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-bold text-[var(--bina-or)]">
-          {isAr ? "اسأل المرشد" : "Ask Mentor"}
-        </div>
-      </div>
+      <FeedPostSocialBar
+        postId={item.id}
+        title={item.title}
+        initialLikeCount={item.likeCount}
+        initialCommentCount={item.commentCount}
+        initialLiked={item.likedByViewer}
+        initialSaved={item.savedByViewer}
+        viewerId={viewerId}
+        variant="veterans"
+      />
     </div>
   );
 }
