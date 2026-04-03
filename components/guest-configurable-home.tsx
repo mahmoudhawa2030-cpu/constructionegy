@@ -33,24 +33,24 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
 
   const mobileInner = !hasAnyHomeContent ? (
     <div className="flex flex-col gap-6 px-4 py-8">
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">{t("cmsEmpty")}</p>
+      <p className="text-center text-sm text-bina-muted">{t("cmsEmpty")}</p>
       <nav className="flex flex-col gap-3 font-medium">
         {isSignedIn ? (
           <>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 px-5 text-white dark:bg-zinc-100 dark:text-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full bg-bina-or px-5 font-bina-display font-bold text-white shadow-[0_0_0_1px_rgba(184,94,16,0.6)]"
               href="/gallery"
             >
               {t("gallery")}
             </Link>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-bina-border bg-bina-card px-5 font-medium"
               href="/users/myads"
             >
               {t("myAds")}
             </Link>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-bina-border bg-bina-card px-5 font-medium"
               href="/profile"
             >
               {tn("profile")}
@@ -59,19 +59,19 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
         ) : (
           <>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full bg-zinc-900 px-5 text-white dark:bg-zinc-100 dark:text-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full bg-bina-or px-5 font-bina-display font-bold text-white shadow-[0_0_0_1px_rgba(184,94,16,0.6)]"
               href="/login"
             >
               {t("login")}
             </Link>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-bina-border bg-bina-card px-5 font-medium"
               href="/signup"
             >
               {t("signup")}
             </Link>
             <Link
-              className="flex h-12 w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-5 dark:border-zinc-600 dark:bg-zinc-900"
+              className="flex h-12 w-full items-center justify-center rounded-full border border-bina-border bg-bina-card px-5 font-medium"
               href="/gallery"
             >
               {t("gallery")}
@@ -100,13 +100,13 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
                 {secTitle ? (
                   <div className="mb-3">
                     <h2
-                      className="text-base font-semibold text-zinc-900 dark:text-zinc-50 sm:text-lg"
+                      className="font-bina-display text-base font-bold tracking-wide text-bina-text sm:text-lg"
                       id={`home-sec-${section.id}`}
                     >
                       {secTitle}
                     </h2>
                     {secSub ? (
-                      <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">{secSub}</p>
+                      <p className="mt-0.5 text-sm text-bina-muted">{secSub}</p>
                     ) : null}
                   </div>
                 ) : null}
@@ -138,23 +138,27 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
   return (
     <>
       <div
-        className={`flex min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-zinc-950 ${showDesktopFallback ? "lg:hidden" : ""}`}
+        className={`flex min-h-0 flex-1 flex-col bg-bina-page ${showDesktopFallback ? "lg:hidden" : ""}`}
         dir={loc === "ar" ? "rtl" : "ltr"}
       >
-        <header className="flex items-center justify-center border-b border-zinc-200 px-4 py-4 dark:border-zinc-800">
-          <span className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {tc("brandName")}
+        <header className="flex flex-col items-center justify-center border-b border-bina-border bg-bina-topbar px-4 py-4">
+          <span className="font-bina-display text-[22px] font-black tracking-wide text-bina-or">{tc("brandName")}</span>
+          <span className="font-bina-display mt-0.5 text-[8px] font-semibold uppercase tracking-[0.2em] text-bina-muted">
+            {tc("brandTagline")}
+          </span>
+          <span className="font-bina-display text-[7px] font-semibold tracking-[0.15em] text-bina-muted/90">
+            {tc("brandRegion")}
           </span>
         </header>
         {mobileInner}
       </div>
 
       {showDesktopFallback ? (
-        <div className="hidden min-h-0 flex-1 flex-col bg-zinc-50 dark:bg-black lg:flex" dir={loc === "ar" ? "rtl" : "ltr"}>
+        <div className="hidden min-h-0 flex-1 flex-col bg-bina-page lg:flex" dir={loc === "ar" ? "rtl" : "ltr"}>
           <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center gap-10 px-8 py-16">
             <div className="flex flex-col items-center text-center">
-              <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{t("title")}</h1>
-              <p className="mt-4 max-w-md text-zinc-600 dark:text-zinc-400">{t("intro")}</p>
+              <h1 className="font-bina-display text-2xl font-bold tracking-wide text-bina-text">{t("title")}</h1>
+              <p className="mt-4 max-w-md text-bina-muted">{t("intro")}</p>
             </div>
             <DesktopHomeCategoryGrid
               cardAria={(name) => t("desktopCategoryCardAria", { category: name })}
@@ -166,42 +170,36 @@ export async function GuestConfigurableHome({ showDesktopFallback = true, isSign
               {isSignedIn ? (
                 <>
                   <Link
-                    className="rounded-full bg-zinc-900 px-6 py-3 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    className="rounded-full bg-bina-or px-6 py-3 font-bina-display font-bold text-white shadow-[0_0_0_2px_var(--bina-or-dk)]"
                     href="/gallery"
                   >
                     {t("gallery")}
                   </Link>
-                  <Link className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600" href="/users/myads">
+                  <Link className="rounded-full border border-bina-border bg-bina-card px-6 py-3 font-medium" href="/users/myads">
                     {t("myAds")}
                   </Link>
-                  <Link className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600" href="/profile">
+                  <Link className="rounded-full border border-bina-border bg-bina-card px-6 py-3 font-medium" href="/profile">
                     {tn("profile")}
                   </Link>
                 </>
               ) : (
                 <>
                   <Link
-                    className="rounded-full bg-zinc-900 px-6 py-3 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                    className="rounded-full bg-bina-or px-6 py-3 font-bina-display font-bold text-white shadow-[0_0_0_2px_var(--bina-or-dk)]"
                     href="/login"
                   >
                     {t("login")}
                   </Link>
-                  <Link
-                    className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
-                    href="/signup"
-                  >
+                  <Link className="rounded-full border border-bina-border bg-bina-card px-6 py-3 font-medium" href="/signup">
                     {t("signup")}
                   </Link>
-                  <Link
-                    className="rounded-full border border-zinc-300 px-6 py-3 dark:border-zinc-600"
-                    href="/gallery"
-                  >
+                  <Link className="rounded-full border border-bina-border bg-bina-card px-6 py-3 font-medium" href="/gallery">
                     {t("gallery")}
                   </Link>
                 </>
               )}
             </nav>
-            <p className="text-center text-xs text-zinc-500">{t("desktopHomeHint")}</p>
+            <p className="text-center text-xs text-bina-muted">{t("desktopHomeHint")}</p>
           </main>
         </div>
       ) : null}

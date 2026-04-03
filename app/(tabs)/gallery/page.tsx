@@ -64,21 +64,21 @@ export default async function GalleryPage({ searchParams }: PageProps) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-3 px-3 py-5 sm:gap-4 sm:px-4 sm:py-6">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-900 sm:text-2xl dark:text-zinc-50">
+        <h1 className="font-bina-display text-xl font-bold tracking-wide text-bina-text sm:text-2xl">
           {filteredLabel
             ? t.rich("titleFiltered", {
                 category: filteredLabel,
                 muted: (chunks) => (
-                  <span className="text-zinc-700 dark:text-zinc-300">{chunks}</span>
+                  <span className="text-bina-muted">{chunks}</span>
                 ),
               })
             : t("titleAll")}
         </h1>
-        <p className="text-xs leading-relaxed text-zinc-600 sm:text-sm dark:text-zinc-400">
+        <p className="text-xs leading-relaxed text-bina-muted sm:text-sm">
           {filteredLabel ? (
             <>
               {t("activeInCategory")}{" "}
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/gallery">
+              <Link className="font-medium text-bina-or underline underline-offset-2" href="/gallery">
                 {t("showAll")}
               </Link>
               {" · "}
@@ -87,7 +87,7 @@ export default async function GalleryPage({ searchParams }: PageProps) {
             <>{t("browseActive")} </>
           )}
           {t("toAdd")}{" "}
-          <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
+          <Link className="font-medium text-bina-or underline underline-offset-2" href="/listings/new">
             {t("addListingLink")}
           </Link>{" "}
           {t("requiresLogin")}
@@ -95,28 +95,28 @@ export default async function GalleryPage({ searchParams }: PageProps) {
       </div>
 
       {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200">
+        <p className="rounded-xl border border-bina-red/40 bg-bina-red/10 px-4 py-3 text-sm text-bina-red">
           {t("loadError")}
         </p>
       ) : null}
 
       {!error && (!listings || listings.length === 0) ? (
-        <div className="rounded-xl border border-dashed border-zinc-300 p-8 text-center text-sm text-zinc-500 dark:border-zinc-600 dark:text-zinc-400">
+        <div className="rounded-xl border border-dashed border-bina-border p-8 text-center text-sm text-bina-muted">
           {filteredLabel ? (
             <>
               {t("emptyFiltered", { category: filteredLabel })}{" "}
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/gallery">
+              <Link className="font-medium text-bina-or underline underline-offset-2" href="/gallery">
                 {t("browseAllCategories")}
               </Link>
             </>
           ) : (
             <>
               {t("empty")}{" "}
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/login?next=/listings/new">
+              <Link className="font-medium text-bina-or underline underline-offset-2" href="/login?next=/listings/new">
                 {t("loginThen")}
               </Link>{" "}
               {t("then")}{" "}
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
+              <Link className="font-medium text-bina-or underline underline-offset-2" href="/listings/new">
                 {t("addListing")}
               </Link>
               .

@@ -77,11 +77,11 @@ export async function ListingCard({ listing, categoryLabelMap, viewerUserId, fav
   return (
     <div className="relative">
       <Link
-        className="block overflow-hidden rounded-xl border border-zinc-200 bg-white transition-shadow hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+        className="block overflow-hidden rounded-[var(--bina-r)] border border-bina-border bg-bina-card transition-shadow hover:shadow-md hover:shadow-bina-or/5"
         href={`/listings/${listing.id}`}
       >
         <span className="flex max-sm:flex-row flex-col sm:flex-col">
-          <span className="relative aspect-[5/4] w-full shrink-0 bg-zinc-100 max-sm:order-2 max-sm:aspect-square max-sm:w-[38%] max-sm:min-w-0 sm:order-none sm:aspect-[3/2] dark:bg-zinc-900">
+          <span className="relative aspect-[5/4] w-full shrink-0 bg-bina-steel3 max-sm:order-2 max-sm:aspect-square max-sm:w-[38%] max-sm:min-w-0 sm:order-none sm:aspect-[3/2]">
             {thumb ? (
               <Image
                 alt=""
@@ -92,7 +92,7 @@ export async function ListingCard({ listing, categoryLabelMap, viewerUserId, fav
                 unoptimized
               />
             ) : (
-              <div className="flex h-full items-center justify-center text-xs text-zinc-400">
+              <div className="flex h-full items-center justify-center text-xs text-bina-muted">
                 {t("noImage")}
               </div>
             )}
@@ -100,32 +100,32 @@ export async function ListingCard({ listing, categoryLabelMap, viewerUserId, fav
           <span
             className={`flex min-w-0 flex-1 flex-col gap-0.5 p-2.5 text-start max-sm:order-1 sm:order-none sm:p-3${favorite ? " max-sm:pr-11" : ""}`}
           >
-            <span className="text-base font-bold tabular-nums text-zinc-900 sm:hidden dark:text-zinc-50">
+            <span className="font-bina-display text-base font-black tabular-nums text-bina-or sm:hidden">
               {priceFmt} {listing.price_unit}
             </span>
-            <span className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
+            <span className="line-clamp-2 text-sm font-semibold leading-snug text-bina-text">
               {listing.title}
             </span>
-            <span className="text-[11px] leading-relaxed text-zinc-500 sm:text-xs dark:text-zinc-400">
+            <span className="text-[11px] leading-relaxed text-bina-muted sm:text-xs">
               {labelForCategorySlug(listing.category, categoryLabelMap)} · {typeLabels[listing.type]} ·{" "}
               {conditionLabels[listing.condition]}
             </span>
             {listing.location ? (
-              <span className="line-clamp-1 text-[11px] text-zinc-500 sm:text-xs dark:text-zinc-400">
+              <span className="line-clamp-1 text-[11px] text-bina-muted sm:text-xs">
                 {listing.location}
               </span>
             ) : null}
             <span className="mt-0.5 hidden flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 sm:flex">
-              <span className="text-base font-bold tabular-nums text-zinc-900 dark:text-zinc-50">
+              <span className="font-bina-display text-base font-black tabular-nums text-bina-or">
                 {priceFmt} {listing.price_unit}
               </span>
               {viewsFmt !== null ? (
-                <span className="text-[11px] tabular-nums text-zinc-500 sm:text-xs dark:text-zinc-400">
+                <span className="text-[11px] tabular-nums text-bina-muted sm:text-xs">
                   {viewsFmt} {t("views")}
                 </span>
               ) : null}
             </span>
-            <span className="text-[11px] tabular-nums text-zinc-500 sm:hidden dark:text-zinc-400">
+            <span className="text-[11px] tabular-nums text-bina-muted sm:hidden">
               {listingRelativeAge(listing.created_at, locale)}
               {viewsFmt !== null ? (
                 <span>

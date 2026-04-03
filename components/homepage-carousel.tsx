@@ -59,12 +59,12 @@ export function HomepageCarousel({ items, locale, dotLabel, slideAria }: Props) 
             >
               <Link
                 aria-label={slideAria(title)}
-                className="flex min-h-[11rem] flex-col justify-between rounded-2xl border border-zinc-200 bg-gradient-to-b from-zinc-50 to-white p-4 shadow-sm transition hover:border-zinc-300 dark:border-zinc-700 dark:from-zinc-900 dark:to-zinc-950 dark:hover:border-zinc-600"
+                className="flex min-h-[11rem] flex-col justify-between rounded-2xl border border-bina-border bg-gradient-to-b from-bina-steel3/40 to-bina-card p-4 shadow-sm transition hover:border-bina-or/35"
                 href={itemHref}
                 prefetch={true}
               >
                 {item.image_url ? (
-                  <div className="relative mb-3 h-28 w-full overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                  <div className="relative mb-3 h-28 w-full overflow-hidden rounded-xl bg-bina-steel3">
                     <Image
                       alt=""
                       className="object-cover"
@@ -76,9 +76,9 @@ export function HomepageCarousel({ items, locale, dotLabel, slideAria }: Props) 
                   </div>
                 ) : null}
                 <div>
-                  <h3 className="text-base font-semibold leading-snug text-zinc-900 dark:text-zinc-50">{title}</h3>
+                  <h3 className="font-bina-display text-base font-bold leading-snug text-bina-text">{title}</h3>
                   {body ? (
-                    <p className="mt-1 text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{body}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-bina-muted">{body}</p>
                   ) : null}
                 </div>
               </Link>
@@ -93,7 +93,7 @@ export function HomepageCarousel({ items, locale, dotLabel, slideAria }: Props) 
               key={i}
               aria-label={dotLabel(i + 1)}
               aria-current={i === active ? "true" : undefined}
-              className={`h-2 w-2 rounded-full transition ${i === active ? "bg-zinc-900 dark:bg-zinc-100" : "bg-zinc-300 dark:bg-zinc-600"}`}
+              className={`h-2 w-2 rounded-full transition ${i === active ? "bg-bina-or" : "bg-bina-steel4"}`}
               type="button"
               onClick={() => scrollTo(i)}
             />

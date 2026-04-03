@@ -842,6 +842,8 @@
   },
   "common": {
     "brandAlt": "Next.js logo",
-    "brandName": "construction-egy"
+    "brandName": "construction-egy",
+    "brandTagline": "BUILD · CONNECT · TRADE",
+    "brandRegion": "Egypt · مصر"
   }
 }

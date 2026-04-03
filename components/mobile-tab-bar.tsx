@@ -66,7 +66,7 @@ export function MobileTabBar({
   return (
     <nav
       aria-label={t("mainNavAria")}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-200 bg-white/95 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-bina-border bg-bina-steel2/98 pt-2 shadow-[0_-8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md"
       style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
       <ul className="mx-auto flex max-w-lg items-stretch justify-around gap-0.5 px-1 sm:px-2">
@@ -80,10 +80,8 @@ export function MobileTabBar({
               return (
                 <li key="profile-menu" className="min-w-0 flex-1">
                   <button
-                    className={`relative flex min-h-[3rem] w-full flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[11px] font-medium leading-tight transition-colors sm:text-xs ${
-                      active
-                        ? "text-zinc-900 dark:text-zinc-50"
-                        : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                    className={`font-bina-display relative flex min-h-[3rem] w-full flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
+                      active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
                     }`}
                     type="button"
                     aria-label={item.label}
@@ -98,10 +96,8 @@ export function MobileTabBar({
             return (
               <li key="profile-link" className="min-w-0 flex-1">
                 <Link
-                  className={`relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[11px] font-medium leading-tight transition-colors sm:text-xs ${
-                    active
-                      ? "text-zinc-900 dark:text-zinc-50"
-                      : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  className={`font-bina-display relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
+                    active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
                   }`}
                   href={item.href}
                   prefetch={true}
@@ -125,10 +121,8 @@ export function MobileTabBar({
           return (
             <li key={`${item.kind}-${href}`} className="min-w-0 flex-1">
               <Link
-                className={`relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[11px] font-medium leading-tight transition-colors sm:text-xs ${
-                  active
-                    ? "text-zinc-900 dark:text-zinc-50"
-                    : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200"
+                className={`font-bina-display relative flex min-h-[3rem] flex-col items-center justify-center rounded-xl px-0.5 py-1 text-center text-[10px] font-semibold uppercase leading-tight tracking-wide transition-colors sm:text-[11px] ${
+                  active ? "text-bina-or" : "text-bina-muted hover:text-bina-text"
                 }`}
                 href={href}
                 prefetch={true}
@@ -136,7 +130,7 @@ export function MobileTabBar({
               >
                 <span className="line-clamp-2 break-words">{item.label}</span>
                 {showMsgBadge ? (
-                  <span className="absolute end-1 top-0.5 flex h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                  <span className="font-bina-display absolute end-1 top-0.5 flex h-[1.15rem] min-w-[1.15rem] items-center justify-center rounded-full bg-bina-or px-1 text-[10px] font-bold leading-none text-white">
                     {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
                   </span>
                 ) : null}

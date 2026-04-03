@@ -16,7 +16,7 @@ export default async function AuthLayout({
   return (
     <div className="flex min-h-full flex-col">
       <header
-        className="flex w-full items-center justify-between gap-2 border-b border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95"
+        className="flex w-full items-center justify-between gap-2 border-b border-bina-border bg-bina-topbar/95 px-3 py-2 backdrop-blur-md"
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-2">

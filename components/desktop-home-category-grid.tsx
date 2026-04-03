@@ -16,7 +16,7 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
   return (
     <section aria-labelledby="desktop-home-categories-heading" className="w-full max-w-4xl">
       <h2
-        className="mb-4 text-center text-lg font-semibold text-zinc-900 dark:text-zinc-50"
+        className="font-bina-display mb-4 text-center text-lg font-bold tracking-wide text-bina-text"
         id="desktop-home-categories-heading"
       >
         {sectionTitle}
@@ -28,7 +28,7 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
             <li key={card.id}>
               <Link
                 aria-label={cardAria(title)}
-                className="flex min-h-[5.85rem] flex-col items-center justify-center gap-[0.1625rem] rounded-lg border border-zinc-200 bg-white px-[0.1625rem] py-[0.65rem] text-center shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:border-zinc-600 dark:hover:bg-zinc-900 sm:min-h-[6.5rem] sm:gap-1.5 sm:rounded-xl sm:px-[0.325rem] sm:py-[0.8125rem] md:min-h-[7.15rem] md:gap-2 md:px-[0.65rem] md:py-[0.975rem]"
+                className="flex min-h-[5.85rem] flex-col items-center justify-center gap-[0.1625rem] rounded-[var(--bina-r)] border border-bina-border bg-bina-card px-[0.1625rem] py-[0.65rem] text-center shadow-sm transition hover:border-bina-or/40 hover:shadow-md sm:min-h-[6.5rem] sm:gap-1.5 sm:rounded-xl sm:px-[0.325rem] sm:py-[0.8125rem] md:min-h-[7.15rem] md:gap-2 md:px-[0.65rem] md:py-[0.975rem]"
                 href={card.href}
                 prefetch={true}
               >
@@ -42,7 +42,7 @@ export function DesktopHomeCategoryGrid({ categories, locale, sectionTitle, card
                     unoptimized={card.image_public_url.startsWith("http")}
                   />
                 </span>
-                <span className="line-clamp-2 text-[11.7px] font-medium leading-tight text-zinc-900 dark:text-zinc-50 sm:text-[14.3px] md:text-[0.975rem] lg:text-[1.1375rem]">
+                <span className="font-bina-display line-clamp-2 text-[11.7px] font-semibold leading-tight text-bina-text sm:text-[14.3px] md:text-[0.975rem] lg:text-[1.1375rem]">
                   {title}
                 </span>
               </Link>

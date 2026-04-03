@@ -25,7 +25,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
   return (
     <div className="flex min-h-full flex-col">
       <header
-        className="sticky top-0 z-40 hidden w-full items-center justify-between gap-2 border-b border-zinc-200 bg-white/95 px-3 py-2 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95 md:flex"
+        className="sticky top-0 z-40 hidden w-full items-center justify-between gap-2 border-b border-bina-border bg-bina-topbar/95 px-3 py-2 backdrop-blur-md md:flex"
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
       >
         <div className="flex shrink-0 items-center gap-2">
@@ -35,14 +35,14 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
         <div className="flex min-w-0 flex-1 items-center justify-end gap-2">
           {hasUser ? (
             <Link
-              className="relative shrink-0 rounded-md px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="relative shrink-0 rounded-md px-2 py-1 text-sm font-medium text-bina-text hover:bg-bina-steel3 dark:hover:bg-bina-steel3"
               href="/messages"
               prefetch={true}
               aria-label={t("messagesLinkAria")}
             >
               {t("messages")}
               {unreadTotal > 0 ? (
-                <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                <span className="font-bina-display absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-bina-or px-1 text-[10px] font-bold leading-none text-white">
                   {unreadTotal > 99 ? "99+" : unreadTotal}
                 </span>
               ) : null}
@@ -50,7 +50,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
           ) : null}
           {hasUser ? (
             <Link
-              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-bina-red hover:bg-bina-red/10"
               href="/favorites"
               prefetch={true}
             >
@@ -59,7 +59,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
           ) : null}
           {hasUser ? (
             <Link
-              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-zinc-800 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-bina-text hover:bg-bina-steel3"
               href="/profile#business-verification"
               prefetch={true}
             >
