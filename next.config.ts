@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Default server-action multipart limit is 1 MB; feed photos often exceed that after compression.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "8mb",
+    },
+  },
 };
 
 export default withNextIntl(nextConfig);
