@@ -120,7 +120,12 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
               </span>
             ) : null}
           </div>
-          <p className="mt-1 font-bina-display text-[12px] leading-snug text-[var(--bina-muted)]">{metaLine}</p>
+          <p
+            className="mt-1 font-bina-display text-[12px] leading-snug text-[var(--bina-muted)]"
+            suppressHydrationWarning
+          >
+            {metaLine}
+          </p>
         </div>
         <span className="shrink-0 rounded-md border border-[#4a3016] bg-[#2a1c0c] px-2 py-1 font-bina-display text-[10px] font-bold text-[var(--bina-or)]">
           {t("postKind")}

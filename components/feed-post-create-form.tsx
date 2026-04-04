@@ -10,10 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
-import {
-  createFeedPostWithImages,
-  type CreateFeedPostState,
-} from "@/lib/feed/post-actions";
+import type { CreateFeedPostState } from "@/lib/feed/post-actions";
 import {
   isAllowedFeedImageFile,
   uploadFeedPostImagesFromBrowser,

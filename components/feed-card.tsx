@@ -96,7 +96,7 @@ export function FeedCard({ item, priority }: Props) {
               </span>
             ) : null}
           </div>
-          <div className="font-bina-display text-[9px] text-[var(--bina-muted)]">
+          <div className="font-bina-display text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
             {item.seller_role}
             {item.location ? ` · ${item.location}` : ""}
             {" · "}

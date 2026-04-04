@@ -36,7 +36,7 @@ export function FeedRfqCard({ item }: { item: FeedRfqItem }) {
         <h3 className="font-bina-display mb-1 text-[11px] font-bold leading-snug text-[var(--bina-text)]">
           {item.title}
         </h3>
-        <div className="mb-2 text-[9px] text-[var(--bina-muted)]">
+        <div className="mb-2 text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
           {item.location ? `${item.location} · ` : ""}
           {isAr ? "موثّق" : "Verified buyer"} · {age}
         </div>

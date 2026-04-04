@@ -72,7 +72,7 @@ export function FeedVeteransCard({ item, viewerId }: Props) {
                 ★ VETERAN
               </span>
             </div>
-            <div className="font-bina-display text-[9px] text-[var(--bina-muted)]">
+            <div className="font-bina-display text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
               {item.author_role}
               {item.location ? ` · ${item.location}` : ""}
               {" · "}
