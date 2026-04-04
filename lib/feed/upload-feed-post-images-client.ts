@@ -1,5 +1,6 @@
 "use client";
 
+import { createFeedPostSignedUploadUrl } from "@/lib/feed/feed-post-signed-upload";
 import { compressImageForUpload } from "@/lib/images/compress-image-client";
 import { createClient } from "@/lib/supabase/client";
 
@@ -18,8 +19,11 @@ function extFromFile(file: File): string {
 
 export type FeedImageUploadErrorKind = "type" | "size" | "upload";
 
-/** Upload to `feed-post-images` bucket; returns public URLs in order. */
-export async function uploadFeedPostImagesFromBrowser(files: File[], userId: string): Promise<string[]> {
+/**
+ * Upload to `feed-post-images` via server-issued signed URLs (cookie session), then PUT from the
+ * browser with the token so RLS accepts the object even when the anon browser client has no JWT.
+ */
+export async function uploadFeedPostImagesFromBrowser(files: File[]): Promise<string[]> {
   const supabase = createClient();
   const urls: string[] = [];
 
@@ -35,16 +39,28 @@ export async function uploadFeedPostImagesFromBrowser(files: File[], userId: str
       throw new Error("size");
     }
     const ext = extFromFile(prepared);
-    const path = `${userId}/feed/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("feed-post-images").upload(path, prepared, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: prepared.type || "image/jpeg",
-    });
+    const slot = await createFeedPostSignedUploadUrl(ext);
+    if (!slot.ok) {
+      if (slot.code === "unauthorized") throw new Error("auth");
+      if (slot.code === "invalidExt") throw new Error("type");
+      throw new Error("upload");
+    }
+
+    const { error } = await supabase.storage.from("feed-post-images").uploadToSignedUrl(
+      slot.path,
+      slot.token,
+      prepared,
+      {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: prepared.type || "image/jpeg",
+      },
+    );
     if (error) {
       throw new Error("upload");
     }
-    const { data } = supabase.storage.from("feed-post-images").getPublicUrl(path);
+
+    const { data } = supabase.storage.from("feed-post-images").getPublicUrl(slot.path);
     urls.push(data.publicUrl);
   }
 

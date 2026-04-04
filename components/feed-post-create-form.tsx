@@ -35,7 +35,6 @@ type LocalPhoto = { id: string; file: File; previewUrl: string };
 
 type Props = {
   defaultLocation?: string | null;
-  userId: string;
 };
 
 function insertAtCursor(textarea: HTMLTextAreaElement, text: string) {
@@ -49,7 +48,7 @@ function insertAtCursor(textarea: HTMLTextAreaElement, text: string) {
   textarea.focus();
 }
 
-export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
+export function FeedPostCreateForm({ defaultLocation }: Props) {
   const t = useTranslations("feedPost");
   const router = useRouter();
   const { resolvedTheme } = useTheme();
@@ -137,15 +136,13 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
     if (attachments.length > 0) {
       setUploading(true);
       try {
-        urls = await uploadFeedPostImagesFromBrowser(
-          attachments.map((a) => a.file),
-          userId,
-        );
+        urls = await uploadFeedPostImagesFromBrowser(attachments.map((a) => a.file));
       } catch (err) {
         setUploading(false);
         const code = err instanceof Error ? err.message : "";
         if (code === "type") setClientError(t("imageTypeInvalid"));
         else if (code === "size") setClientError(t("imageTooLarge"));
+        else if (code === "auth") setClientError(t("errors.unauthorized"));
         else setClientError(t("uploadFailed"));
         return;
       }
