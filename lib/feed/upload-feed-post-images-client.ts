@@ -1,67 +1,43 @@
 "use client";
 
-import { createFeedPostSignedUploadUrl } from "@/lib/feed/feed-post-signed-upload";
 import { compressImageForUpload } from "@/lib/images/compress-image-client";
-import { createClient } from "@/lib/supabase/client";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_BYTES = 5 * 1024 * 1024;
 
-function extFromFile(file: File): string {
-  const map: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-    "image/gif": "gif",
-  };
-  return map[file.type] ?? "jpg";
-}
-
-export type FeedImageUploadErrorKind = "type" | "size" | "upload";
+export type FeedImageUploadErrorKind = "type" | "size" | "upload" | "auth";
 
 /**
- * Upload to `feed-post-images` via server-issued signed URLs (cookie session), then PUT from the
- * browser with the token so RLS accepts the object even when the anon browser client has no JWT.
+ * Compress each file client-side, then POST to /api/feed/upload-image (server
+ * handles Supabase Storage with the cookie session — no client JWT needed).
  */
 export async function uploadFeedPostImagesFromBrowser(files: File[]): Promise<string[]> {
-  const supabase = createClient();
   const urls: string[] = [];
 
   for (const file of files) {
-    if (!ALLOWED.has(file.type)) {
-      throw new Error("type");
-    }
-    if (file.size > MAX_BYTES) {
-      throw new Error("size");
-    }
+    if (!ALLOWED.has(file.type)) throw new Error("type");
+    if (file.size > MAX_BYTES) throw new Error("size");
+
     const prepared = await compressImageForUpload(file);
-    if (prepared.size > MAX_BYTES) {
-      throw new Error("size");
-    }
-    const ext = extFromFile(prepared);
-    const slot = await createFeedPostSignedUploadUrl(ext);
-    if (!slot.ok) {
-      if (slot.code === "unauthorized") throw new Error("auth");
-      if (slot.code === "invalidExt") throw new Error("type");
+    if (prepared.size > MAX_BYTES) throw new Error("size");
+
+    const body = new FormData();
+    body.append("file", prepared);
+
+    const res = await fetch("/api/feed/upload-image", { method: "POST", body });
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({} as Record<string, unknown>));
+      const code = typeof json.error === "string" ? json.error : "";
+      if (res.status === 401 || code === "unauthorized") throw new Error("auth");
+      if (code === "invalid_type") throw new Error("type");
+      if (code === "too_large") throw new Error("size");
       throw new Error("upload");
     }
 
-    const { error } = await supabase.storage.from("feed-post-images").uploadToSignedUrl(
-      slot.path,
-      slot.token,
-      prepared,
-      {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: prepared.type || "image/jpeg",
-      },
-    );
-    if (error) {
-      throw new Error("upload");
-    }
-
-    const { data } = supabase.storage.from("feed-post-images").getPublicUrl(slot.path);
-    urls.push(data.publicUrl);
+    const json = (await res.json()) as { url: string };
+    if (!json.url) throw new Error("upload");
+    urls.push(json.url);
   }
 
   return urls;
