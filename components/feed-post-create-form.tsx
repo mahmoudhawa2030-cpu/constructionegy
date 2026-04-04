@@ -158,11 +158,7 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
 
     setSubmitting(true);
     try {
-      const next = await createFeedPostWithImages({
-        body,
-        location,
-        imageUrls: urls,
-      });
+      const next = await createFeedPostWithImages(body, location, urls);
       setState(next);
       if (next.ok === true) {
         router.push(`/posts/${next.id}`);

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
 import type { FeedPostItem } from "@/lib/feed/feed-post-types";
+import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
 import type { Database } from "@/lib/supabase/database.types";
 
 export type { FeedPostItem } from "@/lib/feed/feed-post-types";
@@ -21,7 +22,7 @@ function mapRows(rows: FeedPostRow[], profileMap: Map<string, ProfileMini>): Fee
       user_id: row.user_id,
       title: row.title,
       body: row.body,
-      images: row.images ?? [],
+      images: normalizeFeedPostImages(row.images),
       location: row.location,
       view_count: row.view_count,
       created_at: row.created_at,

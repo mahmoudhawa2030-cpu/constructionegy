@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { deriveFeedPostTitle } from "@/lib/feed/derive-post-title";
+import { normalizeImageUrlsArgument } from "@/lib/feed/normalize-feed-post-images";
 import { createFeedPostSchema, feedPostImageUrlsSchema } from "@/lib/feed/post-schema";
 import { isValidUploadedFeedPostImageUrl } from "@/lib/feed/validate-feed-post-image-url";
 import type { Database } from "@/lib/supabase/database.types";
@@ -19,23 +20,18 @@ export type CreateFeedPostState =
       fieldErrors?: { body?: string; location?: string };
     };
 
-export type CreateFeedPostPayload = {
-  body: string;
-  location: string;
-  imageUrls: string[];
-};
-
 async function runCreateFeedPost(
   supabase: SupabaseClient<Database>,
   userId: string,
   t: Awaited<ReturnType<typeof getTranslations>>,
   rawBody: string,
   rawLocation: string,
-  imageUrlsInput: string[],
+  imageUrlsInput: unknown,
 ): Promise<CreateFeedPostState> {
+  const normalizedIncoming = normalizeImageUrlsArgument(imageUrlsInput);
   let imageUrls: string[];
   try {
-    imageUrls = [...new Set(feedPostImageUrlsSchema.parse(imageUrlsInput))];
+    imageUrls = [...new Set(feedPostImageUrlsSchema.parse(normalizedIncoming))];
   } catch {
     return { ok: false, formError: t("errors.invalidImages") };
   }
@@ -95,10 +91,14 @@ async function runCreateFeedPost(
 }
 
 /**
- * Preferred: JSON-serializable payload so `imageUrls` always reach the server (FormData + programmatic
- * server-action calls can drop or empty custom fields in some setups).
+ * Positional args so `imageUrls` is not lost to RSC/server-action object field edge cases.
+ * Upload client must still pass the same Supabase public URLs as `getPublicUrl`.
  */
-export async function createFeedPostWithImages(payload: CreateFeedPostPayload): Promise<CreateFeedPostState> {
+export async function createFeedPostWithImages(
+  body: string,
+  location: string,
+  imageUrls: unknown,
+): Promise<CreateFeedPostState> {
   const t = await getTranslations("feedPost");
   const supabase = await createClient();
   const {
@@ -108,14 +108,7 @@ export async function createFeedPostWithImages(payload: CreateFeedPostPayload): 
     return { ok: false, formError: t("errors.unauthorized") };
   }
 
-  return runCreateFeedPost(
-    supabase,
-    user.id,
-    t,
-    payload.body,
-    payload.location,
-    Array.isArray(payload.imageUrls) ? payload.imageUrls : [],
-  );
+  return runCreateFeedPost(supabase, user.id, t, body, location, imageUrls);
 }
 
 export async function createFeedPostFromForm(

@@ -8,6 +8,7 @@ import { FeedPostCommentList } from "@/components/feed-post-comment-list";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
 import type { FeedPostItem } from "@/lib/feed/feed-post-types";
+import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
 import { fetchFeedPostComments } from "@/lib/feed/fetch-post-comments";
 import { createClient } from "@/lib/supabase/server";
 
@@ -47,14 +48,15 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   const author = profile?.full_name ?? "—";
   const role = profile?.user_type ?? "contractor";
   const isPro = profile?.business_verification_status === "verified";
-  const thumb = post.images?.[0];
+  const postImages = normalizeFeedPostImages(post.images);
+  const thumb = postImages[0];
 
   const socialItem: FeedPostItem = {
     id: post.id,
     user_id: post.user_id,
     title: post.title,
     body: post.body,
-    images: post.images ?? [],
+    images: postImages,
     location: post.location,
     view_count: post.view_count,
     created_at: post.created_at,
