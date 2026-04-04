@@ -16,6 +16,8 @@ export type FeedPostSocialBarProps = {
   initialSaved: boolean;
   viewerId: string | null;
   variant?: "default" | "veterans";
+  /** Feed cards: LinkedIn-style row (dividers, hover, touch targets). */
+  layout?: "default" | "linkedin";
   /** When true, omit top margin (e.g. embedded on post detail). */
   embed?: boolean;
 };
@@ -29,6 +31,7 @@ export function FeedPostSocialBar({
   initialSaved,
   viewerId,
   variant = "default",
+  layout = "default",
   embed = false,
 }: FeedPostSocialBarProps) {
   const t = useTranslations("feed");
@@ -158,47 +161,39 @@ export function FeedPostSocialBar({
     );
   }
 
+  const cellBase =
+    layout === "linkedin"
+      ? "flex min-h-[48px] flex-1 items-center justify-center gap-1.5 px-1 font-bina-display text-[11px] font-semibold transition-colors active:bg-black/[0.04] disabled:opacity-50 dark:active:bg-white/[0.06] sm:text-xs"
+      : "flex flex-1 items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-semibold transition-opacity disabled:opacity-50";
+
+  const rowClass =
+    layout === "linkedin"
+      ? "flex min-h-[48px] divide-x divide-[var(--bina-border)] border-t border-[var(--bina-border)]"
+      : `flex divide-x divide-[var(--bina-border)] border-t border-[var(--bina-border)] ${embed ? "" : "mt-1"}`;
+
+  const likeClass = `${cellBase} ${liked ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"} ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
+  const mutedCell = `${cellBase} text-[var(--bina-muted)] ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
+  const saveClass = `${cellBase} ${saved ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"} ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
+
   return (
-    <div className={`flex border-t border-[var(--bina-border)] ${embed ? "" : "mt-1"}`}>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={onLike}
-        className={`flex flex-1 items-center justify-center gap-1 border-r border-[var(--bina-border)] py-[7px] font-bina-display text-[9px] font-semibold transition-opacity disabled:opacity-50 ${
-          liked ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"
-        }`}
-      >
-        <span className="text-[11px]">👍</span>
-        {likeCount > 0 ? <span>{likeCount}</span> : null}
-        {isAr ? "إعجاب" : "Like"}
+    <div className={rowClass}>
+      <button className={likeClass} disabled={pending} onClick={onLike} type="button">
+        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>👍</span>
+        {likeCount > 0 ? <span className="tabular-nums">{likeCount}</span> : null}
+        <span>{isAr ? "إعجاب" : "Like"}</span>
       </button>
-      <Link
-        href={commentHref}
-        prefetch
-        className="flex flex-1 items-center justify-center gap-1 border-r border-[var(--bina-border)] py-[7px] font-bina-display text-[9px] font-semibold text-[var(--bina-muted)]"
-      >
-        <span className="text-[11px]">💬</span>
-        {commentCount > 0 ? <span>{commentCount}</span> : null}
-        {isAr ? "تعليق" : "Comment"}
+      <Link className={mutedCell} href={commentHref} prefetch>
+        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>💬</span>
+        {commentCount > 0 ? <span className="tabular-nums">{commentCount}</span> : null}
+        <span>{isAr ? "تعليق" : "Comment"}</span>
       </Link>
-      <button
-        type="button"
-        onClick={onShare}
-        className="relative flex flex-1 items-center justify-center gap-1 border-r border-[var(--bina-border)] py-[7px] font-bina-display text-[9px] font-semibold text-[var(--bina-muted)]"
-      >
-        <span className="text-[11px]">📤</span>
-        {copied ? t("social.linkCopied") : isAr ? "مشاركة" : "Share"}
+      <button className={`${mutedCell} relative`} onClick={onShare} type="button">
+        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>📤</span>
+        <span>{copied ? t("social.linkCopied") : isAr ? "مشاركة" : "Share"}</span>
       </button>
-      <button
-        type="button"
-        disabled={pending}
-        onClick={onSave}
-        className={`flex flex-1 items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-semibold transition-opacity disabled:opacity-50 ${
-          saved ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"
-        }`}
-      >
-        <span className="text-[11px]">🔖</span>
-        {isAr ? "حفظ" : "Save"}
+      <button className={saveClass} disabled={pending} onClick={onSave} type="button">
+        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>📌</span>
+        <span>{isAr ? "حفظ" : "Save"}</span>
       </button>
     </div>
   );

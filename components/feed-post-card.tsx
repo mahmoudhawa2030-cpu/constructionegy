@@ -50,79 +50,104 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
   const av = avStyle(item.user_id);
   const age = relativeAge(item.created_at, locale);
   const thumb = item.images?.[0];
+  const profileHref = `/profile/${item.user_id}`;
+
+  const metaLine = [
+    item.author_role,
+    item.location ? item.location : null,
+    age,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <div className="mb-3 overflow-hidden rounded-[10px] border border-[var(--bina-border)] bg-[var(--bina-steel2)]">
-      <div className="flex items-center gap-2 px-3 pt-3 pb-2">
-        <span
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bina-display text-[12px] font-bold"
-          style={{ background: av.bg, color: av.color }}
+    <article className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
+      <header className="flex items-start gap-3 px-4 pt-4 pb-1">
+        <Link
+          aria-label={t("openAuthorProfileAria", { name: item.author_name })}
+          className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--bina-or)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bina-steel2)]"
+          href={profileHref}
+          prefetch
         >
-          {initials(item.author_name)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1">
-            <span className="font-bina-display text-[11px] font-bold leading-tight text-[var(--bina-text)]">
+          <span
+            className="flex h-12 w-12 items-center justify-center rounded-full font-bina-display text-sm font-bold tracking-tight"
+            style={{ background: av.bg, color: av.color }}
+          >
+            {initials(item.author_name)}
+          </span>
+        </Link>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Link
+              className="font-bina-display text-[15px] font-semibold leading-tight text-[var(--bina-text)] decoration-[var(--bina-or)]/50 underline-offset-2 hover:text-[var(--bina-or)] hover:underline"
+              href={profileHref}
+              prefetch
+            >
               {item.author_name}
-            </span>
+            </Link>
             {item.is_pro ? (
-              <span className="rounded border border-[#1a4a80] bg-[#0a2a50] px-1 py-px font-bina-display text-[8px] font-bold text-[var(--bina-blue)]">
-                ✓ PRO
+              <span
+                aria-label={t("proBadgeAria")}
+                className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-bina-display text-[10px] font-bold leading-none text-white"
+                style={{ background: "#0a66c2" }}
+              >
+                <span aria-hidden className="text-[9px]">
+                  ✓
+                </span>
+                PRO
               </span>
             ) : null}
           </div>
-          <div className="font-bina-display text-[9px] text-[var(--bina-muted)]">
-            {item.author_role}
-            {item.location ? ` · ${item.location}` : ""}
-            {" · "}
-            {age}
-          </div>
+          <p className="mt-1 font-bina-display text-[12px] leading-snug text-[var(--bina-muted)]">{metaLine}</p>
         </div>
-        <span className="rounded border border-[#3d2000] bg-[#2a1808] px-1.5 py-0.5 font-bina-display text-[9px] font-bold text-[var(--bina-or)]">
+        <span className="shrink-0 rounded-md border border-[#4a3016] bg-[#2a1c0c] px-2 py-1 font-bina-display text-[10px] font-bold text-[var(--bina-or)]">
           {t("postKind")}
         </span>
-      </div>
+      </header>
 
-      <Link href={`/posts/${item.id}`} prefetch className="block" aria-label={t("openPostAria", { title: item.title })}>
+      <Link
+        aria-label={t("openPostAria", { title: item.title })}
+        className="block"
+        href={`/posts/${item.id}`}
+        prefetch
+      >
         <div
-          className="relative h-[76px] w-full overflow-hidden"
-          style={{ background: "linear-gradient(135deg,var(--bina-steel3),var(--bina-steel4))" }}
+          className={
+            thumb
+              ? "relative aspect-video w-full bg-[var(--bina-steel3)]"
+              : "relative flex min-h-[140px] w-full items-center justify-center gap-3 bg-gradient-to-br from-[var(--bina-steel3)] to-[var(--bina-steel4)] px-6 sm:min-h-[168px]"
+          }
         >
           {thumb ? (
             <Image
               alt=""
               className="object-cover"
               fill
-              sizes="100vw"
+              sizes="(max-width: 768px) 100vw, 42rem"
               src={thumb}
               unoptimized={thumb.startsWith("http")}
               priority={priority}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center gap-2">
-              <span className="text-3xl">📝</span>
-              <span className="font-bina-display max-w-[60%] line-clamp-2 text-[11px] font-semibold text-[var(--bina-muted)]">
+            <>
+              <span className="select-none text-4xl drop-shadow-sm sm:text-5xl" aria-hidden>
+                📝
+              </span>
+              <span className="font-bina-display line-clamp-2 max-w-[78%] text-start text-sm font-semibold leading-snug text-[var(--bina-text)] sm:max-w-[70%] sm:text-[15px]">
                 {item.title}
               </span>
-            </div>
+            </>
           )}
         </div>
       </Link>
 
-      <div className="px-3 pt-2 pb-1">
+      <div className="border-t border-[var(--bina-border)]/80 px-4 py-3">
         <Link href={`/posts/${item.id}`} prefetch>
-          <h3 className="mb-1 line-clamp-2 font-bina-display text-[12px] font-bold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)]">
+          <h2 className="font-bina-display text-start text-[15px] font-semibold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-3">
             {item.title}
-          </h3>
+          </h2>
         </Link>
-        <p className="mb-2 line-clamp-3 text-[10px] leading-relaxed text-[var(--bina-muted)]">{item.body}</p>
-        {item.location ? (
-          <div className="mb-2 flex flex-wrap gap-1">
-            <span className="rounded border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-[7px] py-[2px] font-bina-display text-[9px] font-semibold uppercase text-[var(--bina-muted)]">
-              {item.location}
-            </span>
-          </div>
-        ) : null}
+        <p className="mt-2 line-clamp-5 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{item.body}</p>
       </div>
 
       <FeedPostSocialBar
@@ -133,7 +158,8 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
         initialLiked={item.likedByViewer}
         initialSaved={item.savedByViewer}
         viewerId={viewerId}
+        layout="linkedin"
       />
-    </div>
+    </article>
   );
 }

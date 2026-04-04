@@ -66,6 +66,8 @@
     "empty": "No posts yet. Check back soon.",
     "createPostCta": "Write the first post",
     "postKind": "Post",
+    "openAuthorProfileAria": "Open {name}'s profile",
+    "proBadgeAria": "Professional account",
     "openPostAria": "Open post: {title}",
     "backToFeed": "Back to feed",
     "postNotFound": "This post is unavailable or was removed.",

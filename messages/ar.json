@@ -66,6 +66,8 @@
     "empty": "لا منشورات بعد. تفقّد لاحقاً.",
     "createPostCta": "اكتب أول منشور",
     "postKind": "منشور",
+    "openAuthorProfileAria": "فتح ملف {name}",
+    "proBadgeAria": "حساب احترافي",
     "openPostAria": "فتح المنشور: {title}",
     "backToFeed": "العودة للتغذية",
     "postNotFound": "المنشور غير متاح أو تمت إزالته.",
