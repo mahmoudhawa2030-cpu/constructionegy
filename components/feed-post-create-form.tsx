@@ -155,7 +155,20 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
 
     setSubmitting(true);
     try {
-      const next = await createFeedPostWithImages(body, location, urls);
+      const res = await fetch("/api/feed/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body, location, imageUrls: urls }),
+      });
+
+      let next: CreateFeedPostState;
+      if (res.ok) {
+        const json = await res.json();
+        next = { ok: true, id: json.id };
+      } else {
+        const json = await res.json().catch(() => ({}));
+        next = { ok: false, formError: json.error || "saveFailed" };
+      }
       setState(next);
       if (next.ok === true) {
         router.push(`/posts/${next.id}`);
