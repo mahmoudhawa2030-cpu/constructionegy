@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
+import { getPublicAppOrigin } from "@/lib/public-app-url";
 import { createClient } from "@/lib/supabase/client";
 
 export function ForgotPasswordForm() {
@@ -18,12 +19,9 @@ export function ForgotPasswordForm() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
-    const origin =
-      typeof window !== "undefined"
-        ? `${window.location.origin.replace(/\/$/, "")}/update-password`
-        : "";
+    const redirectTo = `${getPublicAppOrigin()}/update-password`;
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: origin,
+      redirectTo,
     });
     setLoading(false);
     if (resetError) {

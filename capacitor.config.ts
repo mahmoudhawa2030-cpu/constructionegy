@@ -1,16 +1,16 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
+import { DEFAULT_PUBLIC_APP_URL } from "./lib/public-app-url";
+
 /**
  * WebView loads NEXT_PUBLIC_APP_URL (e.g. Vercel) when set during `npx cap sync`.
  * Override with CAPACITOR_SERVER_URL for local dev (e.g. http://10.0.2.2:3000 on Android emulator).
  * If both are unset, falls back to production so the native shell never shows `public/cap-web` placeholder only.
  */
-const DEFAULT_NATIVE_WEB_URL = "https://constructionegy.vercel.app";
-
 const serverUrl =
   process.env.CAPACITOR_SERVER_URL?.trim() ||
   process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-  DEFAULT_NATIVE_WEB_URL;
+  DEFAULT_PUBLIC_APP_URL;
 
 function allowNavigationFor(url: string): string[] {
   try {
