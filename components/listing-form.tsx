@@ -10,6 +10,7 @@ import type { CategoryOption } from "@/lib/categories/queries";
 import { createListing, updateListing } from "@/lib/listings/actions";
 import { labelForCategorySlug } from "@/lib/listings/categories";
 import { EGYPT_GOVERNORATES_AR, isEgyptGovernorateAr } from "@/lib/listings/egypt-governorates";
+import { compressImageForUpload } from "@/lib/images/compress-image-client";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -75,11 +76,15 @@ export function ListingForm({
     const supabase = createClient();
     const urls: string[] = [];
     for (const file of files) {
-      const path = `${userId}/${crypto.randomUUID()}/${safeFileName(file.name)}`;
-      const { error: upErr } = await supabase.storage.from("listing-images").upload(path, file, {
+      const prepared = await compressImageForUpload(file);
+      if (prepared.size > MAX_BYTES) {
+        throw new Error("كل صورة يجب أن تكون 5 ميجابايت أو أقل بعد الضغط.");
+      }
+      const path = `${userId}/${crypto.randomUUID()}/${safeFileName(prepared.name)}`;
+      const { error: upErr } = await supabase.storage.from("listing-images").upload(path, prepared, {
         cacheControl: "3600",
         upsert: false,
-        contentType: file.type || "image/jpeg",
+        contentType: prepared.type || "image/jpeg",
       });
       if (upErr) {
         throw new Error(upErr.message);

@@ -4,7 +4,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 import { Theme } from "emoji-picker-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -57,17 +57,12 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiWrapRef = useRef<HTMLDivElement>(null);
 
-  const [state, formAction, pending] = useActionState(createFeedPostFromForm, null as CreateFeedPostState | null);
+  const [state, setState] = useState<CreateFeedPostState | null>(null);
   const [attachments, setAttachments] = useState<LocalPhoto[]>([]);
   const [clientError, setClientError] = useState<string | null>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    if (state?.ok === true) {
-      router.push(`/posts/${state.id}`);
-    }
-  }, [state, router]);
+  const [submitting, setSubmitting] = useState(false);
 
   const attachmentsRef = useRef(attachments);
   attachmentsRef.current = attachments;
@@ -159,10 +154,20 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
 
     const fd = new FormData(formEl);
     fd.set("imageUrls", JSON.stringify(urls));
-    formAction(fd);
+
+    setSubmitting(true);
+    try {
+      const next = await createFeedPostFromForm(null, fd);
+      setState(next);
+      if (next.ok === true) {
+        router.push(`/posts/${next.id}`);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const busy = pending || uploading;
+  const busy = submitting || uploading;
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -297,7 +302,7 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
         disabled={busy}
         type="submit"
       >
-        {pending || uploading ? t("submitting") : t("submit")}
+        {submitting || uploading ? t("submitting") : t("submit")}
       </button>
 
       <Link

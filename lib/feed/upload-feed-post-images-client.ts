@@ -1,5 +1,6 @@
 "use client";
 
+import { compressImageForUpload } from "@/lib/images/compress-image-client";
 import { createClient } from "@/lib/supabase/client";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -29,12 +30,16 @@ export async function uploadFeedPostImagesFromBrowser(files: File[], userId: str
     if (file.size > MAX_BYTES) {
       throw new Error("size");
     }
-    const ext = extFromFile(file);
+    const prepared = await compressImageForUpload(file);
+    if (prepared.size > MAX_BYTES) {
+      throw new Error("size");
+    }
+    const ext = extFromFile(prepared);
     const path = `${userId}/feed/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("feed-post-images").upload(path, file, {
+    const { error } = await supabase.storage.from("feed-post-images").upload(path, prepared, {
       cacheControl: "3600",
       upsert: false,
-      contentType: file.type || "image/jpeg",
+      contentType: prepared.type || "image/jpeg",
     });
     if (error) {
       throw new Error("upload");
