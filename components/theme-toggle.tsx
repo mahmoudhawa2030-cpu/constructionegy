@@ -1,22 +1,29 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const options = [
-  { value: "light" as const, label: "فاتح" },
-  { value: "dark" as const, label: "داكن" },
-  { value: "system" as const, label: "النظام" },
-];
+const THEME_VALUES = ["light", "dark", "system"] as const;
 
 type Props = {
-  /** Shorter control for sticky headers (no «المظهر» label). */
+  /** Shorter control for sticky headers (no appearance label above buttons). */
   compact?: boolean;
 };
 
 export function ThemeToggle({ compact = false }: Props) {
+  const t = useTranslations("theme");
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  const options = useMemo(
+    () =>
+      THEME_VALUES.map((value) => ({
+        value,
+        label: t(value),
+      })),
+    [t],
+  );
 
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
@@ -41,7 +48,7 @@ export function ThemeToggle({ compact = false }: Props) {
         compact ? "max-w-full" : ""
       }`}
       role="group"
-      aria-label="اختيار المظهر"
+      aria-label={t("appearanceAria")}
     >
       {options.map(({ value, label }) => {
         const active = theme === value;
@@ -77,7 +84,7 @@ export function ThemeToggle({ compact = false }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">المظهر</p>
+      <p className="text-xs font-medium text-zinc-600 dark:text-zinc-400">{t("appearanceLabel")}</p>
       {group}
     </div>
   );

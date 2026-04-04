@@ -7,6 +7,13 @@
     "ariaLabel": "اختيار اللغة",
     "current": "اللغة الحالية"
   },
+  "theme": {
+    "appearanceAria": "اختيار المظهر",
+    "appearanceLabel": "المظهر",
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
   "nav": {
     "home": "الرئيسية",
     "feed": "التغذية",
@@ -30,7 +37,8 @@
     "closeMenuAria": "إغلاق القائمة",
     "closeMenuBackdropAria": "إغلاق القائمة",
     "menuAppearance": "المظهر",
-    "menuLanguage": "اللغة"
+    "menuLanguage": "اللغة",
+    "openMenuAria": "فتح القائمة"
   },
   "messagesInbox": {
     "title": "الرسائل",

@@ -7,6 +7,13 @@
     "ariaLabel": "Choose language",
     "current": "Current language"
   },
+  "theme": {
+    "appearanceAria": "Choose appearance",
+    "appearanceLabel": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "nav": {
     "home": "Home",
     "feed": "Feed",
@@ -30,7 +37,8 @@
     "closeMenuAria": "Close menu",
     "closeMenuBackdropAria": "Close menu",
     "menuAppearance": "Appearance",
-    "menuLanguage": "Language"
+    "menuLanguage": "Language",
+    "openMenuAria": "Open menu"
   },
   "messagesInbox": {
     "title": "Messages",
