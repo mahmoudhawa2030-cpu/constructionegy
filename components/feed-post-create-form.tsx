@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 
 import {
-  createFeedPostFromForm,
+  createFeedPostWithImages,
   type CreateFeedPostState,
 } from "@/lib/feed/post-actions";
 import {
@@ -153,11 +153,16 @@ export function FeedPostCreateForm({ defaultLocation, userId }: Props) {
     }
 
     const fd = new FormData(formEl);
-    fd.set("imageUrls", JSON.stringify(urls));
+    const body = String(fd.get("body") ?? "");
+    const location = String(fd.get("location") ?? "");
 
     setSubmitting(true);
     try {
-      const next = await createFeedPostFromForm(null, fd);
+      const next = await createFeedPostWithImages({
+        body,
+        location,
+        imageUrls: urls,
+      });
       setState(next);
       if (next.ok === true) {
         router.push(`/posts/${next.id}`);
