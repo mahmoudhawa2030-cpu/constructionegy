@@ -38,6 +38,26 @@ function avStyle(userId: string) {
   return AV_STYLES[sum % AV_STYLES.length];
 }
 
+/** Avoid showing the same line again when `title` is derived from the start of `body`. */
+function bodySnippetAfterTitle(title: string, body: string): string | null {
+  const t = title.trim();
+  const b = body.trim();
+  if (!b) return null;
+  if (!t || t === "—") return b;
+  if (b === t) return null;
+  if (b.startsWith(t)) {
+    const rest = b.slice(t.length).replace(/^[\s\n\r]+/, "").trim();
+    return rest.length > 0 ? rest : null;
+  }
+  const firstLine = b.split(/\r?\n/).find((l) => l.trim().length > 0)?.trim() ?? "";
+  if (firstLine.length > 0 && t === firstLine) {
+    const idx = b.indexOf(firstLine);
+    const rest = (idx >= 0 ? b.slice(idx + firstLine.length) : b).replace(/^[\s\n\r]+/, "").trim();
+    return rest.length > 0 ? rest : null;
+  }
+  return b;
+}
+
 type Props = {
   item: FeedPostItem;
   viewerId: string | null;
@@ -59,6 +79,8 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
   ]
     .filter(Boolean)
     .join(" · ");
+
+  const textBelowFold = bodySnippetAfterTitle(item.title, item.body);
 
   return (
     <article className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
@@ -115,7 +137,7 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
           className={
             thumb
               ? "relative aspect-video w-full bg-[var(--bina-steel3)]"
-              : "relative flex min-h-[140px] w-full items-center justify-center gap-3 bg-gradient-to-br from-[var(--bina-steel3)] to-[var(--bina-steel4)] px-6 sm:min-h-[168px]"
+              : "relative flex min-h-[100px] w-full items-center justify-center bg-gradient-to-br from-[var(--bina-steel3)] to-[var(--bina-steel4)] px-6 sm:min-h-[120px]"
           }
         >
           {thumb ? (
@@ -129,25 +151,22 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
               priority={priority}
             />
           ) : (
-            <>
-              <span className="select-none text-4xl drop-shadow-sm sm:text-5xl" aria-hidden>
-                📝
-              </span>
-              <span className="font-bina-display line-clamp-2 max-w-[78%] text-start text-sm font-semibold leading-snug text-[var(--bina-text)] sm:max-w-[70%] sm:text-[15px]">
-                {item.title}
-              </span>
-            </>
+            <span className="select-none text-5xl drop-shadow-sm sm:text-6xl" aria-hidden>
+              📝
+            </span>
           )}
         </div>
       </Link>
 
       <div className="border-t border-[var(--bina-border)]/80 px-4 py-3">
         <Link href={`/posts/${item.id}`} prefetch>
-          <h2 className="font-bina-display text-start text-[15px] font-semibold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-3">
+          <h2 className="font-bina-display text-start text-[15px] font-semibold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-4">
             {item.title}
           </h2>
         </Link>
-        <p className="mt-2 line-clamp-5 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{item.body}</p>
+        {textBelowFold ? (
+          <p className="mt-2 line-clamp-5 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
+        ) : null}
       </div>
 
       <FeedPostSocialBar
