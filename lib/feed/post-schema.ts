@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const feedPostImageUrlsSchema = z.array(z.string().url()).max(9);
+
 export const createFeedPostSchema = z.object({
   body: z
     .string()

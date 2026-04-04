@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { deriveFeedPostTitle } from "@/lib/feed/derive-post-title";
-import { createFeedPostSchema } from "@/lib/feed/post-schema";
+import { createFeedPostSchema, feedPostImageUrlsSchema } from "@/lib/feed/post-schema";
+import { isValidUploadedFeedPostImageUrl } from "@/lib/feed/validate-feed-post-image-url";
 import { createClient } from "@/lib/supabase/server";
+import { getSupabasePublicEnv } from "@/lib/supabase/env";
 
 export type CreateFeedPostState =
   | { ok: true; id: string }
@@ -33,6 +35,30 @@ export async function createFeedPostFromForm(
     location: String(formData.get("location") ?? ""),
   };
 
+  let imageUrls: string[] = [];
+  const rawImagesJson = String(formData.get("imageUrls") ?? "");
+  if (rawImagesJson.trim().length > 0) {
+    try {
+      const decoded = JSON.parse(rawImagesJson) as unknown;
+      imageUrls = [...new Set(feedPostImageUrlsSchema.parse(decoded))];
+    } catch {
+      return { ok: false, formError: t("errors.invalidImages") };
+    }
+  }
+
+  let supabasePublicUrl: string;
+  try {
+    supabasePublicUrl = getSupabasePublicEnv().url.replace(/\/$/, "");
+  } catch {
+    return { ok: false, formError: t("errors.saveFailed") };
+  }
+
+  for (const u of imageUrls) {
+    if (!isValidUploadedFeedPostImageUrl(u, user.id, supabasePublicUrl)) {
+      return { ok: false, formError: t("errors.invalidImages") };
+    }
+  }
+
   const parsed = createFeedPostSchema.safeParse(raw);
   if (!parsed.success) {
     const fieldErrors: { body?: string; location?: string } = {};
@@ -55,7 +81,7 @@ export async function createFeedPostFromForm(
       title,
       body,
       location,
-      images: [],
+      images: imageUrls,
       status: "published",
     })
     .select("id")

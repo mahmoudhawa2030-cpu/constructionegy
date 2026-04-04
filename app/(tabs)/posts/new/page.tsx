@@ -37,7 +37,7 @@ export default async function NewFeedPostPage() {
         <p className="font-bina-display text-[11px] leading-relaxed text-[var(--bina-muted)]">{t("intro")}</p>
       </div>
 
-      <FeedPostCreateForm defaultLocation={profile?.location ?? null} />
+      <FeedPostCreateForm defaultLocation={profile?.location ?? null} userId={user.id} />
     </div>
   );
 }

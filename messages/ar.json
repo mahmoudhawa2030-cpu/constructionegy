@@ -98,6 +98,14 @@
     "backToFeed": "العودة للتغذية",
     "bodyLabel": "ماذا تريد أن تشارك؟",
     "bodyPlaceholder": "اكتب منشورك…",
+    "emojiButtonAria": "إدراج إيموجي",
+    "mediaSectionLabel": "صور",
+    "addPhotos": "إضافة صور",
+    "removePhotoAria": "إزالة الصورة {n}",
+    "photoLimitHint": "حتى {max} صور · JPEG أو PNG أو WebP أو GIF · بحد أقصى 5 ميجابايت لكل صورة",
+    "uploadFailed": "تعذّر رفع الصور. تحقق من الاتصال وحاول مرة أخرى.",
+    "imageTypeInvalid": "استخدم JPEG أو PNG أو WebP أو GIF.",
+    "imageTooLarge": "يجب ألا يتجاوز حجم كل صورة 5 ميجابايت.",
     "locationLabel": "الموقع (اختياري)",
     "locationPlaceholder": "مثال: الإسكندرية",
     "submit": "نشر",
@@ -108,7 +116,8 @@
       "saveFailed": "تعذّر حفظ المنشور. حاول مرة أخرى.",
       "bodyRequired": "اكتب نص المنشور.",
       "bodyTooLong": "المنشور طويل جداً (حد أقصى 8000 حرف).",
-      "locationTooLong": "الموقع طويل جداً (حد أقصى 120 حرف)."
+      "locationTooLong": "الموقع طويل جداً (حد أقصى 120 حرف).",
+      "invalidImages": "بعض الصور غير مقبولة. أزلها وحاول مرة أخرى."
     }
   },
   "home": {
