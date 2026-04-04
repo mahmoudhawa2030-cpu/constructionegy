@@ -75,6 +75,12 @@ export function LoginForm() {
               type="password"
               value={password}
             />
+            <Link
+              className="self-end text-xs font-medium text-zinc-900 underline underline-offset-2 dark:text-zinc-100"
+              href="/forgot-password"
+            >
+              {t("forgotPasswordLink")}
+            </Link>
           </label>
           {error ? (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
