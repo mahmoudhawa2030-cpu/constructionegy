@@ -44,7 +44,7 @@ async function runCreateFeedPost(
   }
 
   for (const u of imageUrls) {
-    if (!isValidUploadedFeedPostImageUrl(u, userId, supabasePublicUrl)) {
+    if (!isValidUploadedFeedPostImageUrl(u, userId)) {
       return { ok: false, formError: t("errors.invalidImages") };
     }
   }
