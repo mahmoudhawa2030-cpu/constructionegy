@@ -1,5 +1,6 @@
 import { FeedTopbar } from "@/components/feed-topbar";
 import { FeedTabStrip } from "@/components/feed-tab-strip";
+import { PullToRefreshScroll } from "@/components/pull-to-refresh-scroll";
 import type { FeedRfqItem } from "@/components/feed-rfq-card";
 import { fetchFeedPostPool, fetchLatestVeteransPost } from "@/lib/feed/fetch-feed-posts";
 import { filterNearMePosts, rankFeedPostsForYou } from "@/lib/feed/for-you-post-rank";
@@ -47,7 +48,7 @@ export default async function HomePage() {
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)]">
       <FeedTopbar />
-      <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+      <PullToRefreshScroll namespace="feed" platformScope="mobileTouch">
         <FeedTabStrip
           posts={postPool}
           forYouPosts={forYouPosts}
@@ -56,7 +57,7 @@ export default async function HomePage() {
           latestRfq={latestRfq}
           viewerId={user?.id ?? null}
         />
-      </div>
+      </PullToRefreshScroll>
     </div>
   );
 }

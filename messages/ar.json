@@ -60,6 +60,10 @@
     "notificationTitle": "رسالة جديدة"
   },
   "feed": {
+    "pullToRefreshAria": "اسحب للأسفل لتحديث التغذية",
+    "pullRefreshingAria": "جاري تحديث التغذية",
+    "pullReleaseToRefresh": "أفلت للتحديث",
+    "pullRefreshing": "جاري التحديث…",
     "forYou": "لك",
     "latest": "الأحدث",
     "nearMe": "قريب مني",

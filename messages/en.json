@@ -60,6 +60,10 @@
     "notificationTitle": "New message"
   },
   "feed": {
+    "pullToRefreshAria": "Pull down to refresh the feed",
+    "pullRefreshingAria": "Refreshing the feed",
+    "pullReleaseToRefresh": "Release to refresh",
+    "pullRefreshing": "Refreshing…",
     "forYou": "For You",
     "latest": "Latest",
     "nearMe": "Near Me",
