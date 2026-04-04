@@ -23,7 +23,7 @@ function mimeFromFilename(name: string): string | null {
 
 export type UploadFeedPostImageActionResult =
   | { ok: true; url: string }
-  | { ok: false; code: "unauthorized" | "bad_input" | "storage" };
+  | { ok: false; code: "unauthorized" | "bad_input" | "storage"; message?: string };
 
 /**
  * Upload one feed image using the **server** Supabase client (cookie session).
@@ -71,7 +71,8 @@ export async function uploadFeedPostImageAction(formData: FormData): Promise<Upl
   });
 
   if (error) {
-    return { ok: false, code: "storage" };
+    console.error("[feed-post-image-upload-action] Storage upload error:", error);
+    return { ok: false, code: "storage", message: error.message };
   }
 
   const { data: pub } = supabase.storage.from("feed-post-images").getPublicUrl(path);

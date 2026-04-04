@@ -29,6 +29,10 @@ export async function uploadFeedPostImagesFromBrowser(files: File[]): Promise<st
     if (!result.ok) {
       if (result.code === "unauthorized") throw new Error("auth");
       if (result.code === "bad_input") throw new Error("type");
+      if (result.code === "storage") {
+        console.error("Storage error from server:", (result as any).message);
+        throw new Error("upload");
+      }
       throw new Error("upload");
     }
     urls.push(result.url);

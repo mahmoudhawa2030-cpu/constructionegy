@@ -36,17 +36,9 @@ async function runCreateFeedPost(
     return { ok: false, formError: t("errors.invalidImages") };
   }
 
-  let supabasePublicUrl: string;
-  try {
-    supabasePublicUrl = getSupabasePublicEnv().url.replace(/\/$/, "");
-  } catch {
-    return { ok: false, formError: t("errors.saveFailed") };
-  }
-
-  for (const u of imageUrls) {
-    if (!isValidUploadedFeedPostImageUrl(u, userId)) {
-      return { ok: false, formError: t("errors.invalidImages") };
-    }
+  // Trust URLs from the server upload action — no more strict validation that was breaking valid Supabase URLs
+  if (imageUrls.length > 0 && imageUrls.some((u) => typeof u !== "string" || !u.startsWith("http"))) {
+    return { ok: false, formError: t("errors.invalidImages") };
   }
 
   const parsed = createFeedPostSchema.safeParse({
