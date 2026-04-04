@@ -81,10 +81,12 @@ export type Database = {
       feed_posts: {
         Row: {
           body: string
+          comment_count: number
           created_at: string
           id: string
           images: string[]
           is_veterans_corner: boolean
+          like_count: number
           location: string | null
           status: Database["public"]["Enums"]["feed_post_status"]
           title: string
@@ -94,10 +96,12 @@ export type Database = {
         }
         Insert: {
           body?: string
+          comment_count?: number
           created_at?: string
           id?: string
           images?: string[]
           is_veterans_corner?: boolean
+          like_count?: number
           location?: string | null
           status?: Database["public"]["Enums"]["feed_post_status"]
           title: string
@@ -107,10 +111,12 @@ export type Database = {
         }
         Update: {
           body?: string
+          comment_count?: number
           created_at?: string
           id?: string
           images?: string[]
           is_veterans_corner?: boolean
+          like_count?: number
           location?: string | null
           status?: Database["public"]["Enums"]["feed_post_status"]
           title?: string

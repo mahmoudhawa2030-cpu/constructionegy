@@ -26,7 +26,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
 
   const { data: post, error } = await supabase
     .from("feed_posts")
-    .select("id,user_id,title,body,images,location,view_count,created_at,status")
+    .select("id,user_id,title,body,images,location,view_count,like_count,comment_count,created_at,status")
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
@@ -61,8 +61,8 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
     author_name: author,
     author_role: role,
     is_pro: isPro,
-    likeCount: 0,
-    commentCount: 0,
+    likeCount: post.like_count ?? 0,
+    commentCount: post.comment_count ?? 0,
     likedByViewer: false,
     savedByViewer: false,
   };

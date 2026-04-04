@@ -8,7 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const FEED_POST_LIMIT = 60;
+// Keep the first paint lighter on mobile; larger feeds can be paginated later.
+const FEED_POST_LIMIT = 18;
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -26,7 +27,7 @@ export default async function HomePage() {
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
-    fetchLatestVeteransPost(supabase),
+    fetchLatestVeteransPost(supabase, user?.id ?? null),
     user?.id ? fetchPersonalizationContext(supabase, user.id) : Promise.resolve(null),
   ]);
 

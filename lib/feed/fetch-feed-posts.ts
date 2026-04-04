@@ -28,8 +28,8 @@ function mapRows(rows: FeedPostRow[], profileMap: Map<string, ProfileMini>): Fee
       author_name: p?.full_name ?? "—",
       author_role: p?.user_type ?? "contractor",
       is_pro: p?.business_verification_status === "verified",
-      likeCount: 0,
-      commentCount: 0,
+      likeCount: row.like_count ?? 0,
+      commentCount: row.comment_count ?? 0,
       likedByViewer: false,
       savedByViewer: false,
     };
