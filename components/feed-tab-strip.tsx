@@ -44,6 +44,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
     (item: FeedPostItem): FeedPostItem => {
       const p = socialPatch[item.id];
       if (!p) return item;
+      console.log("[feed-tab-strip] merging patch for", item.id, p);
       return {
         ...item,
         likeCount: p.likeCount,
@@ -82,9 +83,12 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
             savedByViewer: row.savedByViewer,
           };
         }
-        if (!cancelled) setSocialPatch(next);
-      } catch {
-        /* ignore */
+        if (!cancelled) {
+          console.log("[feed-tab-strip] social bulk response for", rows.length, "posts");
+          setSocialPatch(next);
+        }
+      } catch (err) {
+        console.error("[feed-tab-strip] social bulk failed:", err);
       }
     })();
 
