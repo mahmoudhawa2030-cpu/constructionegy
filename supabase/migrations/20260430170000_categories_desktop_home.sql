@@ -10,6 +10,8 @@ ALTER TABLE public.categories
 COMMENT ON COLUMN public.categories.label_en IS 'Optional English name; desktop home uses it when locale is en (falls back to formatted slug).';
 COMMENT ON COLUMN public.categories.homepage_desktop_icon_key IS 'Named icon from app whitelist; when set with is_active, category is shown as a card on desktop home.';
 
+-- Make constraint idempotent
+ALTER TABLE public.categories DROP CONSTRAINT IF EXISTS categories_label_en_len;
 ALTER TABLE public.categories
   ADD CONSTRAINT categories_label_en_len CHECK (label_en IS NULL OR char_length(trim(label_en)) <= 200);
 
