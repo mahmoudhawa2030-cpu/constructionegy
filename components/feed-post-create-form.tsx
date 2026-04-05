@@ -94,21 +94,29 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    console.log("[feed form] onFileChange fired. Event:", e);
+    console.log("[feed form] target.files:", e.target.files);
+    console.log("[feed form] files length:", e.target.files?.length || 0);
+
     setClientError(null);
     const list = e.target.files;
-    e.target.value = "";
-    console.log("[feed form] file input change - files received:", list?.length || 0, list);
+    
+    if (!list || list.length === 0) {
+      console.error("[feed form] No files received from input!");
+      return;
+    }
 
-    if (!list?.length) return;
+    e.target.value = "";
 
     const incoming = Array.from(list);
+    console.log("[feed form] Processing files:", incoming.map(f => ({name: f.name, type: f.type, size: f.size})));
+
     const next = [...attachments];
     for (const file of incoming) {
-      console.log("[feed form] processing file:", file.name, file.type, file.size);
       if (next.length >= MAX_PHOTOS) break;
       if (!isAllowedFeedImageFile(file)) {
         const allowedType = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
-        console.error("[feed form] file rejected by isAllowedFeedImageFile:", file.name, { allowedType, size: file.size });
+        console.error("[feed form] File rejected:", file.name, {allowedType, size: file.size});
         setClientError(allowedType ? t("imageTooLarge") : t("imageTypeInvalid"));
         return;
       }
@@ -118,7 +126,7 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         previewUrl: URL.createObjectURL(file),
       });
     }
-    console.log("[feed form] final attachments count:", next.length);
+    console.log("[feed form] Final attachments count:", next.length);
     setAttachments(next);
   }
 
@@ -258,19 +266,13 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
           </span>
         </div>
         
-        <div className="border-2 border-red-500 p-4 rounded-lg bg-red-500/5">
-          <p className="text-red-500 text-xs mb-3 font-medium">📸 DEBUG: Click below to select photo</p>
-          
-          <input
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            multiple
-            onChange={onFileChange}
-            className="block w-full text-sm text-white file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--bina-or)] file:text-white hover:file:bg-orange-600 cursor-pointer"
-          />
-          
-          <p className="text-[10px] text-red-400 mt-3">Use this large red box to test photo selection</p>
-        </div>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={onFileChange}
+          className="block w-full text-sm file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--bina-or)] file:text-white hover:file:bg-orange-600 cursor-pointer border border-[var(--bina-border)] p-3 rounded"
+        />
 
         {attachments.length > 0 ? (
           <ul className="flex flex-wrap gap-2">
