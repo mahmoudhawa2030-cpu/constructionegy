@@ -50,7 +50,6 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const bodyRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const emojiWrapRef = useRef<HTMLDivElement>(null);
 
   const [state, setState] = useState<CreateFeedPostState | null>(null);
@@ -94,29 +93,18 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
   }
 
   function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    console.log("[feed form] onFileChange fired. Event:", e);
-    console.log("[feed form] target.files:", e.target.files);
-    console.log("[feed form] files length:", e.target.files?.length || 0);
-
     setClientError(null);
-    const list = e.target.files;
-    
-    if (!list || list.length === 0) {
-      console.error("[feed form] No files received from input!");
-      return;
-    }
+    // Snapshot files before clearing input — `FileList` is live; resetting value empties it.
+    const incoming = Array.from(e.target.files ?? []);
+    if (incoming.length === 0) return;
 
     e.target.value = "";
-
-    const incoming = Array.from(list);
-    console.log("[feed form] Processing files:", incoming.map(f => ({name: f.name, type: f.type, size: f.size})));
 
     const next = [...attachments];
     for (const file of incoming) {
       if (next.length >= MAX_PHOTOS) break;
       if (!isAllowedFeedImageFile(file)) {
         const allowedType = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
-        console.error("[feed form] File rejected:", file.name, {allowedType, size: file.size});
         setClientError(allowedType ? t("imageTooLarge") : t("imageTypeInvalid"));
         return;
       }
@@ -126,7 +114,6 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         previewUrl: URL.createObjectURL(file),
       });
     }
-    console.log("[feed form] Final attachments count:", next.length);
     setAttachments(next);
   }
 
@@ -146,11 +133,8 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
     if (attachments.length > 0) {
       setUploading(true);
       try {
-        console.log("[feed form] starting upload of", attachments.length, "images");
         urls = await uploadFeedPostImagesFromBrowser(attachments.map((a) => a.file));
-        console.log("[feed form] upload succeeded, got URLs:", urls);
       } catch (err) {
-        console.error("[feed form] upload failed:", err);
         setUploading(false);
         const code = err instanceof Error ? err.message : "";
         if (code === "type") setClientError(t("imageTypeInvalid"));
@@ -174,16 +158,12 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         body: JSON.stringify({ body, location, imageUrls: urls }),
       });
 
-      console.log("[feed form] API response status:", res.status);
-
       let next: CreateFeedPostState;
       if (res.ok) {
         const json = await res.json();
-        console.log("[feed form] API success response:", json);
         next = { ok: true, id: json.id };
       } else {
         const json = await res.json().catch(() => ({}));
-        console.error("[feed form] API error response:", json);
         next = { ok: false, formError: json.error || "saveFailed" };
       }
       setState(next);
@@ -268,7 +248,7 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         
         <input
           type="file"
-          accept="image/*"
+          accept="image/jpeg,image/png,image/webp,image/gif"
           multiple
           onChange={onFileChange}
           className="block w-full text-sm file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--bina-or)] file:text-white hover:file:bg-orange-600 cursor-pointer border border-[var(--bina-border)] p-3 rounded"
