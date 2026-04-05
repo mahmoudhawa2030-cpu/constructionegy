@@ -1,3 +1,4 @@
+import { FeedSocialResyncProvider } from "@/components/feed-social-resync-context";
 import { FeedTopbar } from "@/components/feed-topbar";
 import { FeedTabStrip } from "@/components/feed-tab-strip";
 import { PullToRefreshScroll } from "@/components/pull-to-refresh-scroll";
@@ -6,7 +7,6 @@ import { fetchFeedPostPool, fetchLatestVeteransPost } from "@/lib/feed/fetch-fee
 import { filterNearMePosts, rankFeedPostsForYou } from "@/lib/feed/for-you-post-rank";
 import { fetchPersonalizationContext } from "@/lib/feed/personalization-context";
 import { createClient } from "@/lib/supabase/server";
-import { unstable_noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +14,6 @@ export const dynamic = "force-dynamic";
 const FEED_POST_LIMIT = 18;
 
 export default async function HomePage() {
-  unstable_noStore(); // Force fresh data on every request (including router.refresh / pull-to-refresh)
-
   const supabase = await createClient();
 
   const {
@@ -52,19 +50,21 @@ export default async function HomePage() {
     : null;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)]">
-      <FeedTopbar />
-      <PullToRefreshScroll namespace="feed" platformScope="mobileTouch">
-        <FeedTabStrip
-          posts={postPool}
-          forYouPosts={forYouPosts}
-          nearMePosts={nearMePosts}
-          veteranPost={veteranPost}
-          latestRfq={latestRfq}
-          viewerId={user?.id ?? null}
-          refreshKey={refreshKey}
-        />
-      </PullToRefreshScroll>
-    </div>
+    <FeedSocialResyncProvider>
+      <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)]">
+        <FeedTopbar />
+        <PullToRefreshScroll namespace="feed" platformScope="mobileTouch">
+          <FeedTabStrip
+            posts={postPool}
+            forYouPosts={forYouPosts}
+            nearMePosts={nearMePosts}
+            veteranPost={veteranPost}
+            latestRfq={latestRfq}
+            viewerId={user?.id ?? null}
+            refreshKey={refreshKey}
+          />
+        </PullToRefreshScroll>
+      </div>
+    </FeedSocialResyncProvider>
   );
 }

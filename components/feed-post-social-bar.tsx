@@ -179,7 +179,7 @@ export function FeedPostSocialBar({
   const saveClass = `${cellBase} ${saved ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"} ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
 
   return (
-    <div key={refreshKey} className={rowClass}>
+    <div className={rowClass}>
       <button className={likeClass} disabled={pending} onClick={onLike} type="button">
         <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>👍</span>
         {likeCount > 0 ? <span className="tabular-nums">{likeCount}</span> : null}

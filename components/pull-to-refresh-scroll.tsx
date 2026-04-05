@@ -3,7 +3,9 @@
 import { Capacitor } from "@capacitor/core";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+
+import { FeedSocialResyncContext } from "@/components/feed-social-resync-context";
 
 const PULL_THRESHOLD = 56;
 const MAX_PULL = 88;
@@ -57,6 +59,7 @@ export function PullToRefreshScroll({ children, namespace, platformScope }: Prop
   const router = useRouter();
   const t = useTranslations(namespace);
   const enabled = usePullEnabled(platformScope);
+  const feedSocialResync = useContext(FeedSocialResyncContext);
 
   const startYRef = useRef(0);
   const pullRef = useRef(0);
@@ -77,11 +80,13 @@ export function PullToRefreshScroll({ children, namespace, platformScope }: Prop
     setPullPx(0);
     pullRef.current = 0;
     router.refresh();
+    // RSC refresh alone often keeps client social state; bump so feed refetches counts from API.
+    feedSocialResync?.bump();
     window.setTimeout(() => {
       refreshingRef.current = false;
       setRefreshing(false);
     }, 750);
-  }, [router]);
+  }, [router, feedSocialResync]);
 
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!enabled || refreshingRef.current) return;

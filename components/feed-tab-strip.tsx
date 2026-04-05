@@ -1,14 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { FeedPostCard } from "@/components/feed-post-card";
 import type { FeedRfqItem } from "@/components/feed-rfq-card";
 import { FeedRfqCard } from "@/components/feed-rfq-card";
+import { FeedSocialResyncContext } from "@/components/feed-social-resync-context";
 import { FeedVeteransCard } from "@/components/feed-veterans-card";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
+
+type SocialPatch = {
+  likeCount: number;
+  commentCount: number;
+  likedByViewer: boolean;
+  savedByViewer: boolean;
+};
 
 type Props = {
   posts: FeedPostItem[];
@@ -23,6 +31,72 @@ type Props = {
 export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, latestRfq, viewerId, refreshKey }: Props) {
   const t = useTranslations("feed");
   const [tab, setTab] = useState<"forYou" | "latest" | "nearMe">("forYou");
+  const resyncCtx = useContext(FeedSocialResyncContext);
+  const [socialPatch, setSocialPatch] = useState<Record<string, SocialPatch>>({});
+
+  const postIdKey = useMemo(() => {
+    const ids = new Set(posts.map((p) => p.id));
+    if (veteranPost) ids.add(veteranPost.id);
+    return [...ids].sort().join(",");
+  }, [posts, veteranPost]);
+
+  const mergeItem = useCallback(
+    (item: FeedPostItem): FeedPostItem => {
+      const p = socialPatch[item.id];
+      if (!p) return item;
+      return {
+        ...item,
+        likeCount: p.likeCount,
+        commentCount: p.commentCount,
+        likedByViewer: p.likedByViewer,
+        savedByViewer: p.savedByViewer,
+      };
+    },
+    [socialPatch],
+  );
+
+  useEffect(() => {
+    const gen = resyncCtx?.generation ?? 0;
+    if (gen === 0) return;
+    const ids = postIdKey.split(",").filter(Boolean);
+    if (ids.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/feed/social-bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postIds: ids }),
+          credentials: "same-origin",
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { items?: Array<SocialPatch & { id: string }> };
+        const rows = data.items ?? [];
+        const next: Record<string, SocialPatch> = {};
+        for (const row of rows) {
+          next[row.id] = {
+            likeCount: row.likeCount,
+            commentCount: row.commentCount,
+            likedByViewer: row.likedByViewer,
+            savedByViewer: row.savedByViewer,
+          };
+        }
+        if (!cancelled) setSocialPatch(next);
+      } catch {
+        /* ignore */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [resyncCtx?.generation, postIdKey]);
+
+  const mergedPosts = useMemo(() => posts.map(mergeItem), [posts, mergeItem]);
+  const mergedForYou = useMemo(() => forYouPosts.map(mergeItem), [forYouPosts, mergeItem]);
+  const mergedNear = useMemo(() => nearMePosts.map(mergeItem), [nearMePosts, mergeItem]);
+  const mergedVeteran = veteranPost ? mergeItem(veteranPost) : null;
 
   const tabs: { key: "forYou" | "latest" | "nearMe"; label: string }[] = [
     { key: "forYou", label: t("forYou") },
@@ -32,20 +106,21 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
   const sorted =
     tab === "latest"
-      ? [...posts].sort((a, b) => b.created_at.localeCompare(a.created_at))
+      ? [...mergedPosts].sort((a, b) => b.created_at.localeCompare(a.created_at))
       : tab === "forYou"
-        ? forYouPosts
-        : nearMePosts;
+        ? mergedForYou
+        : mergedNear;
 
   const feed: React.ReactNode[] = [];
 
-  if (veteranPost) {
+  if (mergedVeteran) {
     feed.push(
       <FeedVeteransCard
-        key={`veteran-${veteranPost.id}-${refreshKey}`}
-        item={veteranPost}
+        key={`veteran-${mergedVeteran.id}-${refreshKey}`}
+        item={mergedVeteran}
         viewerId={viewerId}
-      />
+        refreshKey={refreshKey}
+      />,
     );
   }
   if (latestRfq) {
@@ -59,7 +134,8 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
         item={item}
         viewerId={viewerId}
         priority={i === 0}
-      />
+        refreshKey={refreshKey}
+      />,
     );
   });
 
