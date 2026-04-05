@@ -258,38 +258,18 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
           </span>
         </div>
         
-        <input
-          ref={fileInputRef}
-          accept="image/jpeg,image/png,image/webp,image/gif"
-          className="hidden"
-          multiple
-          type="file"
-          onChange={onFileChange}
-        />
-        
-        <button
-          className="inline-flex items-center justify-center rounded-[var(--bina-r)] border border-dashed border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-xs font-semibold text-[var(--bina-text)] transition-colors hover:border-[var(--bina-or)] hover:text-[var(--bina-or)] disabled:opacity-50"
-          disabled={busy || attachments.length >= MAX_PHOTOS}
-          type="button"
-          onClick={() => {
-            console.log("[feed form] Add photos clicked");
-            fileInputRef.current?.click();
-          }}
-        >
-          {t("addPhotos")}
-          {attachments.length > 0 ? ` (${attachments.length}/${MAX_PHOTOS})` : null}
-        </button>
-
-        {/* DEBUG: Visible file input for testing */}
-        <div className="mt-3 border border-red-500 p-3 rounded">
-          <p className="text-red-400 text-xs mb-2">DEBUG: Select photo here</p>
+        <div className="border-2 border-red-500 p-4 rounded-lg bg-red-500/5">
+          <p className="text-red-500 text-xs mb-3 font-medium">📸 DEBUG: Click below to select photo</p>
+          
           <input
             type="file"
             accept="image/jpeg,image/png,image/webp,image/gif"
             multiple
             onChange={onFileChange}
-            className="text-sm"
+            className="block w-full text-sm text-white file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[var(--bina-or)] file:text-white hover:file:bg-orange-600 cursor-pointer"
           />
+          
+          <p className="text-[10px] text-red-400 mt-3">Use this large red box to test photo selection</p>
         </div>
 
         {attachments.length > 0 ? (
