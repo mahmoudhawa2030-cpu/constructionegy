@@ -43,18 +43,8 @@ export async function toggleFeedPostLike(postId: string): Promise<SocialActionRe
     if (error) return { ok: false, message: t("social.genericError") };
   }
 
-  // Manual fallback in case trigger is missing
-  const { count: likeCount, error: countError } = await supabase
-    .from("feed_post_likes")
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  if (!countError) {
-    await supabase
-      .from("feed_posts")
-      .update({ like_count: likeCount ?? 0 })
-      .eq("id", postId);
-  }
+  // Recount via SECURITY DEFINER RPC — bypasses RLS so any user's action updates the post row
+  await supabase.rpc("feed_post_recount", { p_post_id: postId });
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
@@ -121,18 +111,8 @@ export async function addFeedPostComment(postId: string, rawBody: unknown): Prom
     return { ok: false, message: t("social.genericError") };
   }
 
-  // Manual fallback for comment count (reliable even if trigger missing)
-  const { count: commentCount, error: commentCountError } = await supabase
-    .from("feed_post_comments")
-    .select("*", { count: "exact", head: true })
-    .eq("post_id", postId);
-
-  if (!commentCountError) {
-    await supabase
-      .from("feed_posts")
-      .update({ comment_count: commentCount ?? 0 })
-      .eq("id", postId);
-  }
+  // Recount via SECURITY DEFINER RPC — bypasses RLS so any user's action updates the post row
+  await supabase.rpc("feed_post_recount", { p_post_id: postId });
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);

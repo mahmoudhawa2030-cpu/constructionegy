@@ -1246,6 +1246,10 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: boolean
       }
+      feed_post_recount: {
+        Args: { p_post_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       feed_post_status: "published" | "hidden"
