@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 import { deriveFeedPostTitle } from "@/lib/feed/derive-post-title";
-import { getSupabasePublicEnv } from "@/lib/supabase/env";
 import { isValidUploadedFeedPostImageUrl } from "@/lib/feed/validate-feed-post-image-url";
 
 export async function POST(request: Request) {
@@ -30,10 +29,20 @@ export async function POST(request: Request) {
 
   // Basic validation for image URLs
   if (imageUrls.length > 0) {
-    const publicUrl = getSupabasePublicEnv().url.replace(/\/$/, "");
+    console.log("[feed/posts] received imageUrls:", imageUrls);
     for (const url of imageUrls) {
-      if (typeof url !== "string" || !isValidUploadedFeedPostImageUrl(url, user.id)) {
-        return NextResponse.json({ error: "invalid_images" }, { status: 400 });
+      const isValid = typeof url === "string" && isValidUploadedFeedPostImageUrl(url, user.id);
+      if (!isValid) {
+        console.error("[feed/posts] invalid image URL:", {
+          url,
+          userId: user.id,
+          looksLikeSupabaseUrl: url?.includes("supabase.co") || url?.includes("storage/v1"),
+        });
+        return NextResponse.json({
+          error: "invalid_images",
+          receivedUrls: imageUrls,
+          message: "One or more image URLs failed validation. Check console for details."
+        }, { status: 400 });
       }
     }
   }
@@ -58,5 +67,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "save_failed" }, { status: 500 });
   }
 
+  console.log("[feed/posts] successfully created post:", data.id, "with", imageUrls.length, "images");
   return NextResponse.json({ id: data.id });
 }
