@@ -97,14 +97,18 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
     setClientError(null);
     const list = e.target.files;
     e.target.value = "";
+    console.log("[feed form] file input change - files received:", list?.length || 0, list);
+
     if (!list?.length) return;
 
     const incoming = Array.from(list);
     const next = [...attachments];
     for (const file of incoming) {
+      console.log("[feed form] processing file:", file.name, file.type, file.size);
       if (next.length >= MAX_PHOTOS) break;
       if (!isAllowedFeedImageFile(file)) {
         const allowedType = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
+        console.error("[feed form] file rejected by isAllowedFeedImageFile:", file.name, { allowedType, size: file.size });
         setClientError(allowedType ? t("imageTooLarge") : t("imageTypeInvalid"));
         return;
       }
@@ -114,6 +118,7 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         previewUrl: URL.createObjectURL(file),
       });
     }
+    console.log("[feed form] final attachments count:", next.length);
     setAttachments(next);
   }
 
@@ -133,8 +138,11 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
     if (attachments.length > 0) {
       setUploading(true);
       try {
+        console.log("[feed form] starting upload of", attachments.length, "images");
         urls = await uploadFeedPostImagesFromBrowser(attachments.map((a) => a.file));
+        console.log("[feed form] upload succeeded, got URLs:", urls);
       } catch (err) {
+        console.error("[feed form] upload failed:", err);
         setUploading(false);
         const code = err instanceof Error ? err.message : "";
         if (code === "type") setClientError(t("imageTypeInvalid"));
@@ -158,12 +166,16 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
         body: JSON.stringify({ body, location, imageUrls: urls }),
       });
 
+      console.log("[feed form] API response status:", res.status);
+
       let next: CreateFeedPostState;
       if (res.ok) {
         const json = await res.json();
+        console.log("[feed form] API success response:", json);
         next = { ok: true, id: json.id };
       } else {
         const json = await res.json().catch(() => ({}));
+        console.error("[feed form] API error response:", json);
         next = { ok: false, formError: json.error || "saveFailed" };
       }
       setState(next);
@@ -245,6 +257,7 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
             {t("photoLimitHint", { max: MAX_PHOTOS })}
           </span>
         </div>
+        
         <input
           ref={fileInputRef}
           accept="image/jpeg,image/png,image/webp,image/gif"
@@ -253,15 +266,32 @@ export function FeedPostCreateForm({ defaultLocation }: Props) {
           type="file"
           onChange={onFileChange}
         />
+        
         <button
           className="inline-flex items-center justify-center rounded-[var(--bina-r)] border border-dashed border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-xs font-semibold text-[var(--bina-text)] transition-colors hover:border-[var(--bina-or)] hover:text-[var(--bina-or)] disabled:opacity-50"
           disabled={busy || attachments.length >= MAX_PHOTOS}
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => {
+            console.log("[feed form] Add photos clicked");
+            fileInputRef.current?.click();
+          }}
         >
           {t("addPhotos")}
           {attachments.length > 0 ? ` (${attachments.length}/${MAX_PHOTOS})` : null}
         </button>
+
+        {/* DEBUG: Visible file input for testing */}
+        <div className="mt-3 border border-red-500 p-3 rounded">
+          <p className="text-red-400 text-xs mb-2">DEBUG: Select photo here</p>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            multiple
+            onChange={onFileChange}
+            className="text-sm"
+          />
+        </div>
+
         {attachments.length > 0 ? (
           <ul className="flex flex-wrap gap-2">
             {attachments.map((a, idx) => (
