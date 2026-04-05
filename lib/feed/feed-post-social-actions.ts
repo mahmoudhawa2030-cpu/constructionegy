@@ -121,7 +121,7 @@ export async function addFeedPostComment(postId: string, rawBody: unknown): Prom
     return { ok: false, message: t("social.genericError") };
   }
 
-  // Manual fallback for comment count
+  // Manual fallback for comment count (reliable even if trigger missing)
   const { count: commentCount, error: commentCountError } = await supabase
     .from("feed_post_comments")
     .select("*", { count: "exact", head: true })
