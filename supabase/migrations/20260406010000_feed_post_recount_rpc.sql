@@ -23,3 +23,6 @@ BEGIN
     WHERE id = p_post_id;
 END;
 $$;
+
+REVOKE ALL ON FUNCTION public.feed_post_recount(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.feed_post_recount(uuid) TO authenticated;
