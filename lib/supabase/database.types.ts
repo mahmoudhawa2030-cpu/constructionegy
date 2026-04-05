@@ -1248,7 +1248,7 @@ export type Database = {
       }
       feed_post_recount: {
         Args: { p_post_id: string }
-        Returns: undefined
+        Returns: void
       }
     }
     Enums: {
