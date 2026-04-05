@@ -43,8 +43,21 @@ export async function toggleFeedPostLike(postId: string): Promise<SocialActionRe
     if (error) return { ok: false, message: t("social.genericError") };
   }
 
-  // Recount via SECURITY DEFINER RPC — bypasses RLS so any user's action updates the post row
-  await supabase.rpc("feed_post_recount", { p_post_id: postId });
+  // Robust recount: use RPC first, then fallback to direct count+update (bypasses any RPC/trigger issues)
+  const { error: rpcError } = await supabase.rpc("feed_post_recount", { p_post_id: postId });
+  if (rpcError) {
+    const { count: likeCount, error: countError } = await supabase
+      .from("feed_post_likes")
+      .select("*", { count: "exact", head: true })
+      .eq("post_id", postId);
+
+    if (!countError && likeCount !== null) {
+      await supabase
+        .from("feed_posts")
+        .update({ like_count: likeCount })
+        .eq("id", postId);
+    }
+  }
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
@@ -111,8 +124,22 @@ export async function addFeedPostComment(postId: string, rawBody: unknown): Prom
     return { ok: false, message: t("social.genericError") };
   }
 
-  // Recount via SECURITY DEFINER RPC — bypasses RLS so any user's action updates the post row
-  await supabase.rpc("feed_post_recount", { p_post_id: postId });
+  // Robust recount: use RPC first, then fallback to direct count+update (bypasses any RPC/trigger issues)
+  const { error: rpcError } = await supabase.rpc("feed_post_recount", { p_post_id: postId });
+  if (rpcError) {
+    // Fallback: count comments directly and update feed_posts (works even without RPC/triggers)
+    const { count: commentCount, error: countError } = await supabase
+      .from("feed_post_comments")
+      .select("*", { count: "exact", head: true })
+      .eq("post_id", postId);
+
+    if (!countError && commentCount !== null) {
+      await supabase
+        .from("feed_posts")
+        .update({ comment_count: commentCount })
+        .eq("id", postId);
+    }
+  }
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
