@@ -19,6 +19,9 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Force client components to remount after pull-to-refresh so social state resets
+  const refreshKey = Date.now();
+
   const [postPool, rfqRes, veteranPost, ctx] = await Promise.all([
     fetchFeedPostPool(supabase, FEED_POST_LIMIT, user?.id ?? null),
     supabase
@@ -56,6 +59,7 @@ export default async function HomePage() {
           veteranPost={veteranPost}
           latestRfq={latestRfq}
           viewerId={user?.id ?? null}
+          refreshKey={refreshKey}
         />
       </PullToRefreshScroll>
     </div>

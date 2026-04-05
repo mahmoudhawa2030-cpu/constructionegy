@@ -62,9 +62,10 @@ type Props = {
   item: FeedPostItem;
   viewerId: string | null;
   priority?: boolean;
+  refreshKey?: number;
 };
 
-export function FeedPostCard({ item, viewerId, priority }: Props) {
+export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props) {
   const t = useTranslations("feed");
   const locale = useLocale();
   const av = avStyle(item.user_id);
@@ -183,6 +184,7 @@ export function FeedPostCard({ item, viewerId, priority }: Props) {
         initialSaved={item.savedByViewer}
         viewerId={viewerId}
         layout="linkedin"
+        refreshKey={refreshKey}
       />
     </article>
   );

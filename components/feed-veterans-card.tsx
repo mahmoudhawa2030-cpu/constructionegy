@@ -29,9 +29,10 @@ function relativeAge(iso: string, locale: string) {
 type Props = {
   item: FeedPostItem;
   viewerId: string | null;
+  refreshKey?: number;
 };
 
-export function FeedVeteransCard({ item, viewerId }: Props) {
+export function FeedVeteransCard({ item, viewerId, refreshKey = 0 }: Props) {
   const locale = useLocale();
   const age = relativeAge(item.created_at, locale);
 
@@ -98,6 +99,7 @@ export function FeedVeteransCard({ item, viewerId }: Props) {
         initialSaved={item.savedByViewer}
         viewerId={viewerId}
         variant="veterans"
+        refreshKey={refreshKey}
       />
     </div>
   );

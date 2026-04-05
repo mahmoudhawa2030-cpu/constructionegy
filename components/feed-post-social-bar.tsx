@@ -20,6 +20,7 @@ export type FeedPostSocialBarProps = {
   layout?: "default" | "linkedin";
   /** When true, omit top margin (e.g. embedded on post detail). */
   embed?: boolean;
+  refreshKey?: number;
 };
 
 export function FeedPostSocialBar({
@@ -33,6 +34,7 @@ export function FeedPostSocialBar({
   variant = "default",
   layout = "default",
   embed = false,
+  refreshKey = 0,
 }: FeedPostSocialBarProps) {
   const t = useTranslations("feed");
   const router = useRouter();
@@ -45,12 +47,13 @@ export function FeedPostSocialBar({
   const [copied, setCopied] = useState(false);
   const [commentCount, setCommentCount] = useState(initialCommentCount);
 
+  // Sync with server props when refreshKey changes (pull-to-refresh)
   useEffect(() => {
     setLikeCount(initialLikeCount);
     setLiked(initialLiked);
     setSaved(initialSaved);
     setCommentCount(initialCommentCount);
-  }, [initialLikeCount, initialLiked, initialSaved, initialCommentCount, postId]);
+  }, [initialLikeCount, initialLiked, initialSaved, initialCommentCount, refreshKey]);
 
   const borderVar = variant === "veterans" ? "#604010" : "var(--bina-border)";
 
@@ -176,7 +179,7 @@ export function FeedPostSocialBar({
   const saveClass = `${cellBase} ${saved ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"} ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
 
   return (
-    <div className={rowClass}>
+    <div key={refreshKey} className={rowClass}>
       <button className={likeClass} disabled={pending} onClick={onLike} type="button">
         <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>👍</span>
         {likeCount > 0 ? <span className="tabular-nums">{likeCount}</span> : null}
