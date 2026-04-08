@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MobileChromeMenuDrawer } from "@/components/mobile-chrome-menu-drawer";
@@ -21,30 +22,35 @@ type Props = {
 function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; children: React.ReactNode }) {
   const t = useTranslations("nav");
   const tHome = useTranslations("home");
+  const pathname = usePathname();
   const { openMenu } = useMobileChromeMenu();
   const { unreadTotal } = useMessageNotifications();
+  /** Industry feed uses its own chrome (FeedTopbar); skip hamburger bar to match mobile mock. */
+  const isMobileFeedHome = pathname === "/" || pathname === "";
 
   return (
     <div className="flex min-h-full flex-col">
-      <header
-        className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2 backdrop-blur-md md:hidden"
-        style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
-      >
-        <button
-          aria-label={t("openMenuAria")}
-          className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-[var(--bina-text)] hover:bg-[var(--bina-steel3)]"
-          onClick={openMenu}
-          type="button"
+      {!isMobileFeedHome ? (
+        <header
+          className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2 backdrop-blur-md md:hidden"
+          style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
         >
-          <svg aria-hidden className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
-          </svg>
-        </button>
-        <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-[var(--bina-text)]">
-          {tHome("title")}
-        </span>
-        <span aria-hidden className="inline-block h-10 w-10 shrink-0" />
-      </header>
+          <button
+            aria-label={t("openMenuAria")}
+            className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-[var(--bina-text)] hover:bg-[var(--bina-steel3)]"
+            onClick={openMenu}
+            type="button"
+          >
+            <svg aria-hidden className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
+            </svg>
+          </button>
+          <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-[var(--bina-text)]">
+            {tHome("title")}
+          </span>
+          <span aria-hidden className="inline-block h-10 w-10 shrink-0" />
+        </header>
+      ) : null}
       <header
         className="sticky top-0 z-40 hidden w-full items-center justify-between gap-2 border-b border-bina-border bg-bina-topbar/95 px-3 py-2 backdrop-blur-md md:flex"
         style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
@@ -93,11 +99,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
       <div className="flex min-h-0 flex-1 flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-0 md:pt-0">
         {children}
       </div>
-      <MobileTabBar
-        hasUser={hasUser}
-        homeHref="/"
-        messageUnreadCount={unreadTotal}
-      />
+      <MobileTabBar homeHref="/" />
       <MobileChromeMenuDrawer hasUser={hasUser} />
     </div>
   );

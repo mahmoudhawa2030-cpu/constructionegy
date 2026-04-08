@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 export type FeedRfqItem = {
   id: string;
@@ -24,31 +24,29 @@ function relativeAge(iso: string, locale: string) {
 
 export function FeedRfqCard({ item }: { item: FeedRfqItem }) {
   const locale = useLocale();
-  const isAr = locale === "ar";
+  const t = useTranslations("feed");
   const age = relativeAge(item.created_at, locale);
 
   return (
-    <div className="mb-3 overflow-hidden rounded-[var(--bina-r)] border border-[var(--bina-border)] border-l-[3px] border-l-[var(--bina-blue)] bg-[var(--bina-steel2)]">
-      <div className="px-3 pt-2.5 pb-2">
-        <div className="font-bina-display mb-1 text-[9px] font-bold tracking-wide text-[var(--bina-blue)] uppercase">
-          {isAr ? "طلب عروض · مفتوح للمزايدة" : "RFQ · OPEN FOR QUOTES"}
+    <div className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] border-l-[4px] border-l-[var(--bina-blue)] bg-[var(--bina-steel2)] shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+      <div className="px-4 pt-3 pb-3">
+        <div className="font-bina-display mb-1.5 text-[9px] font-black tracking-wide text-[var(--bina-blue)] uppercase">
+          {t("rfqOpenForQuotes")}
         </div>
-        <h3 className="font-bina-display mb-1 text-[11px] font-bold leading-snug text-[var(--bina-text)]">
-          {item.title}
-        </h3>
-        <div className="mb-2 text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
+        <h3 className="font-bina-display mb-1.5 text-[12px] font-bold leading-snug text-[var(--bina-text)]">{item.title}</h3>
+        <div className="mb-3 text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
           {item.location ? `${item.location} · ` : ""}
-          {isAr ? "موثّق" : "Verified buyer"} · {age}
+          {t("rfqVerifiedBuyer")} · {age}
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <span className="rounded border border-[#1a3a70] bg-[#0a1e3d] px-2 py-1 font-bina-display text-[9px] font-bold text-[#60AFFF] uppercase">
-            {item.quote_count} {isAr ? "عروض" : "QUOTES"}
+        <div className="flex min-h-[44px] items-stretch justify-between gap-3 border-t border-[var(--bina-border)] pt-3">
+          <span className="inline-flex flex-1 items-center justify-center rounded-lg border-2 border-[#3d7eff] bg-transparent px-3 py-2 font-bina-display text-[10px] font-black uppercase tracking-wide text-[#7ab8ff]">
+            {item.quote_count} {t("rfqQuotes")}
           </span>
           <Link
             href="/rfq"
-            className="rounded-[6px] bg-[var(--bina-or)] px-3 py-1.5 font-bina-display text-[9px] font-bold text-white transition-opacity active:opacity-75"
+            className="inline-flex flex-1 items-center justify-center rounded-lg bg-[var(--bina-or)] px-3 py-2 text-center font-bina-display text-[10px] font-black uppercase tracking-wide text-white shadow-[0_2px_10px_rgba(230,120,40,0.4)] transition-opacity active:opacity-85"
           >
-            {isAr ? "قدّم عرضاً" : "Submit Quote"}
+            {t("rfqSubmitQuote")}
           </Link>
         </div>
       </div>

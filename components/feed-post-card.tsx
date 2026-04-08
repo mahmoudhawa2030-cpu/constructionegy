@@ -82,10 +82,11 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
     .join(" · ");
 
   const textBelowFold = bodySnippetAfterTitle(item.title, item.body);
+  const locationTag = item.location?.trim();
 
   return (
-    <article className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[0_1px_3px_rgba(0,0,0,0.35)]">
-      <header className="flex items-start gap-3 px-4 pt-4 pb-1">
+    <article className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_4px_20px_rgba(0,0,0,0.18)]">
+      <header className="flex items-start gap-3 px-4 pt-4 pb-3">
         <Link
           aria-label={t("openAuthorProfileAria", { name: item.author_name })}
           className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--bina-or)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bina-steel2)]"
@@ -128,25 +129,16 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
             {metaLine}
           </p>
         </div>
-        <span className="shrink-0 rounded-md border border-[#4a3016] bg-[#2a1c0c] px-2 py-1 font-bina-display text-[10px] font-bold text-[var(--bina-or)]">
-          {t("postKind")}
-        </span>
       </header>
 
-      <Link
-        aria-label={t("openPostAria", { title: item.title })}
-        className="block"
-        href={`/posts/${item.id}`}
-        prefetch
-      >
-        <div
-          className={
-            thumb
-              ? "relative aspect-video w-full bg-[var(--bina-steel3)]"
-              : "relative flex min-h-[100px] w-full items-center justify-center bg-gradient-to-br from-[var(--bina-steel3)] to-[var(--bina-steel4)] px-6 sm:min-h-[120px]"
-          }
+      {thumb ? (
+        <Link
+          aria-label={t("openPostAria", { title: item.title })}
+          className="block"
+          href={`/posts/${item.id}`}
+          prefetch
         >
-          {thumb ? (
+          <div className="relative aspect-[16/10] w-full bg-[var(--bina-steel3)]">
             <Image
               alt=""
               className="object-cover"
@@ -156,23 +148,38 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
               unoptimized={thumb.startsWith("http")}
               priority={priority}
             />
-          ) : (
-            <span className="select-none text-5xl drop-shadow-sm sm:text-6xl" aria-hidden>
-              📝
-            </span>
-          )}
-        </div>
-      </Link>
-
-      <div className="border-t border-[var(--bina-border)]/80 px-4 py-3">
-        <Link href={`/posts/${item.id}`} prefetch>
-          <h2 className="font-bina-display text-start text-[15px] font-semibold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-4">
-            {item.title}
-          </h2>
+          </div>
         </Link>
-        {textBelowFold ? (
-          <p className="mt-2 line-clamp-5 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
-        ) : null}
+      ) : null}
+
+      <div className="px-4 pb-3 pt-1">
+        <div className="rounded-lg border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-3">
+          <p className="font-bina-display text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--bina-or)]">
+            {t("projectUpdateEyebrow")}
+          </p>
+          <Link href={`/posts/${item.id}`} prefetch>
+            <h2 className="font-bina-display mt-1.5 text-start text-[15px] font-bold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-4">
+              {item.title}
+            </h2>
+          </Link>
+          {textBelowFold ? (
+            <p className="mt-2 line-clamp-4 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
+          ) : null}
+        </div>
+
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          <span className="rounded-md bg-[var(--bina-or)]/18 px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[var(--bina-or)]">
+            {t("tagConcrete")}
+          </span>
+          <span className="rounded-md bg-[#1f4d2c]/50 px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[#6bdc8f]">
+            {t("tagMilestone")}
+          </span>
+          {locationTag ? (
+            <span className="rounded-md bg-[var(--bina-steel4)] px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[var(--bina-muted)]">
+              {locationTag}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <FeedPostSocialBar

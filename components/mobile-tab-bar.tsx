@@ -4,15 +4,11 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
-import { useMessageNotifications } from "@/components/message-notifications-provider";
-
 type Props = {
-  hasUser?: boolean;
   homeHref?: string;
-  messageUnreadCount?: number;
 };
 
-export function MobileTabBar({ hasUser = false, homeHref = "/", messageUnreadCount = 0 }: Props) {
+export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
 
@@ -66,15 +62,15 @@ export function MobileTabBar({ hasUser = false, homeHref = "/", messageUnreadCou
           </Link>
         </li>
 
-        {/* CENTER + FAB */}
+        {/* CENTER + FAB — industry feed: new post (listings from Market / gallery flows) */}
         <li className="flex min-w-0 flex-1 flex-col items-center justify-center">
           <Link
-            href="/listings/new"
-            aria-label={t("newListingAria")}
+            href="/posts/new"
+            aria-label={t("composePostAria")}
             prefetch
-            className="relative -mt-4 flex h-[42px] w-[42px] items-center justify-center rounded-full bg-[var(--bina-or)] text-white shadow-[0_0_0_3px_var(--bina-steel2),0_0_0_5px_var(--bina-or-dk)] transition-transform active:scale-95"
+            className="relative -mt-4 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[var(--bina-or)] text-white shadow-[0_0_0_4px_var(--bina-steel2),0_4px_14px_rgba(230,120,40,0.45)] transition-transform active:scale-95"
           >
-            <span className="text-[22px] font-light leading-none">+</span>
+            <span className="text-[26px] font-light leading-none">+</span>
           </Link>
         </li>
 
@@ -91,11 +87,6 @@ export function MobileTabBar({ hasUser = false, homeHref = "/", messageUnreadCou
           <Link href="/profile" className={cls("/profile")} aria-label={t("profile")} prefetch>
             {icon("👤", "/profile")}
             {label(t("profile"), "/profile")}
-            {messageUnreadCount > 0 && !isActive("/messages") ? (
-              <span className="font-bina-display absolute -right-0 top-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--bina-or)] px-1 text-[9px] font-bold leading-none text-white">
-                {messageUnreadCount > 99 ? "99+" : messageUnreadCount}
-              </span>
-            ) : null}
           </Link>
         </li>
 

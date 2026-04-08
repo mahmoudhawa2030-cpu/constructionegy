@@ -44,7 +44,6 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
     (item: FeedPostItem): FeedPostItem => {
       const p = socialPatch[item.id];
       if (!p) return item;
-      console.log("[feed-tab-strip] merging patch for", item.id, p);
       return {
         ...item,
         likeCount: p.likeCount,
@@ -83,12 +82,9 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
             savedByViewer: row.savedByViewer,
           };
         }
-        if (!cancelled) {
-          console.log("[feed-tab-strip] social bulk response for", rows.length, "posts");
-          setSocialPatch(next);
-        }
-      } catch (err) {
-        console.error("[feed-tab-strip] social bulk failed:", err);
+        if (!cancelled) setSocialPatch(next);
+      } catch {
+        /* ignore */
       }
     })();
 
@@ -115,8 +111,23 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
         ? mergedForYou
         : mergedNear;
 
+  const veteranId = mergedVeteran?.id ?? null;
+  const postsSlot = veteranId ? sorted.filter((p) => p.id !== veteranId) : sorted;
+  const [leadPost, ...restPosts] = postsSlot;
+
   const feed: React.ReactNode[] = [];
 
+  if (leadPost) {
+    feed.push(
+      <FeedPostCard
+        key={`${leadPost.id}-${refreshKey}`}
+        item={leadPost}
+        viewerId={viewerId}
+        priority={true}
+        refreshKey={refreshKey}
+      />,
+    );
+  }
   if (mergedVeteran) {
     feed.push(
       <FeedVeteransCard
@@ -131,13 +142,13 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
     feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
   }
 
-  sorted.forEach((item, i) => {
+  restPosts.forEach((item, i) => {
     feed.push(
       <FeedPostCard
         key={`${item.id}-${refreshKey}`}
         item={item}
         viewerId={viewerId}
-        priority={i === 0}
+        priority={false}
         refreshKey={refreshKey}
       />,
     );
@@ -147,15 +158,22 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-[var(--bina-border)] bg-[var(--bina-steel)] px-3 pb-2 pt-2">
+      <div
+        className="flex gap-1.5 border-b border-[var(--bina-border)] bg-[var(--bina-steel)] px-3 pb-2.5 pt-2"
+        role="tablist"
+        aria-label={t("feedTabsAria")}
+      >
         {tabs.map(({ key, label }) => (
           <button
             key={key}
+            id={`feed-tab-${key}`}
+            role="tab"
+            aria-selected={tab === key}
             onClick={() => setTab(key)}
             type="button"
-            className={`font-bina-display rounded-full px-3 py-[4px] text-[10px] font-semibold uppercase tracking-wide transition-all ${
+            className={`font-bina-display min-h-[32px] rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-all ${
               tab === key
-                ? "bg-[var(--bina-or)] text-white"
+                ? "bg-[var(--bina-or)] text-white shadow-[0_2px_8px_rgba(230,120,40,0.35)]"
                 : "text-[var(--bina-muted)] hover:text-[var(--bina-text)]"
             }`}
           >
