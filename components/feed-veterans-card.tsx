@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
+import { FeedVeteransCornerBanner } from "@/components/feed-veterans-corner-banner";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
 
 function initials(name: string) {
@@ -42,22 +43,7 @@ export function FeedVeteransCard({ item, viewerId, refreshKey = 0 }: Props) {
       className="mb-3 overflow-hidden rounded-[var(--bina-r)] border border-[var(--bina-gold)]"
       style={{ background: "linear-gradient(135deg,#1e1a0e,#242016)" }}
     >
-      <div
-        className="flex items-center gap-1.5 px-3 py-[7px]"
-        style={{ background: "linear-gradient(90deg,#3d2a00,#2e2000)", borderBottom: "1px solid #604010" }}
-      >
-        <span className="text-[13px] text-[var(--bina-gold)]" aria-hidden>
-          ★
-        </span>
-        <span className="font-bina-display text-[10px] font-black uppercase tracking-[1px] text-[var(--bina-gold)]">
-          {t("veteransCornerTitle")}
-        </span>
-        <span className="mx-0.5 text-[var(--bina-gold)] opacity-50">·</span>
-        <span className="font-bina-display text-[10px] font-bold text-[var(--bina-gold)]">{t("veteransWisdom")}</span>
-        <span className="ms-auto rounded border border-[#604010] bg-[#3d2a00] px-1.5 py-px font-bina-display text-[8px] font-bold text-[var(--bina-gold)]">
-          ★ {t("veteranBadge")}
-        </span>
-      </div>
+      <FeedVeteransCornerBanner />
 
       <div className="px-3 pt-3 pb-2">
         <div className="mb-2 flex items-center gap-2">

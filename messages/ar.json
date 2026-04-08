@@ -723,7 +723,32 @@
     "userActionsVerification": "التوثيق",
     "site": "الموقع",
     "overviewRfqModeration": "مراجعة RFQ — المسودات والبنود والعروض",
-    "homepage": "الصفحة الرئيسية (زائر)"
+    "homepage": "الصفحة الرئيسية (زائر)",
+    "veteransCorner": "ركن الخبراء"
+  },
+  "adminVeteransCorner": {
+    "pageTitle": "ركن الخبراء (التغذية)",
+    "lead": "ارفع منشوراً منشوراً في التغذية ليظهر في خانة ركن الخبراء في الصفحة الرئيسية. يُعرض للمستخدمين آخر منشور مُعلَّم فقط. أزل التعليم لإخراجه من تلك الخانة.",
+    "colTitle": "العنوان",
+    "colAuthor": "الكاتب",
+    "colDate": "تاريخ النشر",
+    "colVeterans": "خانة الخبراء",
+    "colLink": "المنشور",
+    "colActions": "إجراءات",
+    "openPost": "فتح",
+    "promote": "تعزيز إلى ركن الخبراء",
+    "demote": "إزالة من ركن الخبراء",
+    "working": "جاري الحفظ…",
+    "empty": "لا منشورات منشورة بعد.",
+    "loadError": "تعذّر تحميل المنشورات.",
+    "badgeVeterans": "مميّز",
+    "badgeStandard": "عادي",
+    "unauthorized": "غير مصرّح لك بتغيير هذا الإعداد.",
+    "invalidId": "معرّف المنشور غير صالح.",
+    "notFound": "المنشور غير موجود.",
+    "notPublished": "يُمكن تمييز المنشورات المنشورة فقط.",
+    "updateFailed": "تعذّر التحديث. حاول مرة أخرى.",
+    "actionError": "فشل الإجراء"
   },
   "adminSubscriptionsPage": {
     "title": "الاشتراكات",

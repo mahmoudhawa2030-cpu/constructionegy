@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { FeedPostCommentForm } from "@/components/feed-post-comment-form";
 import { FeedPostCommentList } from "@/components/feed-post-comment-list";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
+import { FeedVeteransPostDetailShell } from "@/components/feed-veterans-post-detail-shell";
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
 import type { FeedPostItem } from "@/lib/feed/feed-post-types";
 import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
@@ -27,7 +28,9 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
 
   const { data: post, error } = await supabase
     .from("feed_posts")
-    .select("id,user_id,title,body,images,location,view_count,like_count,comment_count,created_at,status")
+    .select(
+      "id,user_id,title,body,images,location,view_count,like_count,comment_count,created_at,status,is_veterans_corner",
+    )
     .eq("id", id)
     .eq("status", "published")
     .maybeSingle();
@@ -70,17 +73,16 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   };
   await enrichFeedPostsSocial(supabase, [socialItem], user?.id ?? null);
 
-  return (
-    <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)] px-3 pb-8 pt-4">
-      <Link
-        href="/"
-        className="font-bina-display mb-4 inline-block text-[11px] font-semibold text-[var(--bina-or)] underline"
-      >
-        ← {t("backToFeed")}
-      </Link>
+  const isVeteransCorner = Boolean(post.is_veterans_corner);
 
-      <p className="font-bina-display mb-1 text-[10px] font-semibold uppercase tracking-wide text-[var(--bina-muted)]">
-        {t("postKind")}
+  const postMain = (
+    <>
+      <p
+        className={`font-bina-display mb-1 text-[10px] font-semibold uppercase tracking-wide ${
+          isVeteransCorner ? "text-[var(--bina-gold)]" : "text-[var(--bina-muted)]"
+        }`}
+      >
+        {isVeteransCorner ? t("veteransCornerTitle") : t("postKind")}
       </p>
       <h1 className="sr-only">{post.title}</h1>
       <p className="font-bina-display mb-4 text-[11px] text-[var(--bina-muted)]">
@@ -112,9 +114,15 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
         initialLiked={socialItem.likedByViewer}
         initialSaved={socialItem.savedByViewer}
         viewerId={user?.id ?? null}
+        variant={isVeteransCorner ? "veterans" : "default"}
       />
 
-      <section id="comments" className="mt-8 scroll-mt-4 border-t border-[var(--bina-border)] pt-6">
+      <section
+        id="comments"
+        className={`mt-8 scroll-mt-4 border-t pt-6 ${
+          isVeteransCorner ? "border-[#604010]" : "border-[var(--bina-border)]"
+        }`}
+      >
         <h2 className="font-bina-display mb-3 text-[12px] font-black uppercase tracking-wide text-[var(--bina-text)]">
           {t("social.commentsHeading")}
         </h2>
@@ -123,6 +131,19 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
         </div>
         <FeedPostCommentList comments={comments} />
       </section>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)] px-3 pb-8 pt-4">
+      <Link
+        href="/"
+        className="font-bina-display mb-4 inline-block text-[11px] font-semibold text-[var(--bina-or)] underline"
+      >
+        ← {t("backToFeed")}
+      </Link>
+
+      {isVeteransCorner ? <FeedVeteransPostDetailShell>{postMain}</FeedVeteransPostDetailShell> : postMain}
     </div>
   );
 }

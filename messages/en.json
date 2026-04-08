@@ -723,7 +723,32 @@
     "userActionsVerification": "Verification",
     "site": "Site",
     "overviewRfqModeration": "RFQ moderation — drafts, items, bids",
-    "homepage": "Homepage (guest)"
+    "homepage": "Homepage (guest)",
+    "veteransCorner": "Veterans Corner"
+  },
+  "adminVeteransCorner": {
+    "pageTitle": "Veterans Corner (feed)",
+    "lead": "Promote a published feed post to appear in the Veterans Corner slot on the home feed. Only one latest veteran post is shown to users. Demote to remove it from that slot.",
+    "colTitle": "Title",
+    "colAuthor": "Author",
+    "colDate": "Published",
+    "colVeterans": "Veterans slot",
+    "colLink": "Live post",
+    "colActions": "Actions",
+    "openPost": "Open",
+    "promote": "Promote to Veterans Corner",
+    "demote": "Remove from Veterans Corner",
+    "working": "Saving…",
+    "empty": "No published feed posts yet.",
+    "loadError": "Could not load feed posts.",
+    "badgeVeterans": "Featured",
+    "badgeStandard": "Standard",
+    "unauthorized": "You are not allowed to change this setting.",
+    "invalidId": "Invalid post id.",
+    "notFound": "Post not found.",
+    "notPublished": "Only published posts can be featured.",
+    "updateFailed": "Could not update. Try again.",
+    "actionError": "Action failed"
   },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",
