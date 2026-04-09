@@ -137,7 +137,8 @@
       "deleteFailed": "Could not delete the post. Try again.",
       "deleteUnauthorized": "Sign in again to delete your post.",
       "forbidden": "You can only change your own posts.",
-      "notFound": "This post could not be found."
+      "notFound": "This post could not be found.",
+      "overflowMenuAria": "Post options"
     },
     "errors": {
       "unauthorized": "Sign in to publish a post.",

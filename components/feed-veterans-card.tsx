@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
 import { ExpertBadge } from "@/components/expert-badge";
+import { FeedPostOwnerOverflowMenu } from "@/components/feed-post-owner-overflow-menu";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { FeedVeteransCornerBanner } from "@/components/feed-veterans-corner-banner";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
@@ -39,16 +40,18 @@ export function FeedVeteransCard({ item, viewerId, refreshKey = 0 }: Props) {
   const t = useTranslations("feed");
   const tExpert = useTranslations("expertVerification");
   const age = relativeAge(item.created_at, locale);
+  const isOwner = viewerId !== null && viewerId === item.user_id;
 
   return (
     <div
-      className="mb-3 overflow-hidden rounded-[var(--bina-r)] border border-[var(--bina-gold)]"
+      className="mb-3 rounded-[var(--bina-r)] border border-[var(--bina-gold)]"
       style={{ background: "linear-gradient(135deg,#1e1a0e,#242016)" }}
     >
       <FeedVeteransCornerBanner />
 
-      <div className="px-3 pt-3 pb-2">
-        <div className="mb-2 flex items-center gap-2">
+      <div className="relative px-3 pt-3 pb-2">
+        {isOwner ? <FeedPostOwnerOverflowMenu className="absolute end-2 top-2 z-20" postId={item.id} /> : null}
+        <div className={`mb-2 flex items-center gap-2 ${isOwner ? "pe-10" : ""}`}>
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-bina-display text-[12px] font-bold"
             style={{ background: "#3d2e0a", color: "var(--bina-gold)" }}

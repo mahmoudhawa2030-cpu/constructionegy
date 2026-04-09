@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostCommentForm } from "@/components/feed-post-comment-form";
 import { FeedPostCommentList } from "@/components/feed-post-comment-list";
-import { FeedPostOwnerActions } from "@/components/feed-post-owner-actions";
+import { FeedPostOwnerOverflowMenu } from "@/components/feed-post-owner-overflow-menu";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { FeedVeteransPostDetailShell } from "@/components/feed-veterans-post-detail-shell";
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
@@ -83,25 +83,26 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
 
   const postMain = (
     <>
-      <p
-        className={`font-bina-display mb-1 text-[10px] font-semibold uppercase tracking-wide ${
-          isVeteransCorner ? "text-[var(--bina-gold)]" : "text-[var(--bina-muted)]"
-        }`}
-      >
-        {isVeteransCorner ? t("veteransCornerTitle") : t("postKind")}
-      </p>
-      <h1 className="sr-only">{post.title}</h1>
-      <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-bina-display text-[11px] text-[var(--bina-muted)]">
-        <span>
-          {author} · {role}
-          {post.location ? ` · ${post.location}` : ""}
-        </span>
-        {isExpert ? (
-          <ExpertBadge ariaLabel={tExpertMeta("badgeAria")} text={tExpertMeta("badgeShort")} />
-        ) : null}
-      </p>
-
-      {isOwner ? <FeedPostOwnerActions postId={post.id} /> : null}
+      <div className={`relative ${isOwner ? "pe-11" : ""}`}>
+        {isOwner ? <FeedPostOwnerOverflowMenu className="absolute end-0 top-0 z-10" postId={post.id} /> : null}
+        <p
+          className={`font-bina-display mb-1 text-[10px] font-semibold uppercase tracking-wide ${
+            isVeteransCorner ? "text-[var(--bina-gold)]" : "text-[var(--bina-muted)]"
+          }`}
+        >
+          {isVeteransCorner ? t("veteransCornerTitle") : t("postKind")}
+        </p>
+        <h1 className="sr-only">{post.title}</h1>
+        <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-bina-display text-[11px] text-[var(--bina-muted)]">
+          <span>
+            {author} · {role}
+            {post.location ? ` · ${post.location}` : ""}
+          </span>
+          {isExpert ? (
+            <ExpertBadge ariaLabel={tExpertMeta("badgeAria")} text={tExpertMeta("badgeShort")} />
+          ) : null}
+        </p>
+      </div>
 
       {thumb ? (
         <div className="relative mb-4 aspect-[16/10] w-full overflow-hidden rounded-[var(--bina-r)] border border-[var(--bina-border)]">

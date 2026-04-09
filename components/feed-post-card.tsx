@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
 import { ExpertBadge } from "@/components/expert-badge";
+import { FeedPostOwnerOverflowMenu } from "@/components/feed-post-owner-overflow-menu";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
 
@@ -85,10 +86,11 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
 
   const textBelowFold = bodySnippetAfterTitle(item.title, item.body);
   const locationTag = item.location?.trim();
+  const isOwner = viewerId !== null && viewerId === item.user_id;
 
   return (
-    <article className="mb-4 overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_4px_20px_rgba(0,0,0,0.18)]">
-      <header className="flex items-start gap-3 px-4 pt-4 pb-3">
+    <article className="mb-4 rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_4px_20px_rgba(0,0,0,0.18)]">
+      <header className="relative flex items-start gap-3 px-4 pt-4 pb-3">
         <Link
           aria-label={t("openAuthorProfileAria", { name: item.author_name })}
           className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--bina-or)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bina-steel2)]"
@@ -102,7 +104,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
             {initials(item.author_name)}
           </span>
         </Link>
-        <div className="min-w-0 flex-1 pt-0.5">
+        <div className={`min-w-0 flex-1 pt-0.5 ${isOwner ? "pe-11" : ""}`}>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <Link
               className="font-bina-display text-[15px] font-semibold leading-tight text-[var(--bina-text)] decoration-[var(--bina-or)]/50 underline-offset-2 hover:text-[var(--bina-or)] hover:underline"
@@ -134,12 +136,13 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
             {metaLine}
           </p>
         </div>
+        {isOwner ? <FeedPostOwnerOverflowMenu className="absolute end-2 top-3 z-20" postId={item.id} /> : null}
       </header>
 
       {thumb ? (
         <Link
           aria-label={t("openPostAria", { title: item.title })}
-          className="block"
+          className="block overflow-hidden"
           href={`/posts/${item.id}`}
           prefetch
         >
