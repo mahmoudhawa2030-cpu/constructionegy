@@ -124,13 +124,29 @@
     "submit": "Publish",
     "submitting": "Publishing…",
     "cancel": "Cancel",
+    "owner": {
+      "pageTitle": "Edit post",
+      "intro": "Update your post text, photos, or location. Your post stays on the feed after saving.",
+      "backToPost": "Back to post",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "editLink": "Edit post",
+      "deleteButton": "Delete post",
+      "deleteDeleting": "Deleting…",
+      "deleteConfirm": "Delete this post permanently? Comments and likes will be removed. This cannot be undone.",
+      "deleteFailed": "Could not delete the post. Try again.",
+      "deleteUnauthorized": "Sign in again to delete your post.",
+      "forbidden": "You can only change your own posts.",
+      "notFound": "This post could not be found."
+    },
     "errors": {
       "unauthorized": "Sign in to publish a post.",
       "saveFailed": "Could not save your post. Try again.",
       "bodyRequired": "Write something in the post body.",
       "bodyTooLong": "Post is too long (max 8000 characters).",
       "locationTooLong": "Location is too long (max 120 characters).",
-      "invalidImages": "Some images could not be accepted. Remove them and try again."
+      "invalidImages": "Some images could not be accepted. Remove them and try again.",
+      "tooManyImages": "Too many photos (max 9)."
     }
   },
   "home": {

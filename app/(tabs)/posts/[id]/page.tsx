@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostCommentForm } from "@/components/feed-post-comment-form";
 import { FeedPostCommentList } from "@/components/feed-post-comment-list";
+import { FeedPostOwnerActions } from "@/components/feed-post-owner-actions";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { FeedVeteransPostDetailShell } from "@/components/feed-veterans-post-detail-shell";
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
@@ -78,6 +79,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   await enrichFeedPostsSocial(supabase, [socialItem], user?.id ?? null);
 
   const isVeteransCorner = Boolean(post.is_veterans_corner);
+  const isOwner = Boolean(user?.id && user.id === post.user_id);
 
   const postMain = (
     <>
@@ -98,6 +100,8 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
           <ExpertBadge ariaLabel={tExpertMeta("badgeAria")} text={tExpertMeta("badgeShort")} />
         ) : null}
       </p>
+
+      {isOwner ? <FeedPostOwnerActions postId={post.id} /> : null}
 
       {thumb ? (
         <div className="relative mb-4 aspect-[16/10] w-full overflow-hidden rounded-[var(--bina-r)] border border-[var(--bina-border)]">
