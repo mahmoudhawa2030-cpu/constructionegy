@@ -375,6 +375,25 @@
     }
   },
   "adminExpertVerifications": {
+    "manual": {
+      "panelTitle": "Manual expert (veteran) grant",
+      "openButton": "Add veteran manually",
+      "closePanel": "Close",
+      "lead": "Search by name, phone, or full user ID and grant verified industry expert status without a pending application — same outcome as approving an application. Banned users cannot be granted. Use this for trusted experts and Veterans Corner eligibility.",
+      "searchLabel": "Find user",
+      "searchAria": "Search users by name or phone",
+      "searchPlaceholder": "Name, phone, or user UUID…",
+      "searchHint": "Type at least 2 characters (or paste a full user ID).",
+      "searching": "Searching…",
+      "noResults": "No users match.",
+      "statusLabel": "Expert status",
+      "statusVerified": "Verified",
+      "statusPending": "Pending",
+      "statusNone": "None",
+      "statusRejected": "Rejected",
+      "grantButton": "Grant verified expert",
+      "granting": "Granting…"
+    },
     "list": {
       "title": "Expert verification — pending",
       "lead": "Users who applied to be recognized as industry experts and are awaiting review.",
@@ -407,7 +426,11 @@
     "actions": {
       "invalidUser": "Invalid user.",
       "approved": "User marked as verified expert.",
-      "rejected": "Expert application rejected."
+      "rejected": "Expert application rejected.",
+      "grantedManually": "User granted verified expert status manually.",
+      "userNotFound": "User not found.",
+      "userBanned": "Banned users cannot be granted expert status.",
+      "alreadyVerified": "This user is already a verified expert."
     }
   },
   "expertVerification": {

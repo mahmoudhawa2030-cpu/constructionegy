@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { AdminManualExpertGrant } from "@/components/admin-manual-expert-grant";
 import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
 
@@ -45,6 +46,8 @@ export default async function AdminExpertVerificationsListPage() {
       <Link className={adminUi.linkBack} href="/admin">
         {t("back")}
       </Link>
+
+      <AdminManualExpertGrant />
 
       <div className={adminUi.widget}>
         <div className={adminUi.widgetHeader}>{t("tableTitle")}</div>
