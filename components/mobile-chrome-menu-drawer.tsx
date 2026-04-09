@@ -96,6 +96,14 @@ export function MobileChromeMenuDrawer({ hasUser }: Props) {
               </Link>
               <Link
                 className={linkClass}
+                href="/profile#expert-verification"
+                onClick={closeMenu}
+                prefetch={true}
+              >
+                {t("expertVerification")}
+              </Link>
+              <Link
+                className={linkClass}
                 href="/profile#business-verification"
                 onClick={closeMenu}
                 prefetch={true}

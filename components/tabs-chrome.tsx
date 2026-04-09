@@ -87,6 +87,15 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
           {hasUser ? (
             <Link
               className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-bina-text hover:bg-bina-steel3"
+              href="/profile#expert-verification"
+              prefetch={true}
+            >
+              {t("expertVerification")}
+            </Link>
+          ) : null}
+          {hasUser ? (
+            <Link
+              className="shrink-0 rounded-md px-2 py-1 text-sm font-medium text-bina-text hover:bg-bina-steel3"
               href="/profile#business-verification"
               prefetch={true}
             >
