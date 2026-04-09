@@ -25,7 +25,8 @@ const NAV_ITEMS: {
     | "rfqModeration"
     | "businessVerifications"
     | "homepage"
-    | "veteransCorner";
+    | "veteransCorner"
+    | "expertVerifications";
 }[] = [
   { href: "/admin", labelKey: "overview" },
   { href: "/admin/listings", labelKey: "listings" },
@@ -35,6 +36,7 @@ const NAV_ITEMS: {
   { href: "/admin/subscription-services", labelKey: "subscriptionServices" },
   { href: "/admin/rfq", labelKey: "rfqModeration" },
   { href: "/admin/verifications", labelKey: "businessVerifications" },
+  { href: "/admin/expert-verifications", labelKey: "expertVerifications" },
   { href: "/admin/homepage", labelKey: "homepage" },
   { href: "/admin/veterans-corner", labelKey: "veteransCorner" },
 ];

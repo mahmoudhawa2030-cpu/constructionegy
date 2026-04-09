@@ -164,6 +164,7 @@
     "forgotPasswordSubmitting": "Sending…",
     "forgotPasswordSuccess": "If an account exists for that email, we sent a reset link. Check your inbox and spam folder.",
     "forgotPasswordBackToLogin": "Back to log in",
+    "forgotPasswordRecoveryFailed": "That reset link did not work (it may have expired, already been used, or was opened in a different browser than the one where you requested the reset). Request a new link below, or use the token-based link from your email if your project uses a custom template.",
     "updatePasswordTitle": "Choose a new password",
     "updatePasswordSubtitle": "Enter and confirm your new password below",
     "updatePasswordLabel": "New password",
@@ -367,6 +368,71 @@
       "invalidUser": "Invalid user.",
       "approved": "User marked as verified.",
       "rejected": "Application rejected."
+    }
+  },
+  "adminExpertVerifications": {
+    "list": {
+      "title": "Expert verification — pending",
+      "lead": "Users who applied to be recognized as industry experts and are awaiting review.",
+      "back": "← Admin overview",
+      "tableTitle": "Pending applications",
+      "colUser": "User",
+      "colReviewed": "Last reviewed",
+      "empty": "No pending expert applications.",
+      "loadError": "Could not load list"
+    },
+    "detail": {
+      "title": "Expert application review",
+      "back": "← Pending list",
+      "editUser": "Edit user (admin)",
+      "statusSection": "Status",
+      "statusLabel": "Expert verification status",
+      "lastNotes": "Admin notes",
+      "decisionHeading": "Decision",
+      "credentialsHeading": "Credentials / summary submitted by user",
+      "noCredentials": "No summary provided.",
+      "actions": {
+        "approve": "Approve as expert",
+        "approving": "Approving…",
+        "reject": "Reject",
+        "rejecting": "Rejecting…",
+        "rejectNotes": "Notes to user (optional)",
+        "rejectPlaceholder": "Reason for rejection…"
+      }
+    },
+    "actions": {
+      "invalidUser": "Invalid user.",
+      "approved": "User marked as verified expert.",
+      "rejected": "Expert application rejected."
+    }
+  },
+  "expertVerification": {
+    "heading": "Industry expert verification",
+    "intro": "Apply to be recognized as a verified industry expert. Our team reviews your background. Approved experts may be featured in Veterans Corner and show an expert badge on the feed.",
+    "statusVerified": "You are a verified industry expert.",
+    "statusPending": "Your application is under review.",
+    "statusRejected": "Your last application was not approved. You can update your details and apply again.",
+    "statusNone": "You have not applied yet. Submit a short summary of your credentials and experience below.",
+    "rejectionPrefix": "Note from the team:",
+    "submittedSummaryLabel": "Your submitted summary",
+    "summaryLabel": "Credentials and experience",
+    "summaryHint": "Describe your background, certifications, or experience (minimum 20 characters, maximum 2000).",
+    "summaryPlaceholder": "Years in the industry, key projects, certifications, specialties…",
+    "applySubmit": "Submit application",
+    "applySubmitting": "Submitting…",
+    "badgeShort": "Expert",
+    "badgeAria": "Verified industry expert",
+    "apply": {
+      "success": "Application submitted. We will review it soon.",
+      "errors": {
+        "unauthorized": "You must be signed in.",
+        "invalid": "Check your summary and try again.",
+        "summaryTooShort": "Please write at least 20 characters about your credentials.",
+        "summaryTooLong": "Summary is too long (max 2000 characters).",
+        "loadFailed": "Could not load your profile. Try again.",
+        "notApplicable": "You cannot submit a new application in your current status.",
+        "saveFailed": "Could not save. Try again."
+      }
     }
   },
   "adminSubscriptions": {
@@ -720,6 +786,7 @@
     "subscriptionServices": "Subscription services",
     "rfqModeration": "RFQ moderation",
     "businessVerifications": "Business verification",
+    "expertVerifications": "Expert verification",
     "userActionsVerification": "Verification",
     "site": "Site",
     "overviewRfqModeration": "RFQ moderation — drafts, items, bids",
@@ -748,7 +815,8 @@
     "notFound": "Post not found.",
     "notPublished": "Only published posts can be featured.",
     "updateFailed": "Could not update. Try again.",
-    "actionError": "Action failed"
+    "actionError": "Action failed",
+    "authorNotExpert": "Only verified industry experts can be featured in Veterans Corner. Approve the author under Expert verification first."
   },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",

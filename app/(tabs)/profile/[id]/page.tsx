@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { ProfileListingsGrid } from "@/components/profile-listings-grid";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
+import { ExpertBadge } from "@/components/expert-badge";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
@@ -37,7 +38,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, user_type, location, avatar_url, created_at, last_seen_at, business_verification_status",
+      "id, full_name, user_type, location, avatar_url, created_at, last_seen_at, business_verification_status, expert_verification_status",
     )
     .eq("id", id)
     .maybeSingle();
@@ -59,6 +60,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const userTypeLabel =
     profile.user_type === "supplier" ? t("userType.supplier") : t("userType.contractor");
   const isVerifiedBusiness = profile.business_verification_status === "verified";
+  const isExpert = profile.expert_verification_status === "verified";
+  const tExpert = await getTranslations("expertVerification");
   const legalCompanyName = isVerifiedBusiness ? await fetchProfileLegalCompanyName(supabase, profile.id) : null;
   const legalCompanyNameTrimmed = legalCompanyName?.trim() ?? "";
 
@@ -97,6 +100,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
             {isVerifiedBusiness ? <VerifiedBadge className="self-center" label={t("verifiedBadgeAria")} /> : null}
+            {isExpert ? (
+              <ExpertBadge ariaLabel={tExpert("badgeAria")} className="self-center" text={tExpert("badgeShort")} />
+            ) : null}
           </div>
           {isVerifiedBusiness && legalCompanyNameTrimmed ? (
             <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300" dir="auto">

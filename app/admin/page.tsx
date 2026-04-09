@@ -60,6 +60,11 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </li>
                 <li>
+                  <Link className={adminUi.objectLink} href="/admin/expert-verifications" prefetch={true}>
+                    {tAdmin("expertVerifications")}
+                  </Link>
+                </li>
+                <li>
                   <Link className={adminUi.objectLink} href="/admin/messages">
                     مراقبة المحادثات
                   </Link>

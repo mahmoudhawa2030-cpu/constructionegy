@@ -25,7 +25,7 @@ export async function setFeedPostVeteransCorner(postId: string, enabled: boolean
   const supabase = await createClient();
   const { data: post, error: fetchErr } = await supabase
     .from("feed_posts")
-    .select("id,status")
+    .select("id,status,user_id")
     .eq("id", id)
     .maybeSingle();
 
@@ -34,6 +34,17 @@ export async function setFeedPostVeteransCorner(postId: string, enabled: boolean
   }
   if (post.status !== "published") {
     return { ok: false, message: t("notPublished") };
+  }
+
+  if (enabled) {
+    const { data: authorProfile } = await supabase
+      .from("profiles")
+      .select("expert_verification_status")
+      .eq("id", post.user_id)
+      .maybeSingle();
+    if (authorProfile?.expert_verification_status !== "verified") {
+      return { ok: false, message: t("authorNotExpert") };
+    }
   }
 
   const { error } = await supabase.from("feed_posts").update({ is_veterans_corner: enabled }).eq("id", id);

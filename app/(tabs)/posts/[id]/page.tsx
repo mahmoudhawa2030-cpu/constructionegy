@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostCommentForm } from "@/components/feed-post-comment-form";
 import { FeedPostCommentList } from "@/components/feed-post-comment-list";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
@@ -42,7 +43,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   const [{ data: profile }, comments] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name,user_type,business_verification_status")
+      .select("full_name,user_type,business_verification_status,expert_verification_status")
       .eq("id", post.user_id)
       .maybeSingle(),
     fetchFeedPostComments(supabase, id),
@@ -51,6 +52,8 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   const author = profile?.full_name ?? "—";
   const role = profile?.user_type ?? "contractor";
   const isPro = profile?.business_verification_status === "verified";
+  const isExpert = profile?.expert_verification_status === "verified";
+  const tExpertMeta = await getTranslations("expertVerification");
   const postImages = normalizeFeedPostImages(post.images);
   const thumb = postImages[0];
 
@@ -66,6 +69,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
     author_name: author,
     author_role: role,
     is_pro: isPro,
+    is_expert: isExpert,
     likeCount: post.like_count ?? 0,
     commentCount: post.comment_count ?? 0,
     likedByViewer: false,
@@ -85,9 +89,14 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
         {isVeteransCorner ? t("veteransCornerTitle") : t("postKind")}
       </p>
       <h1 className="sr-only">{post.title}</h1>
-      <p className="font-bina-display mb-4 text-[11px] text-[var(--bina-muted)]">
-        {author} · {role}
-        {post.location ? ` · ${post.location}` : ""}
+      <p className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 font-bina-display text-[11px] text-[var(--bina-muted)]">
+        <span>
+          {author} · {role}
+          {post.location ? ` · ${post.location}` : ""}
+        </span>
+        {isExpert ? (
+          <ExpertBadge ariaLabel={tExpertMeta("badgeAria")} text={tExpertMeta("badgeShort")} />
+        ) : null}
       </p>
 
       {thumb ? (

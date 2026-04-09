@@ -822,6 +822,10 @@ export type Database = {
           business_verification_reviewed_at: string | null
           business_verification_status: string
           created_at: string
+          expert_credentials_summary: string | null
+          expert_verification_admin_notes: string | null
+          expert_verification_reviewed_at: string | null
+          expert_verification_status: string
           full_name: string
           id: string
           is_admin: boolean
@@ -841,6 +845,10 @@ export type Database = {
           business_verification_reviewed_at?: string | null
           business_verification_status?: string
           created_at?: string
+          expert_credentials_summary?: string | null
+          expert_verification_admin_notes?: string | null
+          expert_verification_reviewed_at?: string | null
+          expert_verification_status?: string
           full_name: string
           id: string
           is_admin?: boolean
@@ -860,6 +868,10 @@ export type Database = {
           business_verification_reviewed_at?: string | null
           business_verification_status?: string
           created_at?: string
+          expert_credentials_summary?: string | null
+          expert_verification_admin_notes?: string | null
+          expert_verification_reviewed_at?: string | null
+          expert_verification_status?: string
           full_name?: string
           id?: string
           is_admin?: boolean

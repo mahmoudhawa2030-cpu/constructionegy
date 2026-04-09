@@ -2,13 +2,16 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { getPublicAppOrigin } from "@/lib/public-app-url";
+import { getPasswordRecoveryRedirectUrl } from "@/lib/public-app-url";
 import { createClient } from "@/lib/supabase/client";
 
 export function ForgotPasswordForm() {
   const t = useTranslations("auth");
+  const searchParams = useSearchParams();
+  const recoveryFailed = searchParams.get("recovery") === "failed";
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -19,7 +22,7 @@ export function ForgotPasswordForm() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
-    const redirectTo = `${getPublicAppOrigin()}/update-password`;
+    const redirectTo = getPasswordRecoveryRedirectUrl();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo,
     });
@@ -40,6 +43,11 @@ export function ForgotPasswordForm() {
         <p className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-400">
           {t("forgotPasswordSubtitle")}
         </p>
+        {recoveryFailed ? (
+          <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-center text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100" role="alert">
+            {t("forgotPasswordRecoveryFailed")}
+          </p>
+        ) : null}
         {sent ? (
           <p className="mt-8 text-center text-sm text-zinc-700 dark:text-zinc-300" role="status">
             {t("forgotPasswordSuccess")}

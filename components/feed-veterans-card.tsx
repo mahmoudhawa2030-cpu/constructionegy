@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
+import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { FeedVeteransCornerBanner } from "@/components/feed-veterans-corner-banner";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
@@ -36,6 +37,7 @@ type Props = {
 export function FeedVeteransCard({ item, viewerId, refreshKey = 0 }: Props) {
   const locale = useLocale();
   const t = useTranslations("feed");
+  const tExpert = useTranslations("expertVerification");
   const age = relativeAge(item.created_at, locale);
 
   return (
@@ -61,6 +63,13 @@ export function FeedVeteransCard({ item, viewerId, refreshKey = 0 }: Props) {
               <span className="rounded border border-[#604010] bg-[#3d2a00] px-1 py-px font-bina-display text-[8px] font-bold text-[var(--bina-gold)]">
                 ★ {t("veteranBadge")}
               </span>
+              {item.is_expert ? (
+                <ExpertBadge
+                  ariaLabel={tExpert("badgeAria")}
+                  className="!text-[8px] !px-1 !py-px"
+                  text={tExpert("badgeShort")}
+                />
+              ) : null}
             </div>
             <div className="font-bina-display text-[9px] text-[var(--bina-muted)]" suppressHydrationWarning>
               {item.author_role}

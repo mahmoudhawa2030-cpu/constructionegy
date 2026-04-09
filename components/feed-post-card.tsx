@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 
+import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
 
@@ -67,6 +68,7 @@ type Props = {
 
 export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props) {
   const t = useTranslations("feed");
+  const tExpert = useTranslations("expertVerification");
   const locale = useLocale();
   const av = avStyle(item.user_id);
   const age = relativeAge(item.created_at, locale);
@@ -120,6 +122,9 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
                 </span>
                 PRO
               </span>
+            ) : null}
+            {item.is_expert ? (
+              <ExpertBadge ariaLabel={tExpert("badgeAria")} text={tExpert("badgeShort")} />
             ) : null}
           </div>
           <p

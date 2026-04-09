@@ -10,6 +10,7 @@ export type FeedPostItem = {
   author_name: string;
   author_role: string;
   is_pro: boolean;
+  is_expert: boolean;
   likeCount: number;
   commentCount: number;
   likedByViewer: boolean;
