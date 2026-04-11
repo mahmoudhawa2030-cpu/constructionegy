@@ -117,7 +117,14 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
   const feed: React.ReactNode[] = [];
 
-  // Mobile homepage: exactly 3 cards in this order (1. Post, 2. RFQ, 3. Veterans Corner) to match design.
+  // Mobile homepage: RFQ first, then user post card, then Veterans Corner (exact order requested).
+  // RFQ card always appears first (real or empty state)
+  if (latestRfq) {
+    feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
+  } else {
+    feed.push(<FeedRfqEmptyCard key="rfq-empty" />);
+  }
+
   if (leadPost) {
     feed.push(
       <FeedPostCard
@@ -130,14 +137,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
     );
   }
 
-  // RFQ card always appears as the second card (real or empty state)
-  if (latestRfq) {
-    feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
-  } else {
-    feed.push(<FeedRfqEmptyCard key="rfq-empty" />);
-  }
-
-  // Veterans Corner as the third card
+  // Veterans Corner remains the third card
   if (mergedVeteran) {
     feed.push(
       <FeedVeteransCard
