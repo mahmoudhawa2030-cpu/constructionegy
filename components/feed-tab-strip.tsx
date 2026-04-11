@@ -117,7 +117,18 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
   const feed: React.ReactNode[] = [];
 
-  // Veterans Corner + RFQ stay above the fold (featured slots), then tab-sorted posts.
+  // Match mobile mock: (1) lead post, (2) Veterans Corner, (3) RFQ teaser, (4) remaining posts.
+  if (leadPost) {
+    feed.push(
+      <FeedPostCard
+        key={`${leadPost.id}-${refreshKey}`}
+        item={leadPost}
+        viewerId={viewerId}
+        priority={true}
+        refreshKey={refreshKey}
+      />,
+    );
+  }
   if (mergedVeteran) {
     feed.push(
       <FeedVeteransCard
@@ -130,17 +141,6 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
   }
   if (latestRfq) {
     feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
-  }
-  if (leadPost) {
-    feed.push(
-      <FeedPostCard
-        key={`${leadPost.id}-${refreshKey}`}
-        item={leadPost}
-        viewerId={viewerId}
-        priority={true}
-        refreshKey={refreshKey}
-      />,
-    );
   }
 
   restPosts.forEach((item, i) => {

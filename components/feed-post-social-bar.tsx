@@ -141,7 +141,7 @@ export function FeedPostSocialBar({
         >
           <span className="text-[11px]">👏</span>
           {likeCount > 0 ? <span>{likeCount}</span> : null}
-          {isAr ? "إعجاب" : "Like"}
+          {t("social.claps")}
         </button>
         <Link
           href={commentHref}
@@ -151,14 +151,14 @@ export function FeedPostSocialBar({
         >
           <span className="text-[11px]">💬</span>
           {commentCount > 0 ? <span>{commentCount}</span> : null}
-          {isAr ? "تعليق" : "Comment"}
+          {t("social.comments")}
         </Link>
         <Link
           href={commentHref}
           prefetch
           className="flex flex-1 items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-bold text-[var(--bina-or)]"
         >
-          {isAr ? "اسأل المرشد" : "Ask Mentor"}
+          {t("askMentor")}
         </Link>
       </div>
     );
