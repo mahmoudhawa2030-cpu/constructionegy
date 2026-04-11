@@ -117,8 +117,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
 
   const feed: React.ReactNode[] = [];
 
-  // 3-card mobile homepage structure (posts + veteran posts + rfq) per design.
-  // Lead regular post, dedicated veterans corner slot (always shown if data or placeholder), then RFQ.
+  // Mobile homepage: exactly 3 cards in this order (1. Post, 2. RFQ, 3. Veterans Corner) to match design.
   if (leadPost) {
     feed.push(
       <FeedPostCard
@@ -131,7 +130,14 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
     );
   }
 
-  // Always render veterans slot to guarantee 3-card top structure on mobile (use placeholder if no veteranPost)
+  // RFQ card always appears as the second card (real or empty state)
+  if (latestRfq) {
+    feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
+  } else {
+    feed.push(<FeedRfqEmptyCard key="rfq-empty" />);
+  }
+
+  // Veterans Corner as the third card
   if (mergedVeteran) {
     feed.push(
       <FeedVeteransCard
@@ -141,16 +147,6 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
         refreshKey={refreshKey}
       />,
     );
-  } else {
-    // TODO: Add FeedVeteransEmptyCard or similar placeholder in future if design requires it.
-    // For now, skip to keep exact current behavior while ensuring RFQ always appears as 3rd card.
-  }
-
-  // Always show RFQ slot (real card or empty fallback) as the 3rd card
-  if (latestRfq) {
-    feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
-  } else {
-    feed.push(<FeedRfqEmptyCard key="rfq-empty" />);
   }
 
   restPosts.forEach((item, i) => {
