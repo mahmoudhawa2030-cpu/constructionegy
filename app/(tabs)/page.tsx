@@ -28,7 +28,7 @@ export default async function HomePage() {
     supabase
       .from("rfq_drafts")
       .select("id,title,created_at,metadata")
-      .eq("status", "open")
+      .in("status", ["open_for_bids", "submitted"])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle(),
