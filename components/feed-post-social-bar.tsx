@@ -134,29 +134,29 @@ export function FeedPostSocialBar({
           type="button"
           disabled={pending}
           onClick={onLike}
-          className={`flex flex-1 items-center justify-center gap-1 border-r py-[7px] font-bina-display text-[9px] font-semibold transition-opacity disabled:opacity-50 ${
+          className={`flex min-h-[36px] flex-1 items-center justify-center gap-0.5 border-r py-1 font-bina-display text-[8px] font-semibold transition-opacity disabled:opacity-50 ${
             liked ? "text-[var(--bina-gold)]" : "text-[var(--bina-muted)]"
           }`}
           style={{ borderColor: borderVar }}
         >
-          <span className="text-[11px]">👏</span>
+          <span className="text-[10px] leading-none">👏</span>
           {likeCount > 0 ? <span>{likeCount}</span> : null}
           {t("social.claps")}
         </button>
         <Link
           href={commentHref}
           prefetch
-          className="flex flex-1 items-center justify-center gap-1 border-r py-[7px] font-bina-display text-[9px] font-semibold text-[var(--bina-muted)]"
+          className="flex min-h-[36px] flex-1 items-center justify-center gap-0.5 border-r py-1 font-bina-display text-[8px] font-semibold text-[var(--bina-muted)]"
           style={{ borderColor: borderVar }}
         >
-          <span className="text-[11px]">💬</span>
+          <span className="text-[10px] leading-none">💬</span>
           {commentCount > 0 ? <span>{commentCount}</span> : null}
           {t("social.comments")}
         </Link>
         <Link
           href={commentHref}
           prefetch
-          className="flex flex-1 items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-bold text-[var(--bina-or)]"
+          className="flex min-h-[36px] flex-1 items-center justify-center gap-0.5 py-1 font-bina-display text-[8px] font-bold text-[var(--bina-or)]"
         >
           {t("askMentor")}
         </Link>
@@ -166,12 +166,12 @@ export function FeedPostSocialBar({
 
   const cellBase =
     layout === "linkedin"
-      ? "flex min-h-[48px] flex-1 items-center justify-center gap-1.5 px-1 font-bina-display text-[11px] font-semibold transition-colors active:bg-black/[0.04] disabled:opacity-50 dark:active:bg-white/[0.06] sm:text-xs"
+      ? "flex min-h-[40px] flex-1 items-center justify-center gap-1 px-0.5 font-bina-display text-[10px] font-semibold transition-colors active:bg-black/[0.04] disabled:opacity-50 dark:active:bg-white/[0.06] sm:min-h-[42px] sm:text-[11px]"
       : "flex flex-1 items-center justify-center gap-1 py-[7px] font-bina-display text-[9px] font-semibold transition-opacity disabled:opacity-50";
 
   const rowClass =
     layout === "linkedin"
-      ? "flex min-h-[48px] divide-x divide-[var(--bina-border)] border-t border-[var(--bina-border)]"
+      ? "flex min-h-[40px] divide-x divide-[var(--bina-border)] border-t border-[var(--bina-border)] sm:min-h-[42px]"
       : `flex divide-x divide-[var(--bina-border)] border-t border-[var(--bina-border)] ${embed ? "" : "mt-1"}`;
 
   const likeClass = `${cellBase} ${liked ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"} ${layout === "linkedin" ? "hover:bg-black/[0.03] dark:hover:bg-white/[0.04]" : ""}`;
@@ -181,21 +181,21 @@ export function FeedPostSocialBar({
   return (
     <div className={rowClass}>
       <button className={likeClass} disabled={pending} onClick={onLike} type="button">
-        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>👍</span>
+        <span className={layout === "linkedin" ? "text-[13px] leading-none" : "text-[11px]"}>👍</span>
         {likeCount > 0 ? <span className="tabular-nums">{likeCount}</span> : null}
         <span>{isAr ? "إعجاب" : "Like"}</span>
       </button>
       <Link className={mutedCell} href={commentHref} prefetch>
-        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>💬</span>
+        <span className={layout === "linkedin" ? "text-[13px] leading-none" : "text-[11px]"}>💬</span>
         {commentCount > 0 ? <span className="tabular-nums">{commentCount}</span> : null}
         <span>{isAr ? "تعليق" : "Comment"}</span>
       </Link>
       <button className={`${mutedCell} relative`} onClick={onShare} type="button">
-        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>📤</span>
+        <span className={layout === "linkedin" ? "text-[13px] leading-none" : "text-[11px]"}>📤</span>
         <span>{copied ? t("social.linkCopied") : isAr ? "مشاركة" : "Share"}</span>
       </button>
       <button className={saveClass} disabled={pending} onClick={onSave} type="button">
-        <span className={layout === "linkedin" ? "text-[15px] leading-none" : "text-[11px]"}>📌</span>
+        <span className={layout === "linkedin" ? "text-[13px] leading-none" : "text-[11px]"}>📌</span>
         <span>{isAr ? "حفظ" : "Save"}</span>
       </button>
     </div>

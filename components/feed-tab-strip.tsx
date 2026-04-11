@@ -160,7 +160,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
   return (
     <div>
       <div
-        className="flex gap-1.5 border-b border-[var(--bina-border)] bg-[var(--bina-steel)] px-3 pb-2.5 pt-2"
+        className="flex gap-1 border-b border-[var(--bina-border)] bg-[var(--bina-steel)] px-2.5 pb-2 pt-1.5 max-[380px]:px-2"
         role="tablist"
         aria-label={t("feedTabsAria")}
       >
@@ -172,7 +172,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
             aria-selected={tab === key}
             onClick={() => setTab(key)}
             type="button"
-            className={`font-bina-display min-h-[32px] rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-wide transition-all ${
+            className={`font-bina-display min-h-[28px] flex-1 rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide transition-all max-[380px]:px-2 max-[380px]:text-[8px] ${
               tab === key
                 ? "bg-[var(--bina-or)] text-white shadow-[0_2px_8px_rgba(230,120,40,0.35)]"
                 : "text-[var(--bina-muted)] hover:text-[var(--bina-text)]"
@@ -183,7 +183,7 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
         ))}
       </div>
 
-      <div className="px-3 pb-8 pt-3">
+      <div className="px-2.5 pb-6 pt-2 max-[380px]:px-2 sm:px-3">
         {feed}
         {!hasAny ? (
           <div className="flex flex-col items-center gap-4 py-10 text-center">

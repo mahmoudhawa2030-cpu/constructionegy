@@ -8,18 +8,18 @@ export function FeedVeteransCornerBanner() {
 
   return (
     <div
-      className="flex items-center gap-1.5 px-3 py-[7px]"
+      className="flex min-h-[34px] flex-wrap items-center gap-1 px-2.5 py-1.5 max-[380px]:px-2"
       style={{ background: "linear-gradient(90deg,#3d2a00,#2e2000)", borderBottom: "1px solid #604010" }}
     >
-      <span className="text-[13px] text-[var(--bina-gold)]" aria-hidden>
+      <span className="text-[12px] leading-none text-[var(--bina-gold)]" aria-hidden>
         ★
       </span>
-      <span className="font-bina-display text-[10px] font-black uppercase tracking-[1px] text-[var(--bina-gold)]">
+      <span className="font-bina-display text-[9px] font-black uppercase tracking-[0.06em] text-[var(--bina-gold)]">
         {t("veteransCornerTitle")}
       </span>
       <span className="mx-0.5 text-[var(--bina-gold)] opacity-50">·</span>
-      <span className="font-bina-display text-[10px] font-bold text-[var(--bina-gold)]">{t("veteransWisdom")}</span>
-      <span className="ms-auto rounded border border-[#604010] bg-[#3d2a00] px-1.5 py-px font-bina-display text-[8px] font-bold text-[var(--bina-gold)]">
+      <span className="font-bina-display text-[9px] font-bold leading-tight text-[var(--bina-gold)]">{t("veteransWisdom")}</span>
+      <span className="ms-auto shrink-0 rounded border border-[#604010] bg-[#3d2a00] px-1 py-px font-bina-display text-[7px] font-bold text-[var(--bina-gold)]">
         ★ {t("veteranBadge")}
       </span>
     </div>

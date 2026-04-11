@@ -89,8 +89,8 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
   const isOwner = viewerId !== null && viewerId === item.user_id;
 
   return (
-    <article className="mb-4 rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_4px_20px_rgba(0,0,0,0.18)]">
-      <header className="relative flex items-start gap-3 px-4 pt-4 pb-3">
+    <article className="mb-3 max-w-full overflow-hidden rounded-[12px] border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_3px_14px_rgba(0,0,0,0.16)]">
+      <header className="relative flex items-start gap-2 px-3 pt-3 pb-2 max-[380px]:px-2.5">
         <Link
           aria-label={t("openAuthorProfileAria", { name: item.author_name })}
           className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--bina-or)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bina-steel2)]"
@@ -98,16 +98,16 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
           prefetch
         >
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-full font-bina-display text-sm font-bold tracking-tight"
+            className="flex h-10 w-10 items-center justify-center rounded-full font-bina-display text-xs font-bold tracking-tight"
             style={{ background: av.bg, color: av.color }}
           >
             {initials(item.author_name)}
           </span>
         </Link>
-        <div className={`min-w-0 flex-1 pt-0.5 ${isOwner ? "pe-11" : ""}`}>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <div className={`min-w-0 flex-1 pt-px ${isOwner ? "pe-10" : ""}`}>
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <Link
-              className="font-bina-display text-[15px] font-semibold leading-tight text-[var(--bina-text)] decoration-[var(--bina-or)]/50 underline-offset-2 hover:text-[var(--bina-or)] hover:underline"
+              className="font-bina-display text-[14px] font-semibold leading-tight text-[var(--bina-text)] decoration-[var(--bina-or)]/50 underline-offset-2 hover:text-[var(--bina-or)] hover:underline"
               href={profileHref}
               prefetch
             >
@@ -116,10 +116,10 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
             {item.is_pro ? (
               <span
                 aria-label={t("proBadgeAria")}
-                className="inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-bina-display text-[10px] font-bold leading-none text-white"
+                className="inline-flex items-center gap-0.5 rounded px-1 py-px font-bina-display text-[9px] font-bold leading-none text-white"
                 style={{ background: "#0a66c2" }}
               >
-                <span aria-hidden className="text-[9px]">
+                <span aria-hidden className="text-[8px]">
                   ✓
                 </span>
                 PRO
@@ -130,13 +130,13 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
             ) : null}
           </div>
           <p
-            className="mt-1 font-bina-display text-[12px] leading-snug text-[var(--bina-muted)]"
+            className="mt-0.5 font-bina-display text-[11px] leading-snug text-[var(--bina-muted)]"
             suppressHydrationWarning
           >
             {metaLine}
           </p>
         </div>
-        {isOwner ? <FeedPostOwnerOverflowMenu className="absolute end-2 top-3 z-20" postId={item.id} /> : null}
+        {isOwner ? <FeedPostOwnerOverflowMenu className="absolute end-1.5 top-2.5 z-20" postId={item.id} /> : null}
       </header>
 
       {thumb ? (
@@ -146,12 +146,12 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
           href={`/posts/${item.id}`}
           prefetch
         >
-          <div className="relative aspect-[16/10] w-full bg-[var(--bina-steel3)]">
+          <div className="relative aspect-[5/3] w-full max-h-[220px] bg-[var(--bina-steel3)] sm:max-h-[260px]">
             <Image
               alt=""
               className="object-cover"
               fill
-              sizes="(max-width: 768px) 100vw, 42rem"
+              sizes="(max-width: 768px) 100vw, 28rem"
               src={thumb}
               unoptimized={thumb.startsWith("http")}
               priority={priority}
@@ -160,30 +160,30 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
         </Link>
       ) : null}
 
-      <div className="px-4 pb-3 pt-1">
-        <div className="rounded-lg border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-3">
-          <p className="font-bina-display text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--bina-or)]">
+      <div className="px-3 pb-2.5 pt-1 max-[380px]:px-2.5">
+        <div className="rounded-[10px] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-2.5 py-2">
+          <p className="font-bina-display text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--bina-or)]">
             {t("projectUpdateEyebrow")}
           </p>
           <Link href={`/posts/${item.id}`} prefetch>
-            <h2 className="font-bina-display mt-1.5 text-start text-[15px] font-bold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-4">
+            <h2 className="font-bina-display mt-1 text-start text-[14px] font-bold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-3">
               {item.title}
             </h2>
           </Link>
           {textBelowFold ? (
-            <p className="mt-2 line-clamp-4 text-start text-[13px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
+            <p className="mt-1.5 line-clamp-3 text-start text-[12px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
           ) : null}
         </div>
 
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          <span className="rounded-md bg-[var(--bina-or)]/18 px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[var(--bina-or)]">
+        <div className="mt-2 flex flex-wrap gap-1">
+          <span className="rounded-md bg-[var(--bina-or)]/18 px-1.5 py-0.5 font-bina-display text-[8px] font-bold uppercase tracking-wide text-[var(--bina-or)]">
             {t("tagConcrete")}
           </span>
-          <span className="rounded-md bg-[#1f4d2c]/50 px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[#6bdc8f]">
+          <span className="rounded-md bg-[#1f4d2c]/50 px-1.5 py-0.5 font-bina-display text-[8px] font-bold uppercase tracking-wide text-[#6bdc8f]">
             {t("tagMilestone")}
           </span>
           {locationTag ? (
-            <span className="rounded-md bg-[var(--bina-steel4)] px-2 py-1 font-bina-display text-[9px] font-bold uppercase tracking-wide text-[var(--bina-muted)]">
+            <span className="rounded-md bg-[var(--bina-steel4)] px-1.5 py-0.5 font-bina-display text-[8px] font-bold uppercase tracking-wide text-[var(--bina-muted)]">
               {locationTag}
             </span>
           ) : null}
