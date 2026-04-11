@@ -74,15 +74,15 @@ export async function fetchLatestVeteransPost(
   client: SupabaseClient<Database>,
   viewerId: string | null = null,
 ): Promise<FeedPostItem | null> {
-  const { data: row, error } = await client
+  const { data: rows, error } = await client
     .from("feed_posts")
     .select("*")
     .eq("status", "published")
     .eq("is_veterans_corner", true)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
 
+  const row = rows?.[0];
   if (error || !row) return null;
   const items = await attachProfiles(client, [row]);
   const item = items[0];
