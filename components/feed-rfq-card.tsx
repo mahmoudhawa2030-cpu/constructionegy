@@ -60,7 +60,7 @@ export function FeedRfqEmptyCard() {
     <div className="mb-3 max-w-full overflow-hidden rounded-[12px] border border-[var(--bina-border)] border-l-[3px] border-l-[var(--bina-blue)] bg-[var(--bina-steel2)] shadow-[0_3px_14px_rgba(0,0,0,0.12)]">
       <div className="px-3 pt-2.5 pb-2.5 max-[380px]:px-2.5">
         <div className="font-bina-display mb-1 text-[8px] font-black tracking-wide text-[var(--bina-blue)] uppercase">
-          RFQ
+          {t("rfqOpenForQuotes")}
         </div>
         <h3 className="font-bina-display mb-2 text-[13px] font-bold leading-snug text-[var(--bina-text)]">
           {t("rfqNoOpenYet")}
