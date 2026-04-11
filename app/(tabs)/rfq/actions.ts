@@ -170,6 +170,7 @@ export async function submitRfqDraftForBidsAction(
     return { ok: false, message: t("publishFailed") };
   }
 
+  revalidatePath("/");
   revalidatePath("/rfq");
   revalidatePath("/rfq/opportunities");
   revalidatePath(`/rfq/opportunities/${parsedId.data}`);

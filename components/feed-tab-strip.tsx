@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { FeedPostCard } from "@/components/feed-post-card";
 import type { FeedRfqItem } from "@/components/feed-rfq-card";
-import { FeedRfqCard } from "@/components/feed-rfq-card";
+import { FeedRfqCard, FeedRfqEmptyCard } from "@/components/feed-rfq-card";
 import { FeedSocialResyncContext } from "@/components/feed-social-resync-context";
 import { FeedVeteransCard } from "@/components/feed-veterans-card";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
@@ -139,8 +139,12 @@ export function FeedTabStrip({ posts, forYouPosts, nearMePosts, veteranPost, lat
       />,
     );
   }
+
+  // Always show an RFQ slot (real card or empty fallback) to guarantee 3-card structure
   if (latestRfq) {
     feed.push(<FeedRfqCard key={`rfq-${latestRfq.id}`} item={latestRfq} />);
+  } else {
+    feed.push(<FeedRfqEmptyCard key="rfq-empty" />);
   }
 
   restPosts.forEach((item, i) => {

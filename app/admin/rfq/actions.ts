@@ -81,6 +81,7 @@ export async function adminUpdateRfqDraftStatusAction(
     return { ok: false, message: error.message };
   }
 
+  revalidatePath("/");
   revalidatePath("/admin/rfq");
   revalidatePath(`/admin/rfq/${draftId.data}`);
   revalidatePath("/rfq");
