@@ -842,7 +842,7 @@
   },
   "adminVeteransCorner": {
     "pageTitle": "Veterans Corner (feed)",
-    "lead": "Promote a published feed post to the Veterans Corner slot on the home feed (order: regular post, then Veterans, then RFQ). Only the latest promoted post is shown. Demote to remove it. The expert badge still appears only when the author is verified.",
+    "lead": "This list shows only published posts by verified industry experts. Pick one to feature in the Veterans Corner slot on the home feed (order: regular post, then Veterans, then RFQ). Only the latest featured post is shown. Demote to remove it.",
     "colTitle": "Title",
     "colAuthor": "Author",
     "colDate": "Published",
@@ -853,7 +853,7 @@
     "promote": "Promote to Veterans Corner",
     "demote": "Remove from Veterans Corner",
     "working": "Saving…",
-    "empty": "No published feed posts yet.",
+    "empty": "No published posts from verified experts yet. Approve experts under Expert verification, then they can publish feed posts that appear here.",
     "loadError": "Could not load feed posts.",
     "badgeVeterans": "Featured",
     "badgeStandard": "Standard",
@@ -862,7 +862,8 @@
     "notFound": "Post not found.",
     "notPublished": "Only published posts can be featured.",
     "updateFailed": "Could not update. Try again.",
-    "actionError": "Action failed"
+    "actionError": "Action failed",
+    "authorNotExpert": "Only posts by verified industry experts can be featured. Approve the author under Expert verification first."
   },
   "adminSubscriptionsPage": {
     "title": "Subscriptions",

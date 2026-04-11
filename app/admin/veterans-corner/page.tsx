@@ -7,19 +7,43 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
+type VeteransCornerPostRow = {
+  id: string;
+  title: string;
+  created_at: string;
+  is_veterans_corner: boolean;
+  user_id: string;
+};
+
 export default async function AdminVeteransCornerPage() {
   await requireAdmin();
   const t = await getTranslations("adminVeteransCorner");
   const supabase = await createClient();
 
-  // Avoid PostgREST nested embed (`profiles(...)`) — it fails if the FK isn’t in the API schema
-  // cache (common after migrations) and surfaces as a generic query error on Vercel.
-  const { data: posts, error: postsError } = await supabase
-    .from("feed_posts")
-    .select("id,title,created_at,is_veterans_corner,user_id")
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(100);
+  // Only posts by verified industry experts (“veterans”) — not the whole site feed.
+  const { data: expertRows, error: expertsError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("expert_verification_status", "verified");
+
+  const expertIds = [...new Set((expertRows ?? []).map((r) => r.id).filter(Boolean))];
+
+  let posts: VeteransCornerPostRow[] | null = null;
+  let postsError: (typeof expertsError) | null = null;
+
+  if (!expertsError && expertIds.length === 0) {
+    posts = [];
+  } else if (!expertsError) {
+    const res = await supabase
+      .from("feed_posts")
+      .select("id,title,created_at,is_veterans_corner,user_id")
+      .eq("status", "published")
+      .in("user_id", expertIds)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    postsError = res.error;
+    posts = (res.data ?? []) as VeteransCornerPostRow[];
+  }
 
   const userIds = posts?.length
     ? [...new Set(posts.map((p) => p.user_id).filter(Boolean))]
@@ -30,7 +54,7 @@ export default async function AdminVeteransCornerPage() {
       ? await supabase.from("profiles").select("id,full_name").in("id", userIds)
       : { data: [] as { id: string; full_name: string | null }[], error: null };
 
-  const error = postsError ?? profilesError;
+  const error = expertsError ?? postsError ?? profilesError;
 
   const nameByUserId = new Map((profiles ?? []).map((p) => [p.id, p.full_name?.trim() || ""]));
 
