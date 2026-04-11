@@ -8,7 +8,6 @@ import { useMessageNotifications } from "@/components/message-notifications-prov
 
 export function FeedTopbar() {
   const t = useTranslations("nav");
-  const tFeed = useTranslations("feed");
   const { openMenu } = useMobileChromeMenu();
   const { unreadTotal } = useMessageNotifications();
 
@@ -17,10 +16,7 @@ export function FeedTopbar() {
       className="sticky top-0 z-30 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)]"
       style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
     >
-      <p className="px-2.5 pt-1.5 text-center font-bina-display text-[8px] font-black uppercase tracking-[0.2em] text-[var(--bina-or)] max-[380px]:px-2">
-        {tFeed("industryFeed")}
-      </p>
-      <div className="flex items-center justify-between px-2.5 py-1.5 max-[380px]:px-2 sm:px-3">
+      <div className="flex items-center justify-between px-2.5 py-2 max-[380px]:px-2 sm:px-3">
         <div className="flex min-w-0 flex-1 items-center gap-1.5">
           <button
             type="button"
