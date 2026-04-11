@@ -90,7 +90,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
 
   return (
     <article className="mb-3 max-w-full overflow-hidden rounded-[12px] border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_3px_14px_rgba(0,0,0,0.16)]">
-      <header className="relative flex items-start gap-2 px-3 pt-3 pb-2 max-[380px]:px-2.5">
+      <header className="relative flex items-start gap-2 px-3 pt-2 pb-1.5 max-[380px]:px-2.5">
         <Link
           aria-label={t("openAuthorProfileAria", { name: item.author_name })}
           className="shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--bina-or)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bina-steel2)]"
@@ -146,7 +146,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
           href={`/posts/${item.id}`}
           prefetch
         >
-          <div className="relative aspect-[5/3] w-full max-h-[220px] bg-[var(--bina-steel3)] sm:max-h-[260px]">
+          <div className="relative aspect-[5/3] w-full max-h-[110px] bg-[var(--bina-steel3)] sm:max-h-[130px]">
             <Image
               alt=""
               className="object-cover"
@@ -160,22 +160,22 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
         </Link>
       ) : null}
 
-      <div className="px-3 pb-2.5 pt-1 max-[380px]:px-2.5">
+      <div className="px-3 pb-1.5 pt-1 max-[380px]:px-2.5">
         <div className="rounded-[10px] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-2.5 py-2">
           <p className="font-bina-display text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--bina-or)]">
             {t("projectUpdateEyebrow")}
           </p>
           <Link href={`/posts/${item.id}`} prefetch>
-            <h2 className="font-bina-display mt-1 text-start text-[14px] font-bold leading-snug text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-3">
+            <h2 className="font-bina-display mt-0.5 text-start text-[13px] font-bold leading-tight text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-2">
               {item.title}
             </h2>
           </Link>
           {textBelowFold ? (
-            <p className="mt-1.5 line-clamp-3 text-start text-[12px] leading-relaxed text-[var(--bina-muted)]">{textBelowFold}</p>
+            <p className="mt-1 line-clamp-2 text-start text-[11px] leading-snug text-[var(--bina-muted)]">{textBelowFold}</p>
           ) : null}
         </div>
 
-        <div className="mt-2 flex flex-wrap gap-1">
+        <div className="mt-1.5 flex flex-wrap gap-1">
           <span className="rounded-md bg-[var(--bina-or)]/18 px-1.5 py-0.5 font-bina-display text-[8px] font-bold uppercase tracking-wide text-[var(--bina-or)]">
             {t("tagConcrete")}
           </span>
