@@ -8,6 +8,13 @@ export type RfqDraftListRow = {
   updated_at: string;
 };
 
+function badgeForStatus(status: string, t: (key: string) => string): string {
+  if (status === "draft") return t("badgeDraft");
+  if (status === "open_for_bids" || status === "submitted") return t("badgeOpen");
+  if (status === "closed") return t("badgeClosed");
+  return t("badgeOther");
+}
+
 export async function RfqMyDraftsList({ drafts }: { drafts: RfqDraftListRow[] }) {
   const t = await getTranslations("rfqDraft.myDrafts");
 
@@ -43,9 +50,7 @@ export async function RfqMyDraftsList({ drafts }: { drafts: RfqDraftListRow[] })
               <span className="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-zinc-50">
                 {d.title?.trim() || t("untitled")}
               </span>
-              <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
-                {d.status === "draft" ? t("badgeDraft") : t("badgeOpen")}
-              </span>
+              <span className="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">{badgeForStatus(d.status, t)}</span>
             </Link>
           </li>
         ))}

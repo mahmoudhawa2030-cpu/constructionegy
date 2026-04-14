@@ -19,16 +19,6 @@ export async function isSubscriptionEnforcementOn(): Promise<boolean> {
  * Returns true if the given user may use a paid feature (same rules as RLS).
  * Call only for the signed-in user (`userId` must match the session user).
  */
-export async function isBusinessVerified(userId: string): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("profiles")
-    .select("business_verification_status")
-    .eq("id", userId)
-    .maybeSingle();
-  return data?.business_verification_status === "verified";
-}
-
 export async function canAccessFeature(
   userId: string,
   feature: SubscriptionFeature,
@@ -38,10 +28,6 @@ export async function canAccessFeature(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user || user.id !== userId) {
-    return false;
-  }
-
-  if (feature === "rfq" && !(await isBusinessVerified(userId))) {
     return false;
   }
 

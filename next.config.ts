@@ -13,10 +13,23 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Default server-action multipart limit is 1 MB; feed photos often exceed that after compression.
+  // RFQ pages must not be cached by CDN/browser after deploy (Capacitor WebView often pins the production origin).
+  async headers() {
+    return [
+      {
+        source: "/rfq",
+        headers: [{ key: "Cache-Control", value: "private, no-store, must-revalidate" }],
+      },
+      {
+        source: "/rfq/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store, must-revalidate" }],
+      },
+    ];
+  },
+  // Default server-action multipart limit is 1 MB; RFQ bid attachments allow up to 10 MB per file.
   experimental: {
     serverActions: {
-      bodySizeLimit: "8mb",
+      bodySizeLimit: "12mb",
     },
   },
 };

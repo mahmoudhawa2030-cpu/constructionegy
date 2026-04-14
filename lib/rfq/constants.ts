@@ -1,27 +1,20 @@
-/** Limits for multipart RFQ upload (server-enforced). */
-export const RFQ_UPLOAD_MAX_FILES = 20;
-export const RFQ_UPLOAD_MAX_FILE_BYTES = 25 * 1024 * 1024;
-export const RFQ_UPLOAD_MAX_TOTAL_BYTES = 100 * 1024 * 1024;
+/** Limits for multipart RFQ upload (server-enforced). Simplified to 10MB max per attachment. */
+export const RFQ_UPLOAD_MAX_FILES = 5;
+export const RFQ_UPLOAD_MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB as per requirements
+export const RFQ_UPLOAD_MAX_TOTAL_BYTES = 50 * 1024 * 1024;
 
 /** Limits for supplier bid attachment uploads (server-enforced). */
-export const RFQ_BID_UPLOAD_MAX_FILES = 10;
+export const RFQ_BID_UPLOAD_MAX_FILES = 5;
 export const RFQ_BID_UPLOAD_MAX_FILE_BYTES = RFQ_UPLOAD_MAX_FILE_BYTES;
-export const RFQ_BID_UPLOAD_MAX_TOTAL_BYTES = 50 * 1024 * 1024;
-export const RFQ_SPREADSHEET_MAX_ROWS = 2000;
-
-export const SPREADSHEET_MAPPING_VERSION = 1;
+export const RFQ_BID_UPLOAD_MAX_TOTAL_BYTES = 30 * 1024 * 1024;
 
 /** Signed URL lifetime for private attachment previews (seconds). */
 export const RFQ_SIGNED_URL_TTL = 3600;
 
-const SPREADSHEET_EXT = new Set(["xls", "xlsx"]);
-
-const ATTACHMENT_EXT = new Set([
+const ALLOWED_EXT = new Set([
   "pdf",
   "doc",
   "docx",
-  "xls",
-  "xlsx",
   "dwg",
   "dxf",
   "jpg",
@@ -48,12 +41,9 @@ export function extensionOf(filename: string): string {
   return n.slice(i + 1).toLowerCase();
 }
 
-export function isSpreadsheetExt(ext: string): boolean {
-  return SPREADSHEET_EXT.has(ext.toLowerCase());
+export function isAllowedAttachmentExt(ext: string): boolean {
+  return ALLOWED_EXT.has(ext.toLowerCase());
 }
 
-export function isAllowedAttachmentExt(ext: string): boolean {
-  const e = ext.toLowerCase();
-  if (SPREADSHEET_EXT.has(e)) return true;
-  return ATTACHMENT_EXT.has(e);
-}
+/** @deprecated Spreadsheet parsing and rfq_items removed in simplification. Use description field instead. */
+export const RFQ_SPREADSHEET_MAX_ROWS = 2000;

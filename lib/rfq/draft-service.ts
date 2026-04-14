@@ -6,7 +6,7 @@ export type RfqSupabase = SupabaseClient<Database>;
 
 type DraftRow = Pick<
   Database["public"]["Tables"]["rfq_drafts"]["Row"],
-  "id" | "user_id" | "status" | "title" | "metadata"
+  "id" | "user_id" | "status" | "title" | "description" | "location" | "closing_date" | "metadata"
 >;
 
 /**
@@ -34,7 +34,7 @@ export async function getRfqDraftOwnedBy(
 ): Promise<{ ok: true; draft: DraftRow } | { ok: false; reason: "not_found" | "forbidden" }> {
   const { data, error } = await client
     .from("rfq_drafts")
-    .select("id, user_id, status, title, metadata")
+    .select("id, user_id, status, title, description, location, closing_date, metadata")
     .eq("id", draftId)
     .maybeSingle();
 
@@ -49,6 +49,9 @@ export async function getRfqDraftOwnedBy(
 
 export type RfqDraftPatch = {
   title?: string | null;
+  description?: string | null;
+  location?: string | null;
+  closing_date?: string | null; // ISO string or null
   status?: Database["public"]["Tables"]["rfq_drafts"]["Row"]["status"];
   /** Shallow merge is done in SQL via || on existing metadata */
   metadata?: Record<string, unknown>;
@@ -70,6 +73,9 @@ export async function updateRfqDraftForOwner(
 
   const row: Database["public"]["Tables"]["rfq_drafts"]["Update"] = {};
   if (patch.title !== undefined) row.title = patch.title;
+  if (patch.description !== undefined) row.description = patch.description;
+  if (patch.location !== undefined) row.location = patch.location;
+  if (patch.closing_date !== undefined) row.closing_date = patch.closing_date;
   if (patch.status !== undefined) row.status = patch.status;
   if (patch.metadata !== undefined) {
     const prev =

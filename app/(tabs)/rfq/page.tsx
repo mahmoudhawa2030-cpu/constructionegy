@@ -2,11 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { RfqDraftControls } from "@/components/rfq-draft-controls";
+import { RfqBiddersTable, type RfqBidRowForTable } from "@/components/rfq-bidders-table";
+import { RfqCreatorForm } from "@/components/rfq-creator-form";
 import { RfqMyDraftsList } from "@/components/rfq-my-drafts-list";
 import { RfqUpload } from "@/components/rfq-upload";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
-import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
+import { listRfqBidsForBuyerDraft } from "@/lib/rfq/bid-service";
+import type { RfqAttachmentDto } from "@/lib/rfq/types";
 import { createRfqDraft } from "@/lib/rfq/draft-service";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
@@ -37,6 +39,7 @@ export default async function RfqPage({ searchParams }: PageProps) {
   }
 
   const t = await getTranslations("rfqPage");
+  const tDraft = await getTranslations("rfqDraft");
 
   const { data: drafts } = await supabase
     .from("rfq_drafts")
@@ -47,9 +50,12 @@ export default async function RfqPage({ searchParams }: PageProps) {
 
   let activeDraftId: string | null = null;
   let initialTitle: string | null = null;
+  let initialDescription: string | null = null;
+  let initialLocation: string | null = null;
+  let initialClosingDate: string | null = null;
   let initialStatus = "draft";
-  let initialLineItems: RfqItemPreview[] = [];
   let initialAttachments: RfqAttachmentDto[] = [];
+  let bidsForTable: RfqBidRowForTable[] = [];
 
   const paramId =
     typeof draftParam === "string" && UUID_RE.test(draftParam.trim()) ? draftParam.trim() : null;
@@ -57,7 +63,7 @@ export default async function RfqPage({ searchParams }: PageProps) {
   if (paramId) {
     const { data: one } = await supabase
       .from("rfq_drafts")
-      .select("id, title, status, user_id")
+      .select("id, title, description, location, closing_date, status, user_id")
       .eq("id", paramId)
       .eq("user_id", user.id)
       .maybeSingle();
@@ -65,22 +71,10 @@ export default async function RfqPage({ searchParams }: PageProps) {
     if (one) {
       activeDraftId = one.id;
       initialTitle = one.title;
+      initialDescription = one.description;
+      initialLocation = one.location;
+      initialClosingDate = one.closing_date;
       initialStatus = one.status;
-
-      const { data: items } = await supabase
-        .from("rfq_items")
-        .select("row_index, description, quantity, unit, notes")
-        .eq("draft_id", one.id)
-        .order("row_index", { ascending: true });
-
-      initialLineItems =
-        items?.map((row) => ({
-          rowIndex: row.row_index,
-          description: row.description,
-          quantity: row.quantity !== null && row.quantity !== undefined ? Number(row.quantity) : null,
-          unit: row.unit,
-          notes: row.notes,
-        })) ?? [];
 
       const { data: atts } = await supabase
         .from("rfq_attachments")
@@ -101,6 +95,29 @@ export default async function RfqPage({ searchParams }: PageProps) {
           signedUrl: signed?.signedUrl ?? null,
           createdAt: a.created_at,
         });
+      }
+
+      if (one.status !== "draft") {
+        const listed = await listRfqBidsForBuyerDraft(supabase, user.id, one.id);
+        if (listed.ok) {
+          bidsForTable = listed.bids.map((b) => {
+            const row = b as typeof b & {
+              profiles?: { full_name: string | null } | { full_name: string | null }[] | null;
+            };
+            const prof = row.profiles;
+            const profileObj = Array.isArray(prof) ? prof[0] : prof;
+            return {
+              id: row.id,
+              supplier_user_id: row.supplier_user_id,
+              total_amount: row.total_amount !== null ? Number(row.total_amount) : null,
+              currency: row.currency,
+              status: row.status,
+              supplier_notes: row.supplier_notes,
+              created_at: row.created_at,
+              profiles: profileObj ? { full_name: profileObj.full_name } : null,
+            };
+          });
+        }
       }
     }
   }
@@ -143,18 +160,39 @@ export default async function RfqPage({ searchParams }: PageProps) {
         <RfqMyDraftsList drafts={drafts ?? []} />
         <div className="flex min-w-0 flex-col gap-4">
           {activeDraftId ? (
-            <div className="order-1 w-full min-w-0 lg:order-2">
-              <RfqDraftControls draftId={activeDraftId} initialTitle={initialTitle} status={initialStatus} />
-            </div>
+            <>
+              <div className="order-1 w-full min-w-0 lg:order-2">
+                <RfqCreatorForm
+                  draftId={activeDraftId}
+                  initialClosingDateIso={initialClosingDate}
+                  initialDescription={initialDescription}
+                  initialLocation={initialLocation}
+                  initialTitle={initialTitle}
+                  status={initialStatus}
+                />
+              </div>
+              {initialStatus !== "draft" ? (
+                <section
+                  aria-labelledby="rfq-bidders-section"
+                  className="order-2 w-full min-w-0 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-950 lg:order-3"
+                >
+                  <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50" id="rfq-bidders-section">
+                    {tDraft("myDrafts.biddersTable")}
+                  </h2>
+                  <div className="mt-3">
+                    <RfqBiddersTable bids={bidsForTable} />
+                  </div>
+                </section>
+              ) : null}
+            </>
           ) : null}
-          <div className="order-2 w-full min-w-0 lg:order-1">
+          <div className="order-3 w-full min-w-0 lg:order-1">
             <RfqUpload
               key={activeDraftId ?? "new"}
               allowUpload={allowUpload}
               draftIdInUrl={paramId}
               initialAttachments={initialAttachments}
               initialDraftId={activeDraftId}
-              initialLineItems={initialLineItems}
             />
           </div>
         </div>

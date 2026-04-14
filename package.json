@@ -13,7 +13,7 @@
     "push:webhook": "node scripts/push-setup.cjs webhook",
     "push:test-notify": "node scripts/push-setup.cjs test-notify",
     "push:setup": "node scripts/push-setup.cjs",
-    "gen:types": "supabase gen types typescript --project-id <project-ref> --schema public > lib/supabase/database.types.ts",
+    "gen:types": "supabase gen types typescript --project-id hkioztmqasprdixcyhwx --schema public > lib/supabase/database.types.ts",
     "cap:add:ios": "npx cap add ios",
     "cap:add:android": "npx cap add android",
     "cap:sync": "npx cap sync",

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useId, useRef, useState } from "react";
 
-import type { RfqAttachmentDto, RfqItemPreview } from "@/lib/rfq/types";
+import type { RfqAttachmentDto } from "@/lib/rfq/types";
 
 type LocalFile = {
   id: string;
@@ -23,11 +23,11 @@ function extOf(name: string): string {
 function fileIconLabel(ext: string): string {
   const e = ext.toLowerCase();
   if (e === "pdf") return "PDF";
-  if (["xls", "xlsx", "csv"].includes(e)) return "XLS";
   if (["doc", "docx"].includes(e)) return "DOC";
   if (["dwg", "dxf"].includes(e)) return "CAD";
   if (["jpg", "jpeg", "png", "webp", "gif"].includes(e)) return "IMG";
   if (["zip", "rar", "7z"].includes(e)) return "ZIP";
+  if (e === "csv" || e === "txt") return "TXT";
   return "FILE";
 }
 
@@ -37,7 +37,6 @@ type Props = {
   initialDraftId?: string | null;
   /** When set, we do not replace the URL after the first upload (already deep-linked). */
   draftIdInUrl?: string | null;
-  initialLineItems?: RfqItemPreview[];
   initialAttachments?: RfqAttachmentDto[];
   /** When false, hide file upload (e.g. draft already open for bids). */
   allowUpload?: boolean;
@@ -46,7 +45,6 @@ type Props = {
 export function RfqUpload({
   initialDraftId = null,
   draftIdInUrl = null,
-  initialLineItems = [],
   initialAttachments = [],
   allowUpload = true,
 }: Props) {
@@ -57,9 +55,7 @@ export function RfqUpload({
   const filesRef = useRef<LocalFile[]>([]);
   const [draftId, setDraftId] = useState<string | null>(initialDraftId);
   const [localFiles, setLocalFiles] = useState<LocalFile[]>([]);
-  const [parsedItems, setParsedItems] = useState<RfqItemPreview[]>(initialLineItems);
   const [attachments, setAttachments] = useState<RfqAttachmentDto[]>(initialAttachments);
-  const [warnings, setWarnings] = useState<{ code: string; detail?: string }[]>([]);
   const [blockingErrors, setBlockingErrors] = useState<{ code: string; detail?: string }[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -84,30 +80,12 @@ export function RfqUpload({
         return te("DRAFT_CREATE_FAILED");
       case "DRAFT_FORBIDDEN":
         return te("DRAFT_FORBIDDEN");
-      case "SPREADSHEET_READ_ERROR":
-        return te("SPREADSHEET_READ_ERROR");
-      case "SPREADSHEET_EMPTY":
-        return te("SPREADSHEET_EMPTY");
-      case "SPREADSHEET_NO_ROWS":
-        return te("SPREADSHEET_NO_ROWS");
-      case "SPREADSHEET_MISSING_DESCRIPTION_COLUMN":
-        return te("SPREADSHEET_MISSING_DESCRIPTION_COLUMN");
-      case "SPREADSHEET_TOO_MANY_ROWS":
-        return te("SPREADSHEET_TOO_MANY_ROWS");
       case "UNSUPPORTED_EXTENSION":
         return te("UNSUPPORTED_EXTENSION");
-      case "REPLACE_TARGET_NOT_FOUND":
-        return te("REPLACE_TARGET_NOT_FOUND");
       case "STORAGE_UPLOAD_FAILED":
         return te("STORAGE_UPLOAD_FAILED");
-      case "ATTACHMENT_UPDATE_FAILED":
-        return te("ATTACHMENT_UPDATE_FAILED");
       case "ATTACHMENT_INSERT_FAILED":
         return te("ATTACHMENT_INSERT_FAILED");
-      case "REPLACE_ATTACHMENT_UNUSED":
-        return te("REPLACE_ATTACHMENT_UNUSED");
-      case "SPREADSHEET_UNMAPPED_COLUMNS":
-        return te("SPREADSHEET_UNMAPPED_COLUMNS");
       case "UNKNOWN":
         return te("UNKNOWN");
       case "NETWORK":
@@ -116,14 +94,6 @@ export function RfqUpload({
         return te("SUBSCRIPTION_REQUIRED");
       case "DRAFT_LOCKED":
         return te("DRAFT_LOCKED");
-      case "ITEMS_PERSIST_FAILED":
-        return te("ITEMS_PERSIST_FAILED");
-      case "LEGAL_COMPANY_NAME_REQUIRED":
-        return te("LEGAL_COMPANY_NAME_REQUIRED");
-      case "LEGAL_COMPANY_NAME_TOO_LONG":
-        return te("LEGAL_COMPANY_NAME_TOO_LONG");
-      case "METADATA_SAVE_FAILED":
-        return te("METADATA_SAVE_FAILED");
       default:
         return t("errorsFallback", { code: c });
     }
@@ -159,7 +129,6 @@ export function RfqUpload({
     if (localFiles.length === 0 || busy) return;
     setBusy(true);
     setBlockingErrors([]);
-    setWarnings([]);
     setLocalFiles((prev) => prev.map((x) => ({ ...x, status: "uploading" as const })));
 
     const fd = new FormData();
@@ -170,11 +139,9 @@ export function RfqUpload({
 
     type UploadJson = {
       rfqDraftId?: string | null;
-      parsedItems?: RfqItemPreview[];
       attachments?: RfqAttachmentDto[];
-      warnings?: { code: string; detail?: string }[];
       errors?: { code: string; detail?: string }[];
-      fileResults?: { ok: boolean; kind?: string; errorCode?: string }[];
+      fileResults?: { ok: boolean; errorCode?: string }[];
     };
 
     let data: UploadJson;
@@ -194,10 +161,6 @@ export function RfqUpload({
         router.replace(`/rfq?draft=${data.rfqDraftId}`);
       }
     }
-    const nextParsed = data.parsedItems ?? [];
-    if (nextParsed.length > 0) {
-      setParsedItems(nextParsed);
-    }
     const nextAtt = data.attachments ?? [];
     if (nextAtt.length > 0) {
       setAttachments((prev) => {
@@ -206,7 +169,6 @@ export function RfqUpload({
         return [...map.values()];
       });
     }
-    setWarnings(data.warnings ?? []);
     setBlockingErrors(data.errors ?? []);
 
     setLocalFiles((prev) =>
@@ -223,6 +185,8 @@ export function RfqUpload({
 
   return (
     <div className="flex flex-col gap-4">
+      <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">{t("sectionAttachments")}</h2>
+
       {allowUpload ? (
         <div className="rounded-xl border border-zinc-200 bg-zinc-50/80 p-4 dark:border-zinc-700 dark:bg-zinc-900/40">
           <label className="block text-sm font-medium text-zinc-800 dark:text-zinc-200" htmlFor={inputId}>
@@ -310,17 +274,6 @@ export function RfqUpload({
         </ul>
       ) : null}
 
-      {warnings.length > 0 ? (
-        <ul className="list-inside list-disc rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
-          {warnings.map((w, i) => (
-            <li key={`${w.code}-${i}`}>
-              {errMsg(w.code)}
-              {w.detail ? ` (${w.detail})` : null}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
       {blockingErrors.length > 0 ? (
         <ul className="list-inside list-disc rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
           {blockingErrors.map((e, i) => (
@@ -332,88 +285,52 @@ export function RfqUpload({
         </ul>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section aria-labelledby="rfq-items-heading">
-          <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50" id="rfq-items-heading">
-            {t("sectionItems")}
-          </h2>
-          {parsedItems.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("emptyItems")}</p>
-          ) : (
-            <div className="max-h-64 overflow-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-              <table className="w-full min-w-[20rem] text-start text-xs">
-                <thead className="sticky top-0 bg-zinc-100 dark:bg-zinc-800">
-                  <tr>
-                    <th className="px-2 py-1.5 font-medium">{t("colRow")}</th>
-                    <th className="px-2 py-1.5 font-medium">{t("colDescription")}</th>
-                    <th className="px-2 py-1.5 font-medium">{t("colQty")}</th>
-                    <th className="px-2 py-1.5 font-medium">{t("colUnit")}</th>
-                    <th className="px-2 py-1.5 font-medium">{t("colNotes")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {parsedItems.map((row, idx) => (
-                    <tr key={`${row.rowIndex}-${idx}`} className="border-t border-zinc-200 dark:border-zinc-700">
-                      <td className="px-2 py-1 tabular-nums text-zinc-600 dark:text-zinc-400">{row.rowIndex}</td>
-                      <td className="px-2 py-1 text-zinc-900 dark:text-zinc-100">{row.description}</td>
-                      <td className="px-2 py-1 tabular-nums">{row.quantity ?? "—"}</td>
-                      <td className="px-2 py-1">{row.unit ?? "—"}</td>
-                      <td className="px-2 py-1 text-zinc-600 dark:text-zinc-300">{row.notes ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-
-        <section aria-labelledby="rfq-attach-heading">
-          <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50" id="rfq-attach-heading">
-            {t("sectionAttachments")}
-          </h2>
-          {attachments.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("emptyAttachments")}</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {attachments.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-950"
-                >
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-[10px] font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                    {a.signedUrl && IMG_EXT.has(extOf(a.originalFilename).toLowerCase()) ? (
-                      <Image
-                        alt=""
-                        className="h-full w-full rounded-md object-cover"
-                        height={56}
-                        src={a.signedUrl}
-                        unoptimized
-                        width={56}
-                      />
-                    ) : (
-                      fileIconLabel(extOf(a.originalFilename))
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{a.originalFilename}</p>
-                    <p className="text-xs text-zinc-500">{a.byteSize} B</p>
-                    {a.signedUrl ? (
-                      <a
-                        className="text-xs font-medium text-zinc-700 underline dark:text-zinc-300"
-                        href={a.signedUrl}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        {t("openAttachment")}
-                      </a>
-                    ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+      <section aria-labelledby="rfq-attach-heading">
+        <h3 className="sr-only" id="rfq-attach-heading">
+          {t("savedAttachmentsHeading")}
+        </h3>
+        {attachments.length === 0 ? (
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">{t("emptyAttachments")}</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {attachments.map((a) => (
+              <li
+                key={a.id}
+                className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-2 dark:border-zinc-700 dark:bg-zinc-950"
+              >
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-zinc-100 text-[10px] font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                  {a.signedUrl && IMG_EXT.has(extOf(a.originalFilename).toLowerCase()) ? (
+                    <Image
+                      alt=""
+                      className="h-full w-full rounded-md object-cover"
+                      height={56}
+                      src={a.signedUrl}
+                      unoptimized
+                      width={56}
+                    />
+                  ) : (
+                    fileIconLabel(extOf(a.originalFilename))
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{a.originalFilename}</p>
+                  <p className="text-xs text-zinc-500">{a.byteSize} B</p>
+                  {a.signedUrl ? (
+                    <a
+                      className="text-xs font-medium text-zinc-700 underline dark:text-zinc-300"
+                      href={a.signedUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {t("openAttachment")}
+                    </a>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

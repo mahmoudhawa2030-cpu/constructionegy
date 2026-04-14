@@ -23,9 +23,16 @@ export async function listRfqBidsForBuyerDraft(
     return { ok: false, code: "NOT_FOUND" };
   }
 
-  const { data, error } = await client.from("rfq_bids").select("*").eq("draft_id", draftId).order("created_at", {
-    ascending: false,
-  });
+  const { data, error } = await client
+    .from("rfq_bids")
+    .select(`
+      *,
+      profiles!rfq_bids_supplier_user_id_fkey (
+        full_name
+      )
+    `)
+    .eq("draft_id", draftId)
+    .order("created_at", { ascending: false });
 
   if (error) {
     return { ok: false, code: "LOAD_FAILED", detail: error.message };
