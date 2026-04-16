@@ -124,15 +124,12 @@ export default async function RfqPage({ searchParams }: PageProps) {
 
   const firstDraft = drafts?.[0];
   if (!activeDraftId) {
-    if (firstDraft) {
-      if (!wantNewDraft) {
-        redirect(`/rfq?draft=${firstDraft.id}`);
-      }
-    } else {
-      const created = await createRfqDraft(supabase, user.id);
-      if (created.ok) {
-        redirect(`/rfq?draft=${created.id}`);
-      }
+    if (firstDraft && !wantNewDraft) {
+      redirect(`/rfq?draft=${firstDraft.id}`);
+    }
+    const created = await createRfqDraft(supabase, user.id);
+    if (created.ok) {
+      redirect(`/rfq?draft=${created.id}`);
     }
   }
 
