@@ -127,7 +127,7 @@ export function UserAdsCompactCard({ listing, categoryLabelMap, isOwner }: Props
           prefetch={false}
         >
           {thumb ? (
-            <Image alt="" className="object-cover" fill sizes="64px" src={thumb} unoptimized />
+            <Image alt="" className="object-cover" fill sizes="64px" src={thumb} />
           ) : (
             <div className="flex h-full items-center justify-center text-[10px] text-zinc-400 dark:text-zinc-500">
               لا صورة

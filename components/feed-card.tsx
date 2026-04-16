@@ -120,7 +120,6 @@ export function FeedCard({ item, priority }: Props) {
               fill
               sizes="100vw"
               src={thumb}
-              unoptimized={thumb.startsWith("http")}
               priority={priority}
             />
           ) : (

@@ -89,7 +89,6 @@ export async function ListingCard({ listing, categoryLabelMap, viewerUserId, fav
                 fill
                 sizes="(max-width: 639px) 38vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
                 src={thumb}
-                unoptimized
               />
             ) : (
               <div className="flex h-full items-center justify-center text-xs text-bina-muted">

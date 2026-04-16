@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { MessageDeliveryTicks, messageReceiptStatus } from "@/components/message-delivery-ticks";
@@ -32,6 +32,7 @@ function bubbleRadius(mine: boolean, isLastInGroup: boolean): string {
 export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const resumeNonce = useSupabaseResumeNonce();
   const t = useTranslations("chatThread");
+  const supabase = useMemo(() => createClient(), []);
   const [messages, setMessages] = useState<MessageRow[]>(() => sortOldestFirst(initialMessages));
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -50,10 +51,9 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   const scheduleMarkSeen = useCallback(() => {
     if (markSeenTimer.current) clearTimeout(markSeenTimer.current);
     markSeenTimer.current = setTimeout(() => {
-      const supabase = createClient();
       void markConversationSeenWithClient(supabase, chatId);
     }, 400);
-  }, [chatId]);
+  }, [supabase, chatId]);
 
   /** On native: clear any delivered push notifications in the status bar when this chat opens. */
   useEffect(() => {
@@ -82,7 +82,6 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
   }, [chatId, scheduleMarkSeen, messages.length]);
 
   useEffect(() => {
-    const supabase = createClient();
     const channel = supabase
       .channel(`messages:${chatId}`)
       .on(
@@ -140,7 +139,6 @@ export function ChatThread({ chatId, currentUserId, initialMessages }: Props) {
     }
     setSending(true);
     try {
-      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();

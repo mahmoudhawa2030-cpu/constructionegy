@@ -62,6 +62,7 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
   const resumeNonce = useSupabaseResumeNonce();
   const pathnameRef = useRef(pathname);
   const t = useTranslations("messageNotifications");
+  const supabase = useMemo(() => createClient(), []);
   const [unreadTotal, setUnreadTotal] = useState(initialUnreadTotal);
   const [toast, setToast] = useState<ToastState>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -78,7 +79,6 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
   /** Re-queries the real unread count from DB — used on resume and when entering a chat. */
   const refreshFromServer = useCallback(async () => {
     try {
-      const supabase = createClient();
       const { data: chats } = await supabase
         .from("chats")
         .select("id")
@@ -97,7 +97,7 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
     } catch {
       /* ignore */
     }
-  }, [userId]);
+  }, [userId, supabase]);
 
   /** On app resume, Realtime reconnects and may have missed UPDATE events — re-sync from DB. */
   useEffect(() => {
@@ -127,8 +127,6 @@ export function MessageNotificationsProvider({ userId, initialUnreadTotal, child
   }, []);
 
   useEffect(() => {
-    const supabase = createClient();
-
     const channel = supabase
       .channel(`msg-notifications:${userId}`)
       .on(

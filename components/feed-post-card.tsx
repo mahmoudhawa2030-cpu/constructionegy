@@ -153,7 +153,6 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
               fill
               sizes="(max-width: 768px) 100vw, 28rem"
               src={thumb}
-              unoptimized={thumb.startsWith("http")}
               priority={priority}
             />
           </div>

@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { CategoryOption } from "@/lib/categories/queries";
 import { createListing, updateListing } from "@/lib/listings/actions";
@@ -53,6 +53,7 @@ export function ListingForm({
 }: ListingFormProps) {
   const tForm = useTranslations("listingForm");
   const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
   const isEdit = mode === "edit" && Boolean(listingId && initial);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -73,26 +74,26 @@ export function ListingForm({
     categories.length > 0;
 
   async function uploadFilesToStorage(files: File[], userId: string): Promise<string[]> {
-    const supabase = createClient();
-    const urls: string[] = [];
-    for (const file of files) {
-      const prepared = await compressImageForUpload(file);
-      if (prepared.size > MAX_BYTES) {
-        throw new Error("كل صورة يجب أن تكون 5 ميجابايت أو أقل بعد الضغط.");
-      }
-      const path = `${userId}/${crypto.randomUUID()}/${safeFileName(prepared.name)}`;
-      const { error: upErr } = await supabase.storage.from("listing-images").upload(path, prepared, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: prepared.type || "image/jpeg",
-      });
-      if (upErr) {
-        throw new Error(upErr.message);
-      }
-      const { data: pub } = supabase.storage.from("listing-images").getPublicUrl(path);
-      urls.push(pub.publicUrl);
-    }
-    return urls;
+    const results = await Promise.all(
+      files.map(async (file) => {
+        const prepared = await compressImageForUpload(file);
+        if (prepared.size > MAX_BYTES) {
+          throw new Error(tForm("errorImageTooLargeAfterCompress"));
+        }
+        const path = `${userId}/${crypto.randomUUID()}/${safeFileName(prepared.name)}`;
+        const { error: upErr } = await supabase.storage.from("listing-images").upload(path, prepared, {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: prepared.type || "image/jpeg",
+        });
+        if (upErr) {
+          throw new Error(upErr.message);
+        }
+        const { data: pub } = supabase.storage.from("listing-images").getPublicUrl(path);
+        return pub.publicUrl;
+      }),
+    );
+    return results;
   }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -117,19 +118,18 @@ export function ListingForm({
 
     if (files.length > MAX_FILES) {
       setLoading(false);
-      setError(`يمكن رفع ${MAX_FILES} صور كحد أقصى.`);
+      setError(tForm("errorTooManyImages", { max: MAX_FILES }));
       return;
     }
 
     for (const f of files) {
       if (f.size > MAX_BYTES) {
         setLoading(false);
-        setError("كل صورة يجب أن تكون 5 ميجابايت أو أقل.");
+        setError(tForm("errorImageTooLarge"));
         return;
       }
     }
 
-    const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -146,7 +146,7 @@ export function ListingForm({
       }
     } catch (err) {
       setLoading(false);
-      setError(err instanceof Error ? err.message : "فشل رفع الصور");
+      setError(err instanceof Error ? err.message : tForm("errorUploadFailed"));
       return;
     }
 
@@ -204,7 +204,7 @@ export function ListingForm({
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit}>
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">العنوان</span>
+        <span className="text-zinc-700 dark:text-zinc-300">{tForm("locationLabel")}</span>
         <select
           className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
           defaultValue={
@@ -219,10 +219,10 @@ export function ListingForm({
           required
         >
           <option disabled value="">
-            — اختر المحافظة —
+            {tForm("locationPlaceholder")}
           </option>
           {legacyLocation ? (
-            <option value={legacyLocation}>{legacyLocation} (قديم)</option>
+            <option value={legacyLocation}>{legacyLocation} {tForm("legacyLocationSuffix")}</option>
           ) : null}
           {EGYPT_GOVERNORATES_AR.map((name) => (
             <option key={name} value={name}>
@@ -233,7 +233,7 @@ export function ListingForm({
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">اسم الإعلان</span>
+        <span className="text-zinc-700 dark:text-zinc-300">{tForm("titleLabel")}</span>
         <input
           className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
           defaultValue={initial?.title}
@@ -243,15 +243,15 @@ export function ListingForm({
           minLength={3}
           maxLength={200}
           type="text"
-          placeholder="مثال: سقالات حديد 10 متر"
+          placeholder={tForm("titlePlaceholder")}
         />
       </label>
 
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">التصنيف</span>
+        <span className="text-zinc-700 dark:text-zinc-300">{tForm("categoryLabel")}</span>
         {categories.length === 0 ? (
           <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">
-            لا توجد تصنيفات مفعّلة. يجب على الإدارة إضافة تصنيفات من لوحة الإدارة.
+            {tForm("noCategoriesHint")}
           </p>
         ) : (
           <select
@@ -268,11 +268,11 @@ export function ListingForm({
             required
           >
             <option disabled value="">
-              — اختر التصنيف —
+              {tForm("categoryPlaceholder")}
             </option>
             {legacyCategory ? (
               <option value={legacyCategory}>
-                {labelForCategorySlug(legacyCategory)} (قديم / غير في القائمة)
+                {labelForCategorySlug(legacyCategory)} {tForm("legacyCategorySuffix")}
               </option>
             ) : null}
             {categories.map((c) => {
@@ -305,34 +305,34 @@ export function ListingForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">النوع</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{tForm("typeLabel")}</span>
           <select
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
             defaultValue={initial?.type ?? "sell"}
             key={isEdit ? `${listingId}-type` : "type"}
             name="type"
           >
-            <option value="sell">بيع</option>
-            <option value="rent">إيجار</option>
+            <option value="sell">{tForm("typeSell")}</option>
+            <option value="rent">{tForm("typeRent")}</option>
           </select>
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">الحالة</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{tForm("conditionLabel")}</span>
           <select
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
             defaultValue={initial?.condition ?? "used"}
             key={isEdit ? `${listingId}-cond` : "cond"}
             name="condition"
           >
-            <option value="new">جديد</option>
-            <option value="used">مستعمل</option>
+            <option value="new">{tForm("conditionNew")}</option>
+            <option value="used">{tForm("conditionUsed")}</option>
           </select>
         </label>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1.5 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">السعر</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{tForm("priceLabel")}</span>
           <input
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
             min="0"
@@ -345,7 +345,7 @@ export function ListingForm({
           />
         </label>
         <label className="flex flex-col gap-1.5 text-sm">
-          <span className="text-zinc-700 dark:text-zinc-300">العملة</span>
+          <span className="text-zinc-700 dark:text-zinc-300">{tForm("currencyLabel")}</span>
           <input
             className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
             defaultValue={initial?.price_unit ?? "EGP"}
@@ -358,7 +358,7 @@ export function ListingForm({
       </div>
 
       <label className="flex flex-col gap-1.5 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">الوصف</span>
+        <span className="text-zinc-700 dark:text-zinc-300">{tForm("descriptionLabel")}</span>
         <textarea
           className="min-h-[120px] rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
           defaultValue={initial?.description ?? ""}
@@ -371,7 +371,7 @@ export function ListingForm({
 
       {isEdit && imageList.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <span className="text-sm text-zinc-700 dark:text-zinc-300">الصور الحالية</span>
+          <span className="text-sm text-zinc-700 dark:text-zinc-300">{tForm("existingImagesLabel")}</span>
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {imageList.map((url) => (
               <li
@@ -384,20 +384,20 @@ export function ListingForm({
                   type="button"
                   onClick={() => removeImage(url)}
                 >
-                  حذف
+                  {tForm("removeImageButton")}
                 </button>
               </li>
             ))}
           </ul>
           <p className="text-xs text-zinc-500">
-            أضف صوراً جديدة من الأسفل. الحد أقصى {MAX_FILES} صوراً إجمالاً.
+            {tForm("existingImagesHint", { max: MAX_FILES })}
           </p>
         </div>
       ) : null}
 
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="text-zinc-700 dark:text-zinc-300">
-          {isEdit ? "إضافة صور (اختياري)" : `صور (اختياري، حتى ${MAX_FILES})`}
+          {isEdit ? tForm("addImagesLabel") : tForm("newImagesLabel", { max: MAX_FILES })}
         </span>
         <input
           accept="image/jpeg,image/png,image/webp,image/gif"
@@ -406,7 +406,7 @@ export function ListingForm({
           name="images"
           type="file"
         />
-        <span className="text-xs text-zinc-500">JPEG / PNG / WebP / GIF، حتى 5 ميجابايت لكل صورة.</span>
+        <span className="text-xs text-zinc-500">{tForm("imageHint")}</span>
       </label>
 
       {error ? (
@@ -420,7 +420,7 @@ export function ListingForm({
         disabled={loading || (!isEdit && categories.length === 0)}
         type="submit"
       >
-        {loading ? (isEdit ? "جاري الحفظ…" : "جاري النشر…") : isEdit ? "حفظ التعديلات" : "نشر الإعلان"}
+        {loading ? (isEdit ? tForm("submittingEdit") : tForm("submittingCreate")) : isEdit ? tForm("submitEdit") : tForm("submitCreate")}
       </button>
     </form>
   );

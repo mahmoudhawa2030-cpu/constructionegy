@@ -61,6 +61,7 @@ export function MessagesInboxList({ userId, items }: Props) {
   const locale = useLocale();
   const resumeNonce = useSupabaseResumeNonce();
   const t = useTranslations("messagesInbox");
+  const supabase = useMemo(() => createClient(), []);
   const [rows, setRows] = useState<InboxItem[]>(() => sortInboxByRecent(items));
 
   const sortedItems = useMemo(() => sortInboxByRecent(items), [items]);
@@ -70,7 +71,6 @@ export function MessagesInboxList({ userId, items }: Props) {
   }, [sortedItems]);
 
   useEffect(() => {
-    const supabase = createClient();
     const channel = supabase
       .channel(`inbox-unread:${userId}`)
       .on(

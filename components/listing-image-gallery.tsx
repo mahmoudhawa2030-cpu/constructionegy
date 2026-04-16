@@ -93,7 +93,6 @@ export function ListingImageGallery({ images, title }: Props) {
               fill
               sizes="(max-width: 640px) 100vw, 480px"
               src={current}
-              unoptimized
               priority
             />
           </button>
@@ -178,7 +177,6 @@ export function ListingImageGallery({ images, title }: Props) {
                   fill
                   sizes="100vw"
                   src={current}
-                  unoptimized
                   priority
                 />
               </div>
