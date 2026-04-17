@@ -40,21 +40,21 @@ export function FeedTopbar() {
           <Link
             href="/messages"
             aria-label={t("messagesLinkAria")}
-            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
           >
             🔔
+          </Link>
+          <Link
+            href="/messages"
+            aria-label={t("messages")}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
+          >
+            �
             {unreadTotal > 0 ? (
               <span className="font-bina-display absolute -right-0.5 -top-0.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--bina-red)] px-0.5 text-[7px] font-bold leading-none text-white">
                 {unreadTotal > 9 ? "9+" : unreadTotal}
               </span>
             ) : null}
-          </Link>
-          <Link
-            href="/messages"
-            aria-label={t("messages")}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
-          >
-            💬
           </Link>
         </div>
       </div>
