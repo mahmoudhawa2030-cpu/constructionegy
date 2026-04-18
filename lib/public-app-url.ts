@@ -39,11 +39,15 @@ export function getPublicAppOrigin(): string {
 }
 
 /**
- * `redirect_to` for Supabase `resetPasswordForEmail`. Uses `/auth/callback` so the app can run
- * `exchangeCodeForSession` on the server and set auth cookies (PKCE) before sending the user to `/update-password`.
+ * `redirect_to` for Supabase `resetPasswordForEmail`.
+ * Points at `/auth/confirm` which uses `token_hash` + `verifyOtp` (no PKCE verifier required).
+ * This works even when the user opens the email in a different browser or device.
+ *
+ * IMPORTANT – Supabase Dashboard → Authentication → Email Templates → Reset Password:
+ * Set the link URL to:
+ *   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/update-password
  */
 export function getPasswordRecoveryRedirectUrl(): string {
   const origin = getPublicAppOrigin();
-  const next = encodeURIComponent("/update-password");
-  return `${origin}/auth/callback?next=${next}`;
+  return `${origin}/auth/confirm?type=recovery&next=${encodeURIComponent("/update-password")}`;
 }

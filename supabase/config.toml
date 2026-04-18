@@ -237,6 +237,12 @@ subject = "رمز التحقق — Your signup code"
 # Resolved from repo root (Windows/macOS): file lives under supabase/templates/
 content_path = "./supabase/templates/confirm_signup.html"
 
+# Reset password: token_hash link → /auth/confirm → verifyOtp (no PKCE, works cross-device/browser).
+# For hosted Supabase, paste the same HTML into Dashboard → Authentication → Email templates → Reset password.
+[auth.email.template.recovery]
+subject = "إعادة تعيين كلمة المرور — Reset your password"
+content_path = "./supabase/templates/reset_password.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
