@@ -61,7 +61,7 @@ export default async function RootLayout({
       lang={locale}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="flex h-full flex-col font-sans">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppThemeProvider>
             <CapacitorBridge />

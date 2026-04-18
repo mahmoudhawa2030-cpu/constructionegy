@@ -29,7 +29,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
   const isMobileFeedHome = pathname === "/" || pathname === "";
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="flex h-full flex-col">
       {!isMobileFeedHome ? (
         <header
           className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2 backdrop-blur-md md:hidden"

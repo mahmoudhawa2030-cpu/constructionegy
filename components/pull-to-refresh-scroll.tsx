@@ -136,7 +136,7 @@ export function PullToRefreshScroll({ children, namespace, platformScope }: Prop
   const showHint = enabled && (pullPx > 12 || refreshing);
 
   return (
-    <div className="relative min-h-0 flex-1">
+    <div className="relative flex min-h-0 flex-1 flex-col">
       {showHint ? (
         <div
           aria-label={refreshing ? t("pullRefreshingAria") : t("pullToRefreshAria")}
@@ -150,7 +150,7 @@ export function PullToRefreshScroll({ children, namespace, platformScope }: Prop
         </div>
       ) : null}
       <div
-        className="min-h-0 h-full overflow-y-auto overscroll-y-contain pb-4 pt-1"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain pb-4 pt-1"
         style={{
           WebkitOverflowScrolling: "touch",
           transform: pullPx > 0 && !refreshing ? `translateY(${pullPx * 0.35}px)` : undefined,
