@@ -3,12 +3,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { ProfileListingsGrid } from "@/components/profile-listings-grid";
+import { ProfileTabStrip } from "@/components/profile-tab-strip";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { ExpertBadge } from "@/components/expert-badge";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
+import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
+import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
+import type { FeedPostItem } from "@/lib/feed/feed-post-types";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -56,11 +59,42 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .limit(48);
 
   const listings = listingsRaw ?? [];
+
+  const isVerifiedBusiness = profile.business_verification_status === "verified";
+  const isExpert = profile.expert_verification_status === "verified";
+
+  const { data: feedPostsRaw } = await supabase
+    .from("feed_posts")
+    .select("*")
+    .eq("user_id", id)
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(48);
+
+  const feedPostRows = feedPostsRaw ?? [];
+  const userPosts: FeedPostItem[] = feedPostRows.map((row) => ({
+    id: row.id,
+    user_id: row.user_id,
+    title: row.title,
+    body: row.body,
+    images: normalizeFeedPostImages(row.images),
+    location: row.location,
+    view_count: row.view_count,
+    created_at: row.created_at,
+    author_name: profile.full_name,
+    author_role: profile.user_type ?? "contractor",
+    is_pro: isVerifiedBusiness,
+    is_expert: isExpert,
+    likeCount: row.like_count ?? 0,
+    commentCount: row.comment_count ?? 0,
+    likedByViewer: false,
+    savedByViewer: false,
+  }));
+  await enrichFeedPostsSocial(supabase, userPosts, user.id);
+
   const categoryLabelMap = await getCategoryLabelMap();
   const userTypeLabel =
     profile.user_type === "supplier" ? t("userType.supplier") : t("userType.contractor");
-  const isVerifiedBusiness = profile.business_verification_status === "verified";
-  const isExpert = profile.expert_verification_status === "verified";
   const tExpert = await getTranslations("expertVerification");
   const legalCompanyName = isVerifiedBusiness ? await fetchProfileLegalCompanyName(supabase, profile.id) : null;
   const legalCompanyNameTrimmed = legalCompanyName?.trim() ?? "";
@@ -124,12 +158,12 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
       <p className="mx-auto max-w-lg text-center text-xs text-zinc-500 dark:text-zinc-400">{t("contactHint")}</p>
 
-      <ProfileListingsGrid
-        categoryLabelMap={categoryLabelMap}
-        empty={t("emptyListings")}
+      <ProfileTabStrip
         listings={listings}
-        title={t("listingsTitle", { name: profile.full_name })}
+        posts={userPosts}
+        categoryLabelMap={categoryLabelMap}
         viewerUserId={user.id}
+        emptyListings={t("emptyListings")}
       />
     </div>
   );

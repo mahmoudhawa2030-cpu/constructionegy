@@ -303,7 +303,10 @@
     "memberSince": "عضو منذ {date}",
     "contactHint": "للتواصل استخدم الرسائل أو بيانات الإعلان عند التوفر.",
     "emptyListings": "لا توجد إعلانات منشورة من هذا المستخدم حالياً.",
-    "listingsTitle": "إعلانات {name}"
+    "listingsTitle": "إعلانات {name}",
+    "tabClassifieds": "الإعلانات",
+    "tabPosts": "المنشورات",
+    "emptyPosts": "لا توجد منشورات من هذا المستخدم حالياً."
   },
   "businessVerification": {
     "heading": "توثيق المنشأة",

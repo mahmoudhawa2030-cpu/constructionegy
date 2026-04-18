@@ -303,7 +303,10 @@
     "memberSince": "Member since {date}",
     "contactHint": "Use messages or listing contact details when available.",
     "emptyListings": "No published listings from this user yet.",
-    "listingsTitle": "{name}’s listings"
+    "listingsTitle": "{name}'s listings",
+    "tabClassifieds": "Classifieds",
+    "tabPosts": "Posts",
+    "emptyPosts": "No posts from this user yet."
   },
   "businessVerification": {
     "heading": "Business verification",
