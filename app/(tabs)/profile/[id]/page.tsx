@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 
 import { ProfileTabStrip } from "@/components/profile-tab-strip";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
@@ -22,7 +23,8 @@ type PageProps = { params: Promise<{ id: string }> };
 export default async function PublicProfilePage({ params }: PageProps) {
   const { id } = await params;
   const supabase = await createClient();
-  const locale = await getLocale();
+  const cookieStore = await cookies();
+  const locale = cookieStore.get("locale")?.value ?? "ar";
   const loc = locale === "en" ? "en" : "ar";
   const t = await getTranslations("publicProfile");
   const dateLocale = loc === "en" ? "en-GB" : "ar-EG";
