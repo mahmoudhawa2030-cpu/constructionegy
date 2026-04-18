@@ -50,7 +50,7 @@ export function CapacitorBridge() {
       if (ac.signal.aborted) return;
 
       try {
-        await StatusBar.setOverlaysWebView({ overlay: false });
+        await StatusBar.setOverlaysWebView({ overlay: true });
         await StatusBar.setStyle({ style: Style.Default });
       } catch {
         // Status bar may be unavailable on some webviews
