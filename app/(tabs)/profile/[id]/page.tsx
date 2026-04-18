@@ -1,4 +1,5 @@
-import Image from "next/image";
+"use client";
+
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -7,6 +8,7 @@ import { getTranslations } from "next-intl/server";
 import { ProfileTabStrip } from "@/components/profile-tab-strip";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { ExpertBadge } from "@/components/expert-badge";
+import { AvatarImage } from "@/components/avatar-image";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
@@ -123,22 +125,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       </div>
 
       <div className="mx-auto flex w-full max-w-lg flex-col items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-          {profile.avatar_url ? (
-            <Image
-              alt=""
-              className="object-cover"
-              fill
-              sizes="96px"
-              src={profile.avatar_url}
-              unoptimized
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-2xl font-semibold text-zinc-400">
-              {profile.full_name.slice(0, 1)}
-            </div>
-          )}
-        </div>
+        <AvatarImage src={profile.avatar_url} name={profile.full_name} />
         <div className="w-full text-center">
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             <p className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">{profile.full_name}</p>
