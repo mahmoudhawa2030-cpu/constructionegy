@@ -12,6 +12,7 @@ import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name"
 import { enrichFeedPostsSocial } from "@/lib/feed/enrich-feed-post-social";
 import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
 import type { FeedPostItem } from "@/lib/feed/feed-post-types";
+import type { Database } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -63,15 +64,21 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const isVerifiedBusiness = profile.business_verification_status === "verified";
   const isExpert = profile.expert_verification_status === "verified";
 
-  const { data: feedPostsRaw } = await supabase
-    .from("feed_posts")
-    .select("*")
-    .eq("user_id", id)
-    .eq("status", "published")
-    .order("created_at", { ascending: false })
-    .limit(48);
+  type FeedPostRow = Database["public"]["Tables"]["feed_posts"]["Row"];
+  let feedPostRows: FeedPostRow[] = [];
+  try {
+    const { data } = await supabase
+      .from("feed_posts")
+      .select("*")
+      .eq("user_id", id)
+      .eq("status", "published")
+      .order("created_at", { ascending: false })
+      .limit(48);
+    feedPostRows = data ?? [];
+  } catch {
+    feedPostRows = [];
+  }
 
-  const feedPostRows = feedPostsRaw ?? [];
   const userPosts: FeedPostItem[] = feedPostRows.map((row) => ({
     id: row.id,
     user_id: row.user_id,
@@ -90,7 +97,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     likedByViewer: false,
     savedByViewer: false,
   }));
-  await enrichFeedPostsSocial(supabase, userPosts, user.id);
+  await enrichFeedPostsSocial(supabase, userPosts, user.id).catch(() => {});
 
   const categoryLabelMap = await getCategoryLabelMap();
   const userTypeLabel =
