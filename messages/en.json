@@ -199,7 +199,9 @@
     "updatePasswordSubmitting": "Saving…",
     "updatePasswordInvalidSession": "This reset link is invalid or has expired. Request a new link from the log-in page.",
     "updatePasswordMismatch": "Passwords do not match.",
-    "updatePasswordTooShort": "Password must be at least 6 characters."
+    "updatePasswordTooShort": "Password must be at least 6 characters.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "signup": {
     "title": "Create account",

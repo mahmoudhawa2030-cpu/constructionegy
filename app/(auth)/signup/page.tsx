@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 import { EmailOtpCells } from "@/components/email-otp-cells";
+import { PasswordInput } from "@/components/password-input";
 import { getEmailOtpLength } from "@/lib/auth/email-otp-length";
 import { formatAuthErrorMessage } from "@/lib/supabase/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
@@ -231,14 +232,12 @@ export default function SignupPage() {
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">{t("password")}</span>
-            <input
+            <PasswordInput
               autoComplete="new-password"
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               minLength={6}
               name="password"
               onChange={(e) => setPassword(e.target.value)}
               required
-              type="password"
               value={password}
             />
           </label>

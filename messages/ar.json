@@ -199,7 +199,9 @@
     "updatePasswordSubmitting": "جاري الحفظ…",
     "updatePasswordInvalidSession": "رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رابطاً جديداً من صفحة تسجيل الدخول.",
     "updatePasswordMismatch": "كلمتا المرور غير متطابقتين.",
-    "updatePasswordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل."
+    "updatePasswordTooShort": "يجب أن تكون كلمة المرور 6 أحرف على الأقل.",
+    "showPassword": "إظهار كلمة المرور",
+    "hidePassword": "إخفاء كلمة المرور"
   },
   "signup": {
     "title": "إنشاء حساب",

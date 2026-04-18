@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import { PasswordInput } from "@/components/password-input";
 import { createClient } from "@/lib/supabase/client";
 
 export function UpdatePasswordForm() {
@@ -120,13 +121,11 @@ export function UpdatePasswordForm() {
         <form className="mt-8 flex flex-col gap-4" onSubmit={handleSubmit}>
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="text-zinc-700 dark:text-zinc-300">{t("updatePasswordLabel")}</span>
-            <input
+            <PasswordInput
               autoComplete="new-password"
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               name="password"
               onChange={(e) => setPassword(e.target.value)}
               required
-              type="password"
               value={password}
             />
           </label>
@@ -134,13 +133,11 @@ export function UpdatePasswordForm() {
             <span className="text-zinc-700 dark:text-zinc-300">
               {t("updatePasswordConfirmLabel")}
             </span>
-            <input
+            <PasswordInput
               autoComplete="new-password"
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
               name="confirm"
               onChange={(e) => setConfirm(e.target.value)}
               required
-              type="password"
               value={confirm}
             />
           </label>
