@@ -279,7 +279,11 @@
     "defaultDisplayName": "مستخدم",
     "rfq": "طلب عرض سعر — رفع",
     "rfqOpportunities": "طلبات مفتوحة — تقديم عرض",
-    "emptyMyListingsRich": "لا إعلانات بعد. <link>أضف إعلاناً</link>."
+    "emptyMyListingsRich": "لا إعلانات بعد. <link>أضف إعلاناً</link>.",
+    "avatarUploadAria": "رفع صورة شخصية",
+    "avatarUploading": "جاري الرفع...",
+    "avatarUploadError": "لم يتم الرفع. حاول مرة أخرى.",
+    "avatarHint": "JPEG/PNG/WebP حتى 2 ميجا"
   },
   "subscriptionRequired": {
     "title": "يتطلب اشتراكاً",

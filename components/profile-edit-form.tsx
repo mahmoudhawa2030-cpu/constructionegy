@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
+import { AvatarUpload } from "@/components/avatar-upload";
 import { updateProfile, type UpdateProfileState } from "@/lib/profile/actions";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -21,6 +22,7 @@ type Props = {
 
 export function ProfileEditForm({ profile }: Props) {
   const [state, formAction, pending] = useActionState(updateProfile, null as UpdateProfileState | null);
+  const [avatarUrl, setAvatarUrl] = useState<string>(profile.avatar_url ?? "");
 
   return (
     <form action={formAction} className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
@@ -92,20 +94,18 @@ export function ProfileEditForm({ profile }: Props) {
         />
       </label>
 
-      <label className="flex flex-col gap-1 text-sm">
-        <span className="text-zinc-700 dark:text-zinc-300">رابط صورة شخصية (اختياري)</span>
-        <input
-          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 font-mono text-sm text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
-          defaultValue={profile.avatar_url ?? ""}
-          dir="ltr"
-          name="avatar_url"
-          placeholder="https://..."
-          type="url"
+      <div className="flex flex-col items-center gap-1">
+        <AvatarUpload
+          currentUrl={profile.avatar_url}
+          name="avatar_url_upload"
+          displayName={profile.full_name}
+          onUploaded={(url) => setAvatarUrl(url)}
         />
+        <input type="hidden" name="avatar_url" value={avatarUrl} />
         {state?.ok === false && state.fieldErrors?.avatar_url ? (
           <span className="text-xs text-red-600 dark:text-red-400">{state.fieldErrors.avatar_url}</span>
         ) : null}
-      </label>
+      </div>
 
       {state?.ok === false && !state.fieldErrors ? (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">

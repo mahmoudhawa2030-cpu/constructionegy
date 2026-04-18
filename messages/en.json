@@ -279,7 +279,11 @@
     "defaultDisplayName": "User",
     "rfq": "RFQ — upload",
     "rfqOpportunities": "RFQ — open requests (quote)",
-    "emptyMyListingsRich": "No listings yet. <link>Add a listing</link>."
+    "emptyMyListingsRich": "No listings yet. <link>Add a listing</link>.",
+    "avatarUploadAria": "Upload profile picture",
+    "avatarUploading": "Uploading...",
+    "avatarUploadError": "Upload failed. Please try again.",
+    "avatarHint": "JPEG/PNG/WebP up to 2 MB"
   },
   "subscriptionRequired": {
     "title": "Subscription required",
