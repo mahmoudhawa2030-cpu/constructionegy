@@ -33,6 +33,20 @@ function engagementScore(item: FeedPostItem): number {
   return likes + comments + views;
 }
 
+/**
+ * Velocity / trending boost (X/Twitter-style).
+ * Measures likes+comments per hour since the post was created.
+ * Only posts under 48 h old are eligible — older posts have had too long to accumulate.
+ * Capped at +30 so a viral new post can surface above average content but not dominate forever.
+ */
+function velocityScore(item: FeedPostItem): number {
+  const ageMs = Date.now() - new Date(item.created_at).getTime();
+  const ageHours = ageMs / 3_600_000;
+  if (ageHours < 0.1 || ageHours > 48) return 0;
+  const engagementsPerHour = (item.likeCount + item.commentCount * 2) / ageHours;
+  return Math.min(30, Math.log1p(engagementsPerHour) * 10);
+}
+
 /** Author diversity: interleave so no single author dominates the feed (Facebook/LinkedIn style). */
 function applyAuthorDiversity(ranked: FeedPostItem[]): FeedPostItem[] {
   const result: FeedPostItem[] = [];
@@ -94,6 +108,9 @@ export function rankFeedPostsForYou(
 
     // ── Engagement quality (global, not just viewer) ──
     score += engagementScore(item);
+
+    // ── Velocity / trending boost (X-style: likes+comments per hour, 48h window) ──
+    score += velocityScore(item);
 
     // ── Recency (freshness always matters) ──
     score += recencyScore(item.created_at);
