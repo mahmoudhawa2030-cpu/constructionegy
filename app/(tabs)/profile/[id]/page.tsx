@@ -92,6 +92,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     created_at: row.created_at,
     author_name: profile.full_name,
     author_role: profile.user_type ?? "contractor",
+    author_avatar_url: profile.avatar_url ?? null,
     is_pro: isVerifiedBusiness,
     is_expert: isExpert,
     likeCount: row.like_count ?? 0,
