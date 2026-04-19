@@ -44,7 +44,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
   const [{ data: profile }, comments] = await Promise.all([
     supabase
       .from("profiles")
-      .select("full_name,user_type,business_verification_status,expert_verification_status")
+      .select("full_name,user_type,business_verification_status,expert_verification_status,avatar_url")
       .eq("id", post.user_id)
       .maybeSingle(),
     fetchFeedPostComments(supabase, id),
@@ -69,6 +69,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
     created_at: post.created_at,
     author_name: author,
     author_role: role,
+    author_avatar_url: profile?.avatar_url ?? null,
     is_pro: isPro,
     is_expert: isExpert,
     likeCount: post.like_count ?? 0,
