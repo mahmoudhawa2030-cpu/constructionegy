@@ -157,7 +157,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
           href={`/posts/${item.id}`}
           prefetch
         >
-          <div className="relative h-[220px] w-full bg-[var(--bina-steel3)] sm:h-[260px]">
+          <div className="relative h-[330px] w-full bg-[var(--bina-steel3)] sm:h-[390px]">
             <Image
               alt=""
               className="object-cover"
