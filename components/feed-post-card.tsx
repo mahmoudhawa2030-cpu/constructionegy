@@ -172,11 +172,8 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
 
       <div className="px-3 pb-1.5 pt-1 max-[380px]:px-2.5">
         <div className="rounded-[10px] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-2.5 py-2">
-          <p className="font-bina-display text-[9px] font-bold uppercase tracking-[0.1em] text-[var(--bina-or)]">
-            {t("projectUpdateEyebrow")}
-          </p>
           <Link href={`/posts/${item.id}`} prefetch>
-            <h2 className="font-bina-display mt-0.5 text-start text-[13px] font-bold leading-tight text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-2">
+            <h2 className="font-bina-display text-start text-[13px] font-bold leading-tight text-[var(--bina-text)] transition-colors hover:text-[var(--bina-or)] line-clamp-2">
               {item.title}
             </h2>
           </Link>
