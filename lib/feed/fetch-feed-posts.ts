@@ -11,7 +11,7 @@ type FeedPostRow = Database["public"]["Tables"]["feed_posts"]["Row"];
 
 type ProfileMini = Pick<
   Database["public"]["Tables"]["profiles"]["Row"],
-  "id" | "full_name" | "user_type" | "business_verification_status" | "expert_verification_status"
+  "id" | "full_name" | "user_type" | "business_verification_status" | "expert_verification_status" | "avatar_url"
 >;
 
 function mapRows(rows: FeedPostRow[], profileMap: Map<string, ProfileMini>): FeedPostItem[] {
@@ -28,6 +28,7 @@ function mapRows(rows: FeedPostRow[], profileMap: Map<string, ProfileMini>): Fee
       created_at: row.created_at,
       author_name: p?.full_name ?? "—",
       author_role: p?.user_type ?? "contractor",
+      author_avatar_url: p?.avatar_url ?? null,
       is_pro: p?.business_verification_status === "verified",
       is_expert: p?.expert_verification_status === "verified",
       likeCount: row.like_count ?? 0,
@@ -43,7 +44,7 @@ async function attachProfiles(client: SupabaseClient<Database>, rows: FeedPostRo
   const userIds = [...new Set(rows.map((r) => r.user_id))];
   const { data: profiles } = await client
     .from("profiles")
-    .select("id,full_name,user_type,business_verification_status,expert_verification_status")
+    .select("id,full_name,user_type,business_verification_status,expert_verification_status,avatar_url")
     .in("id", userIds);
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p as ProfileMini]));
   return mapRows(rows, profileMap);

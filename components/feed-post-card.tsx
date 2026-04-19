@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
@@ -72,6 +73,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
   const tExpert = useTranslations("expertVerification");
   const locale = useLocale();
   const av = avStyle(item.user_id);
+  const [avatarError, setAvatarError] = useState(false);
   const age = relativeAge(item.created_at, locale);
   const thumb = item.images?.[0];
   const profileHref = `/profile/${item.user_id}`;
@@ -97,12 +99,21 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
           href={profileHref}
           prefetch
         >
-          <span
-            className="flex h-10 w-10 items-center justify-center rounded-full font-bina-display text-xs font-bold tracking-tight"
-            style={{ background: av.bg, color: av.color }}
-          >
-            {initials(item.author_name)}
-          </span>
+          {item.author_avatar_url && !avatarError ? (
+            <img
+              src={item.author_avatar_url}
+              alt={item.author_name}
+              className="h-10 w-10 rounded-full object-cover"
+              onError={() => setAvatarError(true)}
+            />
+          ) : (
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-full font-bina-display text-xs font-bold tracking-tight"
+              style={{ background: av.bg, color: av.color }}
+            >
+              {initials(item.author_name)}
+            </span>
+          )}
         </Link>
         <div className={`min-w-0 flex-1 pt-px ${isOwner ? "pe-10" : ""}`}>
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">

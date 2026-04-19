@@ -9,6 +9,7 @@ export type FeedPostItem = {
   created_at: string;
   author_name: string;
   author_role: string;
+  author_avatar_url: string | null;
   is_pro: boolean;
   is_expert: boolean;
   likeCount: number;
