@@ -4,12 +4,22 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
+  // Produces a standalone output folder for Docker deployment (Hetzner etc.)
+  // Safe to leave on for Vercel — Vercel ignores it.
+  output: "standalone",
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "**.supabase.co",
         pathname: "/storage/v1/object/**",
+      },
+      // Self-hosted storage (MinIO on Hetzner) — set NEXT_PUBLIC_STORAGE_BASE_URL when active
+      {
+        protocol: "https",
+        hostname: process.env.NEXT_PUBLIC_STORAGE_BASE_URL
+          ? new URL(process.env.NEXT_PUBLIC_STORAGE_BASE_URL).hostname
+          : "storage.example.com",
       },
     ],
   },

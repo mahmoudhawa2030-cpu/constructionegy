@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getStorageBaseUrl } from "@/lib/supabase/desktop-category-icon-url";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
@@ -45,8 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
-  const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path);
-  const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+  const publicUrl = `${getStorageBaseUrl()}/avatars/${path}?t=${Date.now()}`;
 
   const { error: updateError } = await supabase
     .from("profiles")
