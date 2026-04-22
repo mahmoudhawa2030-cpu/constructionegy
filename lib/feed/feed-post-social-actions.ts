@@ -153,14 +153,14 @@ export async function addFeedPostComment(
       .eq("id", parentId)
       .maybeSingle() as unknown as Promise<{ data: { user_id: string } | null; error: unknown }>);
     if (parentComment && parentComment.user_id !== user.id) {
-      await supabase.from("comment_notifications").insert({
+      await (supabase.from("comment_notifications" as never).insert({
         recipient_user_id: parentComment.user_id,
         actor_user_id: user.id,
         actor_name: actorName,
         type: "reply_to_comment",
         post_id: postId,
         comment_id: commentId,
-      } as never);
+      } as never) as unknown as Promise<unknown>);
     }
   } else {
     const { data: post } = await supabase
@@ -169,14 +169,14 @@ export async function addFeedPostComment(
       .eq("id", postId)
       .maybeSingle();
     if (post && post.user_id !== user.id) {
-      await supabase.from("comment_notifications").insert({
+      await (supabase.from("comment_notifications" as never).insert({
         recipient_user_id: post.user_id,
         actor_user_id: user.id,
         actor_name: actorName,
         type: "comment_on_post",
         post_id: postId,
         comment_id: commentId,
-      } as never);
+      } as never) as unknown as Promise<unknown>);
     }
   }
 
