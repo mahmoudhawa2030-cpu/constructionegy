@@ -5,11 +5,13 @@ import { useTranslations } from "next-intl";
 
 import { useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
 import { useMessageNotifications } from "@/components/message-notifications-provider";
+import { useCommentNotifications } from "@/components/comment-notifications-provider";
 
 export function FeedTopbar() {
   const t = useTranslations("nav");
   const { openMenu } = useMobileChromeMenu();
   const { unreadTotal } = useMessageNotifications();
+  const { unreadCount } = useCommentNotifications();
 
   return (
     <div
@@ -38,11 +40,16 @@ export function FeedTopbar() {
 
         <div className="flex shrink-0 items-center gap-1.5">
           <Link
-            href="/messages"
-            aria-label={t("messagesLinkAria")}
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
+            href="/notifications"
+            aria-label={unreadCount > 0 ? t("notificationsAriaWithUnread", { count: unreadCount }) : t("notificationsAria")}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
           >
             🔔
+            {unreadCount > 0 ? (
+              <span className="font-bina-display absolute -right-0.5 -top-0.5 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-[var(--bina-or)] px-0.5 text-[7px] font-bold leading-none text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            ) : null}
           </Link>
           <Link
             href="/messages"
