@@ -144,7 +144,7 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
         <div className="mb-6">
           <FeedPostCommentForm postId={post.id} viewerId={user?.id ?? null} />
         </div>
-        <FeedPostCommentList comments={comments} />
+        <FeedPostCommentList comments={comments} postId={post.id} viewerId={user?.id ?? null} />
       </section>
     </>
   );

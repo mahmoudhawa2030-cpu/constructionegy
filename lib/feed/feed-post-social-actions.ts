@@ -98,7 +98,11 @@ export async function toggleFeedPostSave(postId: string): Promise<SocialActionRe
   return { ok: true };
 }
 
-export async function addFeedPostComment(postId: string, rawBody: unknown): Promise<SocialActionResult> {
+export async function addFeedPostComment(
+  postId: string,
+  rawBody: unknown,
+  parentId?: string | null,
+): Promise<SocialActionResult> {
   const t = await getTranslations("feed");
   const supabase = await createClient();
   const {
@@ -114,11 +118,14 @@ export async function addFeedPostComment(postId: string, rawBody: unknown): Prom
     return { ok: false, message: t(`social.commentErrors.${msg}`) };
   }
 
-  const { error } = await supabase.from("feed_post_comments").insert({
+  const insertPayload: Record<string, unknown> = {
     post_id: postId,
     user_id: user.id,
     body: parsed.data,
-  });
+  };
+  if (parentId) insertPayload.parent_id = parentId;
+
+  const { error } = await supabase.from("feed_post_comments").insert(insertPayload as never);
 
   if (error) {
     return { ok: false, message: t("social.genericError") };

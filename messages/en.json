@@ -104,6 +104,12 @@
       "commentPlaceholder": "Write a comment…",
       "commentSubmit": "Post comment",
       "commentSubmitting": "Posting…",
+      "replyLabel": "Reply to {name}",
+      "replyPlaceholder": "Write a reply…",
+      "replySubmit": "Post reply",
+      "replySubmitting": "Posting…",
+      "replyButton": "Reply",
+      "cancelReply": "Cancel",
       "commentErrors": {
         "bodyRequired": "Write a comment.",
         "bodyTooLong": "Comment is too long (max 2000 characters)."

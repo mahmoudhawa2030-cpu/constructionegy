@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 
 import type { FeedPostCommentItem } from "@/lib/feed/fetch-post-comments";
+import { CommentThread } from "./comment-thread";
 
 function rel(iso: string, locale: string) {
   const diff = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -15,9 +16,11 @@ function rel(iso: string, locale: string) {
 
 type Props = {
   comments: FeedPostCommentItem[];
+  postId: string;
+  viewerId: string | null;
 };
 
-export async function FeedPostCommentList({ comments }: Props) {
+export async function FeedPostCommentList({ comments, postId, viewerId }: Props) {
   const locale = await getLocale();
   const t = await getTranslations("feed");
 
@@ -25,19 +28,29 @@ export async function FeedPostCommentList({ comments }: Props) {
     return <p className="font-bina-display text-[11px] text-[var(--bina-muted)]">{t("social.noComments")}</p>;
   }
 
+  const topLevel = comments.filter((c) => !c.parent_id);
+  const repliesMap = new Map<string, FeedPostCommentItem[]>();
+  for (const c of comments) {
+    if (c.parent_id) {
+      const arr = repliesMap.get(c.parent_id) ?? [];
+      arr.push(c);
+      repliesMap.set(c.parent_id, arr);
+    }
+  }
+
   return (
     <ul className="flex flex-col gap-3">
-      {comments.map((c) => (
-        <li key={c.id} className="rounded-[var(--bina-r)] border border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2">
-          <div className="mb-1 flex flex-wrap items-baseline justify-between gap-1">
-            <span className="font-bina-display text-[11px] font-bold text-[var(--bina-text)]">{c.author_name}</span>
-            <time className="font-bina-display text-[9px] text-[var(--bina-muted)]" dateTime={c.created_at}>
-              {rel(c.created_at, locale)}
-            </time>
-          </div>
-          <p className="whitespace-pre-wrap font-bina-display text-[12px] leading-relaxed text-[var(--bina-text)]">
-            {c.body}
-          </p>
+      {topLevel.map((c) => (
+        <li key={c.id}>
+          <CommentThread
+            comment={c}
+            replies={repliesMap.get(c.id) ?? []}
+            postId={postId}
+            viewerId={viewerId}
+            locale={locale}
+            relFn={rel}
+            replyButtonLabel={t("social.replyButton")}
+          />
         </li>
       ))}
     </ul>

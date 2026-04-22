@@ -104,6 +104,12 @@
       "commentPlaceholder": "اكتب تعليقاً…",
       "commentSubmit": "نشر التعليق",
       "commentSubmitting": "جاري النشر…",
+      "replyLabel": "رد على {name}",
+      "replyPlaceholder": "اكتب رداً…",
+      "replySubmit": "نشر الرد",
+      "replySubmitting": "جاري النشر…",
+      "replyButton": "رد",
+      "cancelReply": "إلغاء",
       "commentErrors": {
         "bodyRequired": "اكتب تعليقاً.",
         "bodyTooLong": "التعليق طويل جداً (حد أقصى 2000 حرف)."
