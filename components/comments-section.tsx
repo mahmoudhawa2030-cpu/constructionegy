@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { createClient } from "@/lib/supabase/client";
 import type { FeedPostCommentItem } from "@/lib/feed/fetch-post-comments";
 import { CommentThread } from "./comment-thread";
 import { FeedPostCommentForm } from "./feed-post-comment-form";
@@ -30,11 +31,73 @@ export function CommentsSection({
   borderClass = "border-[var(--bina-border)]",
 }: Props) {
   const [comments, setComments] = useState<FeedPostCommentItem[]>(initialComments);
+  const seenIds = useRef(new Set(initialComments.map((c) => c.id)));
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    type RealtimeRow = {
+      id: string;
+      body: string;
+      created_at: string;
+      user_id: string;
+      parent_id: string | null;
+    };
+
+    const channel = supabase
+      .channel(`comments:${postId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "feed_post_comments",
+          filter: `post_id=eq.${postId}`,
+        },
+        async (payload) => {
+          const row = payload.new as RealtimeRow;
+          if (seenIds.current.has(row.id)) return;
+          seenIds.current.add(row.id);
+
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("full_name")
+            .eq("id", row.user_id)
+            .maybeSingle();
+
+          const incoming: FeedPostCommentItem = {
+            id: row.id,
+            body: row.body,
+            created_at: row.created_at,
+            author_name: profile?.full_name ?? "—",
+            author_user_id: row.user_id,
+            parent_id: row.parent_id ?? null,
+          };
+
+          setComments((prev) => {
+            const withoutOptimistic = prev.filter(
+              (c) =>
+                !c.id.startsWith("optimistic-") ||
+                c.author_user_id !== row.user_id ||
+                c.body !== row.body,
+            );
+            return [...withoutOptimistic, incoming];
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [postId]);
 
   function handleNewComment(body: string, parentId: string | null) {
     if (!viewerId) return;
+    const optimisticId = `optimistic-${Date.now()}`;
+    seenIds.current.add(optimisticId);
     const optimistic: FeedPostCommentItem = {
-      id: `optimistic-${Date.now()}`,
+      id: optimisticId,
       body,
       created_at: new Date().toISOString(),
       author_name: viewerName ?? "—",
