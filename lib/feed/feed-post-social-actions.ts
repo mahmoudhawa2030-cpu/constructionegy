@@ -6,7 +6,9 @@ import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
 
-export type SocialActionResult = { ok: true } | { ok: false; message: string };
+export type SocialActionResult =
+  | { ok: true; submittedBody?: string; submittedParentId?: string | null }
+  | { ok: false; message: string };
 
 const commentSchema = z
   .string()
@@ -150,5 +152,5 @@ export async function addFeedPostComment(
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
-  return { ok: true };
+  return { ok: true, submittedBody: parsed.data, submittedParentId: parentId ?? null };
 }

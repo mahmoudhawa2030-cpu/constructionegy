@@ -4,8 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { ExpertBadge } from "@/components/expert-badge";
-import { FeedPostCommentForm } from "@/components/feed-post-comment-form";
-import { FeedPostCommentList } from "@/components/feed-post-comment-list";
+import { CommentsSection } from "@/components/comments-section";
 import { FeedPostOwnerOverflowMenu } from "@/components/feed-post-owner-overflow-menu";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import { FeedVeteransPostDetailShell } from "@/components/feed-veterans-post-detail-shell";
@@ -14,6 +13,7 @@ import type { FeedPostItem } from "@/lib/feed/feed-post-types";
 import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
 import { fetchFeedPostComments } from "@/lib/feed/fetch-post-comments";
 import { createClient } from "@/lib/supabase/server";
+import { getLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -41,14 +41,21 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  const [{ data: profile }, comments] = await Promise.all([
+  const [{ data: profile }, comments, locale] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name,user_type,business_verification_status,expert_verification_status,avatar_url")
       .eq("id", post.user_id)
       .maybeSingle(),
     fetchFeedPostComments(supabase, id),
+    getLocale(),
   ]);
+
+  let viewerName: string | null = null;
+  if (user) {
+    const { data: vp } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    viewerName = vp?.full_name ?? null;
+  }
 
   const author = profile?.full_name ?? "—";
   const role = profile?.user_type ?? "contractor";
@@ -132,20 +139,17 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
         variant={isVeteransCorner ? "veterans" : "default"}
       />
 
-      <section
-        id="comments"
-        className={`mt-8 scroll-mt-4 border-t pt-6 ${
-          isVeteransCorner ? "border-[#604010]" : "border-[var(--bina-border)]"
-        }`}
-      >
-        <h2 className="font-bina-display mb-3 text-[12px] font-black uppercase tracking-wide text-[var(--bina-text)]">
-          {t("social.commentsHeading")}
-        </h2>
-        <div className="mb-6">
-          <FeedPostCommentForm postId={post.id} viewerId={user?.id ?? null} />
-        </div>
-        <FeedPostCommentList comments={comments} postId={post.id} viewerId={user?.id ?? null} />
-      </section>
+      <CommentsSection
+        initialComments={comments}
+        postId={post.id}
+        viewerId={user?.id ?? null}
+        viewerName={viewerName}
+        commentsHeading={t("social.commentsHeading")}
+        noCommentsLabel={t("social.noComments")}
+        locale={locale}
+        replyButtonLabel={t("social.replyButton")}
+        borderClass={isVeteransCorner ? "border-[#604010]" : "border-[var(--bina-border)]"}
+      />
     </>
   );
 

@@ -13,6 +13,7 @@ type Props = {
   viewerId: string | null;
   locale: string;
   replyButtonLabel: string;
+  onNewReply?: (body: string, parentId: string) => void;
 };
 
 function rel(iso: string, locale: string) {
@@ -120,7 +121,7 @@ function CommentBubble({
   );
 }
 
-export function CommentThread({ comment, replies, postId, viewerId, locale, replyButtonLabel }: Props) {
+export function CommentThread({ comment, replies, postId, viewerId, locale, replyButtonLabel, onNewReply }: Props) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
   const nameToUserId = new Map<string, string>(
@@ -144,6 +145,7 @@ export function CommentThread({ comment, replies, postId, viewerId, locale, repl
             viewerId={viewerId}
             replyTo={{ id: comment.id, authorName: comment.author_name }}
             onCancel={() => setReplyingToId(null)}
+            onSuccess={(body) => { onNewReply?.(body, comment.id); setReplyingToId(null); }}
             autoFocus
           />
         </div>
@@ -172,6 +174,7 @@ export function CommentThread({ comment, replies, postId, viewerId, locale, repl
                     viewerId={viewerId}
                     replyTo={{ id: comment.id, authorName: reply.author_name }}
                     onCancel={() => setReplyingToId(null)}
+                    onSuccess={(body) => { onNewReply?.(body, comment.id); setReplyingToId(null); }}
                     autoFocus
                   />
                 </div>

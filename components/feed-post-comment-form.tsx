@@ -22,10 +22,11 @@ type Props = {
   viewerId: string | null;
   replyTo?: { id: string; authorName: string } | null;
   onCancel?: () => void;
+  onSuccess?: (body: string, parentId: string | null) => void;
   autoFocus?: boolean;
 };
 
-export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, autoFocus }: Props) {
+export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, onSuccess, autoFocus }: Props) {
   const t = useTranslations("feed");
   const router = useRouter();
   const [state, action, pending] = useActionState(submitComment, null);
@@ -37,11 +38,16 @@ export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, autoF
 
   useEffect(() => {
     if (state?.ok === true) {
+      if (onSuccess) {
+        const body = state.submittedBody ?? "";
+        const parentId = state.submittedParentId ?? null;
+        onSuccess(body, parentId);
+      }
       setFormKey((k) => k + 1);
       router.refresh();
       if (onCancel) onCancel();
     }
-  }, [state, router, onCancel]);
+  }, [state, router, onCancel, onSuccess]);
 
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
