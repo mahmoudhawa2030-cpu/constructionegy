@@ -30,7 +30,11 @@ export async function fetchFeedPostComments(
     .order("created_at", { ascending: true }) as unknown as Promise<{ data: RawRow[] | null; error: unknown }>);
 
   const rows = rawRows;
-  if (error || !rows?.length) return [];
+  if (error) {
+    console.error("[fetchFeedPostComments] query error:", error);
+    return [];
+  }
+  if (!rows?.length) return [];
 
   const userIds = [...new Set(rows.map((r) => r.user_id))];
   const { data: profiles } = await client.from("profiles").select("id,full_name").in("id", userIds);
