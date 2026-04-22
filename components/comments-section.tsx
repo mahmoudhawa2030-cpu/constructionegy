@@ -31,7 +31,6 @@ export function CommentsSection({
   borderClass = "border-[var(--bina-border)]",
 }: Props) {
   const [comments, setComments] = useState<FeedPostCommentItem[]>(initialComments);
-  const seenIds = useRef(new Set(initialComments.map((c) => c.id)));
 
   useEffect(() => {
     const supabase = createClient();
@@ -45,7 +44,7 @@ export function CommentsSection({
     };
 
     const channel = supabase
-      .channel(`comments:${postId}`)
+      .channel(`comments-${postId}-${Math.random()}`)
       .on(
         "postgres_changes",
         {
@@ -56,8 +55,6 @@ export function CommentsSection({
         },
         async (payload) => {
           const row = payload.new as RealtimeRow;
-          if (seenIds.current.has(row.id)) return;
-          seenIds.current.add(row.id);
 
           const { data: profile } = await supabase
             .from("profiles")
@@ -75,11 +72,9 @@ export function CommentsSection({
           };
 
           setComments((prev) => {
+            if (prev.some((c) => c.id === row.id)) return prev;
             const withoutOptimistic = prev.filter(
-              (c) =>
-                !c.id.startsWith("optimistic-") ||
-                c.author_user_id !== row.user_id ||
-                c.body !== row.body,
+              (c) => !(c.id.startsWith("optimistic-") && c.author_user_id === row.user_id && c.body.trim() === row.body.trim()),
             );
             return [...withoutOptimistic, incoming];
           });
@@ -95,7 +90,6 @@ export function CommentsSection({
   function handleNewComment(body: string, parentId: string | null) {
     if (!viewerId) return;
     const optimisticId = `optimistic-${Date.now()}`;
-    seenIds.current.add(optimisticId);
     const optimistic: FeedPostCommentItem = {
       id: optimisticId,
       body,
