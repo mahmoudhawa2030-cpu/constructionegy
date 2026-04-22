@@ -7,6 +7,12 @@ import type { FeedPostCommentItem } from "@/lib/feed/fetch-post-comments";
 import { CommentThread } from "./comment-thread";
 import { FeedPostCommentForm } from "./feed-post-comment-form";
 
+const _seenByPost = new Map<string, Set<string>>();
+function getSeenIds(postId: string): Set<string> {
+  if (!_seenByPost.has(postId)) _seenByPost.set(postId, new Set());
+  return _seenByPost.get(postId)!;
+}
+
 type Props = {
   initialComments: FeedPostCommentItem[];
   postId: string;
@@ -30,8 +36,11 @@ export function CommentsSection({
   replyButtonLabel,
   borderClass = "border-[var(--bina-border)]",
 }: Props) {
-  const [comments, setComments] = useState<FeedPostCommentItem[]>(initialComments);
-  const knownIds = useRef<Set<string>>(new Set(initialComments.map((c) => c.id)));
+  const [comments, setComments] = useState<FeedPostCommentItem[]>(() => {
+    const seen = getSeenIds(postId);
+    initialComments.forEach((c) => seen.add(c.id));
+    return initialComments;
+  });
 
   useEffect(() => {
     const supabase = createClient();
@@ -56,8 +65,9 @@ export function CommentsSection({
         },
         async (payload) => {
           const row = payload.new as RealtimeRow;
-          if (knownIds.current.has(row.id)) return;
-          knownIds.current.add(row.id);
+          const seen = getSeenIds(postId);
+          if (seen.has(row.id)) return;
+          seen.add(row.id);
 
           const { data: profile } = await supabase
             .from("profiles")
@@ -92,7 +102,7 @@ export function CommentsSection({
   function handleNewComment(body: string, parentId: string | null) {
     if (!viewerId) return;
     const optimisticId = `optimistic-${Date.now()}`;
-    knownIds.current.add(optimisticId);
+    getSeenIds(postId).add(optimisticId);
     const optimistic: FeedPostCommentItem = {
       id: optimisticId,
       body,
