@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import type { FeedPostCommentItem } from "@/lib/feed/fetch-post-comments";
 import { FeedPostCommentForm } from "./feed-post-comment-form";
@@ -25,17 +26,48 @@ function rel(iso: string, locale: string) {
   return rtf.format(-Math.floor(h / 24), "day");
 }
 
-function MentionBody({ body }: { body: string }) {
-  const parts = body.split(/(@\S+)/g);
+function MentionBody({ body, nameToUserId }: { body: string; nameToUserId: Map<string, string> }) {
+  const tokens: { text: string; userId: string | null }[] = [];
+  let remaining = body;
+
+  while (remaining.length > 0) {
+    const atIdx = remaining.indexOf("@");
+    if (atIdx === -1) {
+      tokens.push({ text: remaining, userId: null });
+      break;
+    }
+    if (atIdx > 0) {
+      tokens.push({ text: remaining.slice(0, atIdx), userId: null });
+      remaining = remaining.slice(atIdx);
+      continue;
+    }
+    const withoutAt = remaining.slice(1);
+    const sortedNames = [...nameToUserId.keys()].sort((a, b) => b.length - a.length);
+    const matched = sortedNames.find((name) => withoutAt.startsWith(name));
+    if (matched) {
+      tokens.push({ text: `@${matched}`, userId: nameToUserId.get(matched) ?? null });
+      remaining = remaining.slice(1 + matched.length);
+    } else {
+      const spaceIdx = remaining.indexOf(" ", 1);
+      const end = spaceIdx === -1 ? remaining.length : spaceIdx;
+      tokens.push({ text: remaining.slice(0, end), userId: null });
+      remaining = remaining.slice(end);
+    }
+  }
+
   return (
     <p className="whitespace-pre-wrap font-bina-display text-[12px] leading-relaxed text-[var(--bina-text)]">
-      {parts.map((part, i) =>
-        part.startsWith("@") ? (
-          <span key={i} className="font-semibold text-[var(--bina-or)]">
-            {part}
-          </span>
+      {tokens.map((token, i) =>
+        token.userId ? (
+          <Link
+            key={i}
+            href={`/profile/${token.userId}`}
+            className="font-semibold text-[var(--bina-or)] underline underline-offset-2"
+          >
+            {token.text}
+          </Link>
         ) : (
-          part
+          token.text
         ),
       )}
     </p>
@@ -48,12 +80,14 @@ function CommentBubble({
   onReply,
   replyButtonLabel,
   isReply,
+  nameToUserId,
 }: {
   comment: FeedPostCommentItem;
   locale: string;
   onReply?: () => void;
   replyButtonLabel: string;
   isReply?: boolean;
+  nameToUserId: Map<string, string>;
 }) {
   return (
     <div
@@ -62,14 +96,17 @@ function CommentBubble({
       }`}
     >
       <div className="mb-1 flex flex-wrap items-baseline justify-between gap-1">
-        <span className="font-bina-display text-[11px] font-bold text-[var(--bina-text)]">
+        <Link
+          href={`/profile/${comment.author_user_id}`}
+          className="font-bina-display text-[11px] font-bold text-[var(--bina-text)] hover:underline"
+        >
           {comment.author_name}
-        </span>
+        </Link>
         <time className="font-bina-display text-[9px] text-[var(--bina-muted)]" dateTime={comment.created_at}>
           {rel(comment.created_at, locale)}
         </time>
       </div>
-      <MentionBody body={comment.body} />
+      <MentionBody body={comment.body} nameToUserId={nameToUserId} />
       {onReply ? (
         <button
           type="button"
@@ -86,12 +123,17 @@ function CommentBubble({
 export function CommentThread({ comment, replies, postId, viewerId, locale, replyButtonLabel }: Props) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
+  const nameToUserId = new Map<string, string>(
+    [comment, ...replies].map((c) => [c.author_name, c.author_user_id]),
+  );
+
   return (
     <div className="flex flex-col gap-2">
       <CommentBubble
         comment={comment}
         locale={locale}
         replyButtonLabel={replyButtonLabel}
+        nameToUserId={nameToUserId}
         onReply={viewerId ? () => setReplyingToId(comment.id) : undefined}
       />
 
@@ -115,6 +157,7 @@ export function CommentThread({ comment, replies, postId, viewerId, locale, repl
                 comment={reply}
                 locale={locale}
                 replyButtonLabel={replyButtonLabel}
+                nameToUserId={nameToUserId}
                 isReply
                 onReply={
                   viewerId

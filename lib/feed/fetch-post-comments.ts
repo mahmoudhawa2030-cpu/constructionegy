@@ -7,6 +7,7 @@ export type FeedPostCommentItem = {
   body: string;
   created_at: string;
   author_name: string;
+  author_user_id: string;
   parent_id: string | null;
 };
 
@@ -40,6 +41,7 @@ export async function fetchFeedPostComments(
     body: r.body,
     created_at: r.created_at,
     author_name: nameById.get(r.user_id) ?? "—",
+    author_user_id: r.user_id,
     parent_id: r.parent_id ?? null,
   }));
 }
