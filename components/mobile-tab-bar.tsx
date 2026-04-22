@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
+import { useCommentNotifications } from "@/components/comment-notifications-provider";
+
 type Props = {
   homeHref?: string;
 };
@@ -11,6 +13,7 @@ type Props = {
 export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const { unreadCount } = useCommentNotifications();
 
   function isActive(href: string) {
     if (href === homeHref) return pathname === homeHref;
@@ -79,6 +82,26 @@ export function MobileTabBar({ homeHref = "/" }: Props) {
           <Link href="/map" className={cls("/map")} aria-label={t("nearby")} prefetch>
             {icon("📍", "/map")}
             {label(t("nearby"), "/map")}
+          </Link>
+        </li>
+
+        {/* NOTIFICATIONS */}
+        <li className={cls("/notifications")}>
+          <Link
+            href="/notifications"
+            className={cls("/notifications")}
+            aria-label={unreadCount > 0 ? t("notificationsAriaWithUnread", { count: unreadCount }) : t("notificationsAria")}
+            prefetch
+          >
+            <span className="relative flex h-[22px] w-[22px] items-center justify-center text-[16px] leading-none">
+              🔔
+              {unreadCount > 0 ? (
+                <span className="absolute -end-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--bina-or)] px-1 font-bina-display text-[9px] font-bold leading-none text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
+            </span>
+            {label(t("notificationsAria"), "/notifications")}
           </Link>
         </li>
 

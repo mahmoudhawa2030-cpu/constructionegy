@@ -127,10 +127,57 @@ export async function addFeedPostComment(
   };
   if (parentId) insertPayload.parent_id = parentId;
 
-  const { error } = await supabase.from("feed_post_comments").insert(insertPayload as never);
+  const { data: insertedComment, error } = await (supabase
+    .from("feed_post_comments")
+    .insert(insertPayload as never)
+    .select("id")
+    .single() as unknown as Promise<{ data: { id: string } | null; error: unknown }>);
 
-  if (error) {
+  if (error || !insertedComment) {
     return { ok: false, message: t("social.genericError") };
+  }
+
+  const commentId = insertedComment.id;
+
+  const { data: actorProfile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  const actorName = actorProfile?.full_name ?? "—";
+
+  if (parentId) {
+    const { data: parentComment } = await (supabase
+      .from("feed_post_comments")
+      .select("user_id")
+      .eq("id", parentId)
+      .maybeSingle() as unknown as Promise<{ data: { user_id: string } | null; error: unknown }>);
+    if (parentComment && parentComment.user_id !== user.id) {
+      await supabase.from("comment_notifications").insert({
+        recipient_user_id: parentComment.user_id,
+        actor_user_id: user.id,
+        actor_name: actorName,
+        type: "reply_to_comment",
+        post_id: postId,
+        comment_id: commentId,
+      } as never);
+    }
+  } else {
+    const { data: post } = await supabase
+      .from("feed_posts")
+      .select("user_id")
+      .eq("id", postId)
+      .maybeSingle();
+    if (post && post.user_id !== user.id) {
+      await supabase.from("comment_notifications").insert({
+        recipient_user_id: post.user_id,
+        actor_user_id: user.id,
+        actor_name: actorName,
+        type: "comment_on_post",
+        post_id: postId,
+        comment_id: commentId,
+      } as never);
+    }
   }
 
   // Robust recount: use RPC first, then fallback to direct count+update (bypasses any RPC/trigger issues)

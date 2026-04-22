@@ -39,7 +39,20 @@
     "closeMenuBackdropAria": "Close menu",
     "menuAppearance": "Appearance",
     "menuLanguage": "Language",
-    "openMenuAria": "Open menu"
+    "openMenuAria": "Open menu",
+    "notificationsAria": "Notifications",
+    "notificationsAriaWithUnread": "Notifications · {count} unread"
+  },
+  "commentNotifications": {
+    "bellAria": "Notifications",
+    "panelTitle": "Notifications",
+    "empty": "No notifications yet.",
+    "markAllRead": "Mark all as read",
+    "commentOnPost": "{actor} commented on your post",
+    "replyToComment": "{actor} replied to your comment",
+    "viewPost": "View post",
+    "toastDismiss": "Dismiss",
+    "toastView": "View"
   },
   "messagesInbox": {
     "title": "Messages",

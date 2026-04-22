@@ -39,7 +39,20 @@
     "closeMenuBackdropAria": "إغلاق القائمة",
     "menuAppearance": "المظهر",
     "menuLanguage": "اللغة",
-    "openMenuAria": "فتح القائمة"
+    "openMenuAria": "فتح القائمة",
+    "notificationsAria": "الإشعارات",
+    "notificationsAriaWithUnread": "الإشعارات · {count} غير مقروء"
+  },
+  "commentNotifications": {
+    "bellAria": "الإشعارات",
+    "panelTitle": "الإشعارات",
+    "empty": "لا توجد إشعارات بعد.",
+    "markAllRead": "تحديد الكل كمقروء",
+    "commentOnPost": "{actor} علّق على منشورك",
+    "replyToComment": "{actor} ردّ على تعليقك",
+    "viewPost": "عرض المنشور",
+    "toastDismiss": "إغلاق",
+    "toastView": "عرض"
   },
   "messagesInbox": {
     "title": "الرسائل",

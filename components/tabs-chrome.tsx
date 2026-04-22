@@ -8,6 +8,7 @@ import { LocaleSwitcher } from "@/components/locale-switcher";
 import { MobileChromeMenuDrawer } from "@/components/mobile-chrome-menu-drawer";
 import { MobileChromeMenuProvider, useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
 import { MessageNotificationsProvider, useMessageNotifications } from "@/components/message-notifications-provider";
+import { CommentNotificationsProvider } from "@/components/comment-notifications-provider";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,6 +17,7 @@ type Props = {
   hasUser: boolean;
   userId: string | null;
   initialUnreadMessageCount: number;
+  initialUnreadCommentNotifCount: number;
   children: React.ReactNode;
 };
 
@@ -122,13 +124,15 @@ function TabsChromeShell({ hasUser, children }: { hasUser: boolean; children: Re
   );
 }
 
-export function TabsChrome({ hasUser, userId, initialUnreadMessageCount, children }: Props) {
+export function TabsChrome({ hasUser, userId, initialUnreadMessageCount, initialUnreadCommentNotifCount, children }: Props) {
   const shell = <TabsChromeShell hasUser={hasUser}>{children}</TabsChromeShell>;
 
   if (hasUser && userId) {
     return (
       <MessageNotificationsProvider userId={userId} initialUnreadTotal={initialUnreadMessageCount}>
-        {shell}
+        <CommentNotificationsProvider userId={userId} initialUnreadCount={initialUnreadCommentNotifCount}>
+          {shell}
+        </CommentNotificationsProvider>
       </MessageNotificationsProvider>
     );
   }
