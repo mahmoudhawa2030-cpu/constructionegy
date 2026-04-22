@@ -11,9 +11,19 @@ type Props = {
   postId: string;
   viewerId: string | null;
   locale: string;
-  relFn: (iso: string, locale: string) => string;
   replyButtonLabel: string;
 };
+
+function rel(iso: string, locale: string) {
+  const diff = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar" : "en", { numeric: "auto" });
+  if (diff < 60) return rtf.format(-diff, "second");
+  const m = Math.floor(diff / 60);
+  if (m < 60) return rtf.format(-m, "minute");
+  const h = Math.floor(m / 60);
+  if (h < 48) return rtf.format(-h, "hour");
+  return rtf.format(-Math.floor(h / 24), "day");
+}
 
 function MentionBody({ body }: { body: string }) {
   const parts = body.split(/(@\S+)/g);
@@ -35,14 +45,12 @@ function MentionBody({ body }: { body: string }) {
 function CommentBubble({
   comment,
   locale,
-  relFn,
   onReply,
   replyButtonLabel,
   isReply,
 }: {
   comment: FeedPostCommentItem;
   locale: string;
-  relFn: (iso: string, locale: string) => string;
   onReply?: () => void;
   replyButtonLabel: string;
   isReply?: boolean;
@@ -58,7 +66,7 @@ function CommentBubble({
           {comment.author_name}
         </span>
         <time className="font-bina-display text-[9px] text-[var(--bina-muted)]" dateTime={comment.created_at}>
-          {relFn(comment.created_at, locale)}
+          {rel(comment.created_at, locale)}
         </time>
       </div>
       <MentionBody body={comment.body} />
@@ -75,7 +83,7 @@ function CommentBubble({
   );
 }
 
-export function CommentThread({ comment, replies, postId, viewerId, locale, relFn, replyButtonLabel }: Props) {
+export function CommentThread({ comment, replies, postId, viewerId, locale, replyButtonLabel }: Props) {
   const [replyingToId, setReplyingToId] = useState<string | null>(null);
 
   return (
@@ -83,7 +91,6 @@ export function CommentThread({ comment, replies, postId, viewerId, locale, relF
       <CommentBubble
         comment={comment}
         locale={locale}
-        relFn={relFn}
         replyButtonLabel={replyButtonLabel}
         onReply={viewerId ? () => setReplyingToId(comment.id) : undefined}
       />
@@ -107,7 +114,6 @@ export function CommentThread({ comment, replies, postId, viewerId, locale, relF
               <CommentBubble
                 comment={reply}
                 locale={locale}
-                relFn={relFn}
                 replyButtonLabel={replyButtonLabel}
                 isReply
                 onReply={

@@ -3,17 +3,6 @@ import { getLocale, getTranslations } from "next-intl/server";
 import type { FeedPostCommentItem } from "@/lib/feed/fetch-post-comments";
 import { CommentThread } from "./comment-thread";
 
-function rel(iso: string, locale: string) {
-  const diff = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  const rtf = new Intl.RelativeTimeFormat(locale === "ar" ? "ar" : "en", { numeric: "auto" });
-  if (diff < 60) return rtf.format(-diff, "second");
-  const m = Math.floor(diff / 60);
-  if (m < 60) return rtf.format(-m, "minute");
-  const h = Math.floor(m / 60);
-  if (h < 48) return rtf.format(-h, "hour");
-  return rtf.format(-Math.floor(h / 24), "day");
-}
-
 type Props = {
   comments: FeedPostCommentItem[];
   postId: string;
@@ -48,7 +37,6 @@ export async function FeedPostCommentList({ comments, postId, viewerId }: Props)
             postId={postId}
             viewerId={viewerId}
             locale={locale}
-            relFn={rel}
             replyButtonLabel={t("social.replyButton")}
           />
         </li>
