@@ -104,6 +104,7 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
               src={item.author_avatar_url}
               alt={item.author_name}
               className="h-10 w-10 rounded-full object-cover"
+              loading="lazy"
               onError={() => setAvatarError(true)}
             />
           ) : (

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed, Geist_Mono, Noto_Sans_Arabic } from "next/font/google";
+import { Barlow, Barlow_Condensed, Noto_Sans_Arabic } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 
@@ -24,11 +24,6 @@ const barlowCondensed = Barlow_Condensed({
   variable: "--font-barlow-condensed",
   subsets: ["latin"],
   weight: ["400", "600", "700", "900"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
 });
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,7 +51,7 @@ export default async function RootLayout({
 
   return (
     <html
-      className={`${notoSansArabic.variable} ${barlow.variable} ${barlowCondensed.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoSansArabic.variable} ${barlow.variable} ${barlowCondensed.variable} h-full antialiased`}
       dir={dir}
       lang={locale}
       suppressHydrationWarning

@@ -14,7 +14,7 @@ import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { labelForCategorySlug } from "@/lib/listings/categories";
 import { createClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 const typeLabels = { rent: "إيجار", sell: "بيع" } as const;
 const conditionLabels = { new: "جديد", used: "مستعمل" } as const;
