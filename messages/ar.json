@@ -41,7 +41,8 @@
     "menuLanguage": "اللغة",
     "openMenuAria": "فتح القائمة",
     "notificationsAria": "الإشعارات",
-    "notificationsAriaWithUnread": "الإشعارات · {count} غير مقروء"
+    "notificationsAriaWithUnread": "الإشعارات · {count} غير مقروء",
+    "tools": "الأدوات"
   },
   "commentNotifications": {
     "bellAria": "الإشعارات",

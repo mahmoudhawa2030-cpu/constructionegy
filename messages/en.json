@@ -41,7 +41,8 @@
     "menuLanguage": "Language",
     "openMenuAria": "Open menu",
     "notificationsAria": "Notifications",
-    "notificationsAriaWithUnread": "Notifications · {count} unread"
+    "notificationsAriaWithUnread": "Notifications · {count} unread",
+    "tools": "Tools"
   },
   "commentNotifications": {
     "bellAria": "Notifications",

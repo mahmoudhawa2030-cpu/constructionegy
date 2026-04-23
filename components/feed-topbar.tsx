@@ -40,6 +40,13 @@ export function FeedTopbar() {
 
         <div className="flex shrink-0 items-center gap-1.5">
           <Link
+            href="/tools"
+            aria-label={t("tools")}
+            className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
+          >
+            🔧
+          </Link>
+          <Link
             href="/notifications"
             aria-label={unreadCount > 0 ? t("notificationsAriaWithUnread", { count: unreadCount }) : t("notificationsAria")}
             className="relative flex h-8 w-8 items-center justify-center rounded-full border border-[var(--bina-border)] bg-[var(--bina-steel3)] text-[13px] transition-opacity active:opacity-70"
