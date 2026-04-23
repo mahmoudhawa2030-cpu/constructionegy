@@ -91,3 +91,49 @@ export async function fetchLatestVeteransPost(
   await enrichFeedPostsSocial(client, [item], viewerId);
   return item;
 }
+
+/**
+ * Fetches both the regular post pool and the latest veterans post in parallel,
+ * sharing a single profile lookup and a single social enrichment call.
+ * Use this from the home page instead of calling both functions separately.
+ */
+export async function fetchFeedPostPoolAndVeteran(
+  client: SupabaseClient<Database>,
+  limit = 60,
+  viewerId: string | null = null,
+): Promise<{ posts: FeedPostItem[]; veteranPost: FeedPostItem | null }> {
+  const [regularRes, veteranRes] = await Promise.all([
+    client
+      .from("feed_posts")
+      .select("*")
+      .eq("status", "published")
+      .eq("is_veterans_corner", false)
+      .order("created_at", { ascending: false })
+      .limit(limit),
+    client
+      .from("feed_posts")
+      .select("*")
+      .eq("status", "published")
+      .eq("is_veterans_corner", true)
+      .order("created_at", { ascending: false })
+      .limit(1),
+  ]);
+
+  const regularRows = regularRes.data ?? [];
+  const veteranRow = veteranRes.data?.[0] ?? null;
+  const allRows = veteranRow ? [...regularRows, veteranRow] : regularRows;
+
+  if (!allRows.length) return { posts: [], veteranPost: null };
+
+  const allItems = await attachProfiles(client, allRows);
+  await enrichFeedPostsSocial(client, allItems, viewerId);
+
+  const veteranItem = veteranRow
+    ? (allItems.find((i) => i.id === veteranRow.id) ?? null)
+    : null;
+  const posts = veteranRow
+    ? allItems.filter((i) => i.id !== veteranRow.id)
+    : allItems;
+
+  return { posts, veteranPost: veteranItem };
+}

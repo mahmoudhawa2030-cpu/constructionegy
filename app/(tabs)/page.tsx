@@ -3,7 +3,7 @@ import { FeedTopbar } from "@/components/feed-topbar";
 import { FeedTabStrip } from "@/components/feed-tab-strip";
 import { PullToRefreshScroll } from "@/components/pull-to-refresh-scroll";
 import type { FeedRfqItem } from "@/components/feed-rfq-card";
-import { fetchFeedPostPool, fetchLatestVeteransPost } from "@/lib/feed/fetch-feed-posts";
+import { fetchFeedPostPoolAndVeteran } from "@/lib/feed/fetch-feed-posts";
 import { filterNearMePosts, rankFeedPostsForYou } from "@/lib/feed/for-you-post-rank";
 import { fetchPersonalizationContext } from "@/lib/feed/personalization-context";
 import { createClient } from "@/lib/supabase/server";
@@ -23,18 +23,19 @@ export default async function HomePage() {
   // Force client components to remount after pull-to-refresh so social state resets
   const refreshKey = Date.now();
 
-  const [postPool, rfqRes, veteranPost, ctx] = await Promise.all([
-    fetchFeedPostPool(supabase, FEED_POST_LIMIT, user?.id ?? null),
+  const [feedResult, rfqRes, ctx] = await Promise.all([
+    fetchFeedPostPoolAndVeteran(supabase, FEED_POST_LIMIT, user?.id ?? null),
     supabase
       .from("rfq_drafts")
       .select("id,title,created_at,metadata")
       .in("status", ["open_for_bids", "submitted"])
       .order("created_at", { ascending: false })
       .limit(1),
-    fetchLatestVeteransPost(supabase, user?.id ?? null),
     user?.id ? fetchPersonalizationContext(supabase, user.id) : Promise.resolve(null),
   ]);
 
+  const postPool = feedResult.posts;
+  const veteranPost = feedResult.veteranPost;
   const forYouPosts = rankFeedPostsForYou(postPool, ctx);
   const nearMePosts = filterNearMePosts(postPool, ctx?.viewerLocationNorm ?? null);
 
