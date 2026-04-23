@@ -44,6 +44,14 @@
     "notificationsAriaWithUnread": "Notifications · {count} unread",
     "tools": "Tools"
   },
+  "toolsMenu": {
+    "menuAria": "Open tools menu",
+    "scanner": "Document Scanner",
+    "counter": "Things Counter",
+    "profileViews": "Who Viewed My Profile",
+    "dwgViewer": "DWG Viewer",
+    "comingSoon": "Coming Soon"
+  },
   "commentNotifications": {
     "bellAria": "Notifications",
     "panelTitle": "Notifications",

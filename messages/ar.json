@@ -44,6 +44,14 @@
     "notificationsAriaWithUnread": "الإشعارات · {count} غير مقروء",
     "tools": "الأدوات"
   },
+  "toolsMenu": {
+    "menuAria": "فتح قائمة الأدوات",
+    "scanner": "ماسح المستندات",
+    "counter": "عداد الأشياء",
+    "profileViews": "من زار ملفي الشخصي",
+    "dwgViewer": "عارض DWG",
+    "comingSoon": "قريباً"
+  },
   "commentNotifications": {
     "bellAria": "الإشعارات",
     "panelTitle": "الإشعارات",
