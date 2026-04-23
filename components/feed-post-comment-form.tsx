@@ -1,21 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
 
 import { addFeedPostComment } from "@/lib/feed/feed-post-social-actions";
-
-async function submitComment(
-  _prev: Awaited<ReturnType<typeof addFeedPostComment>> | null,
-  formData: FormData,
-) {
-  const postId = String(formData.get("post_id") ?? "");
-  const parentId = String(formData.get("parent_id") ?? "") || null;
-  const body = String(formData.get("body") ?? "");
-  return addFeedPostComment(postId, body, parentId);
-}
 
 type Props = {
   postId: string;
@@ -28,26 +17,13 @@ type Props = {
 
 export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, onSuccess, autoFocus }: Props) {
   const t = useTranslations("feed");
-  const router = useRouter();
-  const [state, action, pending] = useActionState(submitComment, null);
-  const [formKey, setFormKey] = useState(0);
+  const [body, setBody] = useState(replyTo ? `@${replyTo.authorName} ` : "");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isReply = Boolean(replyTo);
-  const mentionPrefix = replyTo ? `@${replyTo.authorName} ` : "";
-
-  useEffect(() => {
-    if (state?.ok === true) {
-      if (onSuccess) {
-        const body = state.submittedBody ?? "";
-        const parentId = state.submittedParentId ?? null;
-        onSuccess(body, parentId);
-      }
-      setFormKey((k) => k + 1);
-      router.refresh();
-      if (onCancel) onCancel();
-    }
-  }, [state, router, onCancel, onSuccess]);
+  const parentId = replyTo?.id ?? null;
 
   useEffect(() => {
     if (autoFocus && textareaRef.current) {
@@ -55,7 +31,7 @@ export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, onSuc
       el.focus();
       el.setSelectionRange(el.value.length, el.value.length);
     }
-  }, [autoFocus, formKey]);
+  }, [autoFocus]);
 
   if (!viewerId) {
     const next = encodeURIComponent(`/posts/${postId}#comments`);
@@ -68,10 +44,34 @@ export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, onSuc
     );
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = body.trim();
+    if (!trimmed || submitting) return;
+
+    setError(null);
+
+    // 1. Show comment instantly — fire optimistic before any await
+    onSuccess?.(trimmed, parentId);
+    setBody("");
+    if (onCancel) onCancel();
+
+    // 2. Submit to server in background
+    setSubmitting(true);
+    try {
+      const result = await addFeedPostComment(postId, trimmed, parentId);
+      if (!result.ok) {
+        setError(result.message ?? t("social.commentError"));
+      }
+    } catch {
+      setError(t("social.commentError"));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <form key={formKey} action={action} className="flex flex-col gap-2">
-      <input type="hidden" name="post_id" value={postId} />
-      {replyTo ? <input type="hidden" name="parent_id" value={replyTo.id} /> : null}
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <label className="flex flex-col gap-1">
         <span className="font-bina-display text-[10px] font-semibold uppercase tracking-wide text-[var(--bina-muted)]">
           {isReply ? t("social.replyLabel", { name: replyTo!.authorName }) : t("social.commentLabel")}
@@ -82,23 +82,22 @@ export function FeedPostCommentForm({ postId, viewerId, replyTo, onCancel, onSuc
           required
           maxLength={2000}
           rows={isReply ? 2 : 3}
-          defaultValue={mentionPrefix}
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
           className="resize-y rounded-[var(--bina-r)] border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-3 py-2 font-bina-display text-sm text-[var(--bina-text)] outline-none ring-[var(--bina-or)] focus:ring-2"
           placeholder={isReply ? t("social.replyPlaceholder") : t("social.commentPlaceholder")}
         />
       </label>
-      {state?.ok === false ? (
-        <p className="font-bina-display text-xs text-[var(--bina-red)]">{state.message}</p>
+      {error ? (
+        <p className="font-bina-display text-xs text-[var(--bina-red)]">{error}</p>
       ) : null}
       <div className="flex items-center gap-2">
         <button
           type="submit"
-          disabled={pending}
+          disabled={submitting || !body.trim()}
           className="font-bina-display w-fit rounded-[var(--bina-r)] bg-[var(--bina-or)] px-4 py-2 text-[11px] font-bold uppercase tracking-wide text-white disabled:opacity-60"
         >
-          {pending
-            ? isReply ? t("social.replySubmitting") : t("social.commentSubmitting")
-            : isReply ? t("social.replySubmit") : t("social.commentSubmit")}
+          {isReply ? t("social.replySubmit") : t("social.commentSubmit")}
         </button>
         {isReply && onCancel ? (
           <button
