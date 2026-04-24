@@ -248,100 +248,68 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       const H = out.height;
       const N = W * H;
 
-      // ── Step 1: Grey World color cast correction ──────────────────────────
-      // Compute mean of each channel → scale so all means equal overall mean.
-      // Removes yellow/warm/green tint from artificial lighting.
+      // ── Step 1: Gentle grey world — only correct strong color casts ────────
+      // Cap at 1.15x so we never over-correct and thin out the ink
       let sumR = 0, sumG = 0, sumB = 0;
       for (let i = 0; i < d.length; i += 4) {
         sumR += d[i]; sumG += d[i + 1]; sumB += d[i + 2];
       }
       const meanR = sumR / N, meanG = sumG / N, meanB = sumB / N;
       const meanAll = (meanR + meanG + meanB) / 3;
-      const ccR = meanAll / (meanR || 1);
-      const ccG = meanAll / (meanG || 1);
-      const ccB = meanAll / (meanB || 1);
-      // Apply — clamp gently so we don't over-correct very saturated images
+      const ccR = Math.min(meanAll / (meanR || 1), 1.15);
+      const ccG = Math.min(meanAll / (meanG || 1), 1.15);
+      const ccB = Math.min(meanAll / (meanB || 1), 1.15);
       for (let i = 0; i < d.length; i += 4) {
-        d[i]     = Math.min(255, Math.round(d[i]     * Math.min(ccR, 1.4)));
-        d[i + 1] = Math.min(255, Math.round(d[i + 1] * Math.min(ccG, 1.4)));
-        d[i + 2] = Math.min(255, Math.round(d[i + 2] * Math.min(ccB, 1.4)));
+        d[i]     = Math.min(255, Math.round(d[i]     * ccR));
+        d[i + 1] = Math.min(255, Math.round(d[i + 1] * ccG));
+        d[i + 2] = Math.min(255, Math.round(d[i + 2] * ccB));
       }
 
-      // ── Step 2: Build luminance map ───────────────────────────────────────
+      // ── Step 2: Luminance map ──────────────────────────────────────────────
       const lum = new Float32Array(N);
       for (let i = 0; i < d.length; i += 4) {
         lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // ── Step 3: Large-tile shadow map (256px) for shadow removal ──────────
-      // Shadows are large smooth dark regions — detected via 95th-percentile
-      // brightness in big tiles then bilinear interpolation.
-      const buildTileMap = (tileSize: number, percentile: number): { map: Float32Array; tx: number; ty: number } => {
-        const tx = Math.ceil(W / tileSize);
-        const ty = Math.ceil(H / tileSize);
-        const map = new Float32Array(tx * ty);
-        for (let tyi = 0; tyi < ty; tyi++) {
-          for (let txi = 0; txi < tx; txi++) {
-            const vals: number[] = [];
-            const x0 = txi * tileSize, x1 = Math.min(x0 + tileSize, W);
-            const y0 = tyi * tileSize, y1 = Math.min(y0 + tileSize, H);
-            for (let py = y0; py < y1; py++) {
-              for (let px = x0; px < x1; px++) {
-                vals.push(lum[py * W + px]);
-              }
-            }
-            vals.sort((a, b) => a - b);
-            map[tyi * tx + txi] = vals[Math.floor(vals.length * percentile)] || 255;
-          }
-        }
-        return { map, tx, ty };
-      };
-
-      const bilinear = (map: Float32Array, txCount: number, tyCount: number, tileSize: number, x: number, y: number): number => {
-        const fx = (x / tileSize) - 0.5;
-        const fy = (y / tileSize) - 0.5;
-        const tx0 = Math.max(0, Math.floor(fx));
-        const tx1 = Math.min(txCount - 1, tx0 + 1);
-        const ty0 = Math.max(0, Math.floor(fy));
-        const ty1 = Math.min(tyCount - 1, ty0 + 1);
-        const wx = fx - Math.floor(fx);
-        const wy = fy - Math.floor(fy);
-        return (
-          map[ty0 * txCount + tx0] * (1 - wx) * (1 - wy) +
-          map[ty0 * txCount + tx1] * wx        * (1 - wy) +
-          map[ty1 * txCount + tx0] * (1 - wx)  * wy +
-          map[ty1 * txCount + tx1] * wx         * wy
-        );
-      };
-
-      // Shadow map: large 128px tiles, 95th percentile
-      const shadow = buildTileMap(128, 0.95);
-      // Fine background map: 32px tiles, 85th percentile (less aggressive whitening)
-      const fine = buildTileMap(32, 0.85);
-      // HDR tile map: 64px tiles, full range per tile
-      const HDR_TILE = 64;
-      const hdrTX = Math.ceil(W / HDR_TILE);
-      const hdrTY = Math.ceil(H / HDR_TILE);
-      const hdrMin = new Float32Array(hdrTX * hdrTY);
-      const hdrMax = new Float32Array(hdrTX * hdrTY);
-      for (let tyi = 0; tyi < hdrTY; tyi++) {
-        for (let txi = 0; txi < hdrTX; txi++) {
-          let mn = 255, mx = 0;
-          const x0 = txi * HDR_TILE, x1 = Math.min(x0 + HDR_TILE, W);
-          const y0 = tyi * HDR_TILE, y1 = Math.min(y0 + HDR_TILE, H);
+      // ── Step 3: Single adaptive background map (64px, 88th percentile) ────
+      // One pass only — no double-whitening stacking
+      // 88th percentile keeps paper as natural off-white/cream, not pure white
+      const TILE = 64;
+      const tilesX = Math.ceil(W / TILE);
+      const tilesY = Math.ceil(H / TILE);
+      const bgMap = new Float32Array(tilesX * tilesY);
+      for (let tyi = 0; tyi < tilesY; tyi++) {
+        for (let txi = 0; txi < tilesX; txi++) {
+          const vals: number[] = [];
+          const x0 = txi * TILE, x1 = Math.min(x0 + TILE, W);
+          const y0 = tyi * TILE, y1 = Math.min(y0 + TILE, H);
           for (let py = y0; py < y1; py++) {
-            for (let px = x0; px < x1; px++) {
-              const v = lum[py * W + px];
-              if (v < mn) mn = v;
-              if (v > mx) mx = v;
-            }
+            for (let px = x0; px < x1; px++) vals.push(lum[py * W + px]);
           }
-          hdrMin[tyi * hdrTX + txi] = mn;
-          hdrMax[tyi * hdrTX + txi] = mx;
+          vals.sort((a, b) => a - b);
+          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.88)] || 200;
         }
       }
 
-      // ── Step 4: Per-pixel full pipeline ───────────────────────────────────
+      // Bilinear interpolation of background map
+      const getBg = (x: number, y: number): number => {
+        const fx = (x / TILE) - 0.5;
+        const fy = (y / TILE) - 0.5;
+        const tx0 = Math.max(0, Math.floor(fx));
+        const tx1 = Math.min(tilesX - 1, tx0 + 1);
+        const ty0 = Math.max(0, Math.floor(fy));
+        const ty1 = Math.min(tilesY - 1, ty0 + 1);
+        const wx = fx - Math.floor(fx);
+        const wy = fy - Math.floor(fy);
+        return (
+          bgMap[ty0 * tilesX + tx0] * (1 - wx) * (1 - wy) +
+          bgMap[ty0 * tilesX + tx1] * wx        * (1 - wy) +
+          bgMap[ty1 * tilesX + tx0] * (1 - wx)  * wy +
+          bgMap[ty1 * tilesX + tx1] * wx         * wy
+        );
+      };
+
+      // ── Step 4: Per-pixel pipeline ────────────────────────────────────────
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
           const idx = (y * W + x) * 4;
@@ -351,56 +319,22 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           let b = d[idx + 2] / 255;
           const lumPx = 0.299 * r + 0.587 * g + 0.114 * b;
 
-          // Shadow removal: lift based on large-tile shadow map
-          const shadowBg = Math.max(bilinear(shadow.map, shadow.tx, shadow.ty, 128, x, y), 30);
-          const shadowScale = Math.min(255 / shadowBg, 2.0);
-          r = Math.min(1, r * shadowScale);
-          g = Math.min(1, g * shadowScale);
-          b = Math.min(1, b * shadowScale);
+          // Adaptive normalization — cap scale at 1.5x so paper stays off-white
+          const bg = Math.max(getBg(x, y), 40);
+          const scale = Math.min(220 / bg, 1.5); // target 220/255 ≈ natural off-white
+          r = Math.min(1, r * scale);
+          g = Math.min(1, g * scale);
+          b = Math.min(1, b * scale);
 
-          // Fine background normalization (wrinkles, dirt)
-          const fineBg = Math.max(bilinear(fine.map, fine.tx, fine.ty, 32, x, y), 30);
-          const fineScale = Math.min(255 / fineBg, 2.0);
-          r = Math.min(1, r * fineScale);
-          g = Math.min(1, g * fineScale);
-          b = Math.min(1, b * fineScale);
-
-          // HDR local contrast stretch per tile
-          const hdrTxi = Math.min(hdrTX - 1, Math.floor(x / HDR_TILE));
-          const hdrTyi = Math.min(hdrTY - 1, Math.floor(y / HDR_TILE));
-          const hdrTileIdx = hdrTyi * hdrTX + hdrTxi;
-          const hdrMn = hdrMin[hdrTileIdx] / 255;
-          const hdrMx = hdrMax[hdrTileIdx] / 255;
-          const hdrRange = hdrMx - hdrMn || 0.01;
-          if (hdrRange < 0.95) {
-            r = Math.min(1, Math.max(0, (r - hdrMn) / hdrRange));
-            g = Math.min(1, Math.max(0, (g - hdrMn) / hdrRange));
-            b = Math.min(1, Math.max(0, (b - hdrMn) / hdrRange));
-          }
-
-          // Texture / grain flattening on bright (background) pixels
-          // Slightly pull bright pixels toward their luminance (reduce chroma noise)
-          const lumNow = 0.299 * r + 0.587 * g + 0.114 * b;
-          if (lumNow > 0.75) {
-            const flatten = 0.18; // blend toward grey to kill paper texture chroma
-            r = r + (lumNow - r) * flatten;
-            g = g + (lumNow - g) * flatten;
-            b = b + (lumNow - b) * flatten;
-          }
-
-
-          // Saturation +10% (ink color preservation)
+          // Saturation +10% (keeps ink colors vivid)
           const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-          const SAT = 1.10;
-          r = Math.min(1, Math.max(0, gray + (r - gray) * SAT));
-          g = Math.min(1, Math.max(0, gray + (g - gray) * SAT));
-          b = Math.min(1, Math.max(0, gray + (b - gray) * SAT));
+          r = Math.min(1, Math.max(0, gray + (r - gray) * 1.10));
+          g = Math.min(1, Math.max(0, gray + (g - gray) * 1.10));
+          b = Math.min(1, Math.max(0, gray + (b - gray) * 1.10));
 
-          // Ink sharpening: dark pixels pushed darker for crispness
-          const lumFinal = 0.299 * r + 0.587 * g + 0.114 * b;
-          if (lumFinal < 0.50) {
-            // Stronger darkening for very dark (text), lighter for mid-dark
-            const inkFactor = lumPx < 0.25 ? 0.65 : 0.80;
+          // Ink sharpening — darken pixels that are ink (dark), leave background
+          if (lumPx < 0.45) {
+            const inkFactor = lumPx < 0.20 ? 0.70 : 0.85;
             r = r * inkFactor;
             g = g * inkFactor;
             b = b * inkFactor;
