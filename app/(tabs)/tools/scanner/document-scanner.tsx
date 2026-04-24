@@ -711,44 +711,50 @@ export function DocumentScanner() {
       {/* ── STAGE: crop ── */}
       {stage === "crop" && rawImage && corners && (
         <div ref={containerRef} className="relative flex flex-1 flex-col items-center overflow-hidden">
-          <div className="relative flex-1 overflow-hidden">
+          {/* Image + overlay — takes remaining space above the sticky bar */}
+          <div className="relative min-h-0 flex-1 overflow-hidden w-full flex items-center justify-center">
             <canvas ref={cropCanvasRef} className="block max-h-full max-w-full" />
             <canvas
               ref={cropOverlayRef}
               className="absolute inset-0 touch-none"
-              style={{ cursor: "crosshair" }}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
+              style={{ cursor: "crosshair", touchAction: "none" }}
+              onPointerDown={(e) => { e.preventDefault(); onPointerDown(e); }}
+              onPointerMove={(e) => { e.preventDefault(); onPointerMove(e); }}
+              onPointerUp={(e) => { e.preventDefault(); onPointerUp(); }}
             />
           </div>
 
-          {autoDetectMsg ? (
-            <p className="font-bina-display px-4 py-1 text-center text-[11px] text-amber-600 dark:text-amber-400">
-              {autoDetectMsg}
-            </p>
-          ) : (
-            <p className="font-bina-display px-4 py-1 text-center text-[11px] text-[var(--bina-muted)]">
-              {t("adjustCorners")}
-            </p>
-          )}
-
-          <div className="flex w-full gap-3 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 pt-3" style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}>
-            <button
-              type="button"
-              onClick={() => { setStage("capture"); setRawImage(null); }}
-              className="font-bina-display flex-1 rounded-xl border border-[var(--bina-border)] py-2.5 text-[13px] font-semibold text-[var(--bina-text)] active:opacity-70"
-            >
-              {t("retake")}
-            </button>
-            <button
-              type="button"
-              onClick={handleApplyCrop}
-              disabled={cvStatus === "loading"}
-              className="font-bina-display flex-1 rounded-xl bg-[var(--bina-or)] py-2.5 text-[13px] font-bold text-white disabled:opacity-50 active:opacity-80"
-            >
-              {t("apply")}
-            </button>
+          {/* Sticky bottom bar — never scrolls off screen */}
+          <div
+            className="sticky bottom-0 w-full border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 pt-2"
+            style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
+          >
+            {autoDetectMsg ? (
+              <p className="font-bina-display mb-2 text-center text-[11px] text-amber-600 dark:text-amber-400">
+                {autoDetectMsg}
+              </p>
+            ) : (
+              <p className="font-bina-display mb-2 text-center text-[11px] text-[var(--bina-muted)]">
+                {t("adjustCorners")}
+              </p>
+            )}
+            <div className="flex w-full gap-3 pb-1">
+              <button
+                type="button"
+                onClick={() => { setStage("capture"); setRawImage(null); }}
+                className="font-bina-display flex-1 rounded-xl border border-[var(--bina-border)] py-2.5 text-[13px] font-semibold text-[var(--bina-text)] active:opacity-70"
+              >
+                {t("retake")}
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyCrop}
+                disabled={cvStatus === "loading"}
+                className="font-bina-display flex-1 rounded-xl bg-[var(--bina-or)] py-2.5 text-[13px] font-bold text-white disabled:opacity-50 active:opacity-80"
+              >
+                {t("apply")}
+              </button>
+            </div>
           </div>
         </div>
       )}
