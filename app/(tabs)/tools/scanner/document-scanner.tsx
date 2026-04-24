@@ -88,6 +88,20 @@ export function DocumentScanner() {
   // Full-screen viewer
   const [viewingScan, setViewingScan] = useState<SavedScan | null>(null);
 
+  // Intercept device back button while viewer is open
+  useEffect(() => {
+    if (!viewingScan) return;
+    // Push a dummy history entry so back button hits it first
+    window.history.pushState({ scanViewer: true }, "");
+    const onPop = () => setViewingScan(null);
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+      // If viewer was closed programmatically (not via back), clean up the extra entry
+      if (window.history.state?.scanViewer) window.history.back();
+    };
+  }, [viewingScan]);
+
   // Load saved scans from localStorage on mount
   useEffect(() => {
     try {
