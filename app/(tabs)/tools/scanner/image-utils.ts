@@ -388,10 +388,7 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
             b = b + (lumNow - b) * flatten;
           }
 
-          // White boost +10%
-          r = Math.min(1, r + (1 - r) * 0.10);
-          g = Math.min(1, g + (1 - g) * 0.10);
-          b = Math.min(1, b + (1 - b) * 0.10);
+          // White boost removed — background normalization handles whitening
 
           // Saturation +10% (ink color preservation)
           const gray = 0.299 * r + 0.587 * g + 0.114 * b;
