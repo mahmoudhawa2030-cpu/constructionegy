@@ -115,6 +115,12 @@ export function DocumentScanner() {
     } catch { /* ignore */ }
   }, []);
 
+  // Camera
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [torchOn, setTorchOn] = useState(false);
+  const [cameraError, setCameraError] = useState<string>("");
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // Canvas/overlay refs
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
   const cropOverlayRef = useRef<HTMLCanvasElement>(null);
@@ -124,6 +130,95 @@ export function DocumentScanner() {
   // Drag state
   const draggingIdx = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // ── Camera lifecycle ────────────────────────────────────────────────────────
+  const stopCamera = useCallback(() => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach((t) => t.stop());
+      setCameraStream(null);
+    }
+  }, [cameraStream]);
+
+  const startCamera = useCallback(async () => {
+    setCameraError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
+        audio: false,
+      });
+      setCameraStream(stream);
+      // Try to enable torch
+      try {
+        const track = stream.getVideoTracks()[0];
+        await (track as any).applyConstraints({ advanced: [{ torch: true }] });
+        setTorchOn(true);
+      } catch {
+        setTorchOn(false);
+      }
+    } catch (err: any) {
+      setCameraError(err?.message ?? "Camera unavailable");
+    }
+  }, []);
+
+  const toggleTorch = useCallback(async () => {
+    if (!cameraStream) return;
+    const track = cameraStream.getVideoTracks()[0];
+    try {
+      await (track as any).applyConstraints({ advanced: [{ torch: !torchOn }] });
+      setTorchOn((v) => !v);
+    } catch { /* torch not supported */ }
+  }, [cameraStream, torchOn]);
+
+  // Start camera when on capture stage, stop otherwise
+  useEffect(() => {
+    if (stage === "capture") {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => { /* stopCamera called on stage change above */ };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
+
+  // Attach stream to video element
+  useEffect(() => {
+    const vid = videoRef.current;
+    if (!vid || !cameraStream) return;
+    vid.srcObject = cameraStream;
+    vid.play().catch(() => {});
+  }, [cameraStream]);
+
+  // Stop camera on unmount
+  useEffect(() => {
+    return () => {
+      cameraStream?.getTracks().forEach((t) => t.stop());
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Capture frame from video ─────────────────────────────────────────────────
+  const handleCapture = useCallback(() => {
+    const vid = videoRef.current;
+    if (!vid || !cameraStream) return;
+    const w = vid.videoWidth || 1280;
+    const h = vid.videoHeight || 720;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    canvas.getContext("2d")!.drawImage(vid, 0, 0, w, h);
+    const url = canvas.toDataURL("image/jpeg", 0.95);
+    const img = new Image();
+    img.onload = () => {
+      setRawImage(img);
+      setRawDataUrl(url);
+      setStage("crop");
+    };
+    img.src = url;
+  }, [cameraStream]);
 
   // ── Load image from file input ──────────────────────────────────────────────
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -515,77 +610,105 @@ export function DocumentScanner() {
 
       {/* ── STAGE: capture ── */}
       {stage === "capture" && (
-        <div
-          className="flex flex-1 flex-col overflow-y-auto"
-          style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
-        >
-          {/* Done button — only shown when pages exist */}
-          {pages.length > 0 && (
-            <div className="flex justify-center px-6 pt-4">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-black">
+
+          {/* Live camera viewfinder — fills available space */}
+          {cameraError ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8">
+              <p className="font-bina-display text-center text-[13px] text-red-400">{cameraError}</p>
               <button
                 type="button"
-                onClick={() => setStage("pages")}
-                className="font-bina-display rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-5 py-2 text-[13px] font-semibold text-[var(--bina-text)] active:opacity-80"
+                onClick={startCamera}
+                className="font-bina-display rounded-xl bg-[var(--bina-or)] px-5 py-2.5 text-[13px] font-bold text-white active:opacity-80"
               >
-                {t("done")} ({pages.length})
+                {t("retake")}
               </button>
             </div>
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="absolute inset-0 h-full w-full object-cover"
+            />
           )}
 
-          {/* Saved scans gallery */}
-          <div className="border-t border-[var(--bina-border)] px-4 pt-3">
-            <p className="font-bina-display mb-2 text-[12px] font-bold uppercase tracking-wide text-[var(--bina-muted)]">
-              {t("savedScans")}
-            </p>
-            {savedScans.length === 0 ? (
-              <p className="font-bina-display py-6 text-center text-[12px] text-[var(--bina-muted)]">
-                {t("noScans")}
-              </p>
-            ) : (
-              <div className="grid grid-cols-3 gap-2 pb-2 sm:grid-cols-4">
-                {savedScans.map((scan) => (
-                  <div
-                    key={scan.id}
-                    className="group relative overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow"
-                  >
-                    {/* Tap thumbnail to open viewer */}
-                    <button
-                      type="button"
-                      className="block w-full"
-                      onClick={() => setViewingScan(scan)}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={scan.thumb}
-                        alt={scan.label}
-                        className="block w-full object-cover"
-                        style={{ aspectRatio: "3/4" }}
-                      />
-                    </button>
-                    {/* Delete button only in corner */}
-                    <button
-                      type="button"
-                      aria-label={t("deleteScan")}
-                      onClick={() => handleDeleteSavedScan(scan.id)}
-                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[11px] text-red-300 active:opacity-70"
-                    >
-                      🗑
-                    </button>
-                    {/* Date label */}
-                    <div className="bg-black/50 px-1.5 py-0.5">
-                      <p className="font-bina-display truncate text-[8px] text-white">{scan.label}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+          {/* Overlay controls */}
+          <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+
+            {/* Top bar — torch + pages done */}
+            <div className="flex items-center justify-between px-4 pt-3 pointer-events-auto">
+              {/* Torch toggle */}
+              <button
+                type="button"
+                aria-label={t("torchAria")}
+                onClick={toggleTorch}
+                className={`flex h-10 w-10 items-center justify-center rounded-full text-lg shadow ${
+                  torchOn ? "bg-yellow-400 text-black" : "bg-black/50 text-white"
+                } active:opacity-70`}
+              >
+                ⚡
+              </button>
+
+              {/* Done — only when pages exist */}
+              {pages.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setStage("pages")}
+                  className="font-bina-display rounded-full bg-[var(--bina-or)] px-4 py-1.5 text-[12px] font-bold text-white shadow active:opacity-80"
+                >
+                  {t("done")} ({pages.length})
+                </button>
+              )}
+            </div>
+
+            {/* Bottom bar — gallery + shutter + saved */}
+            <div
+              className="flex items-center justify-between px-6 pb-4 pointer-events-auto"
+              style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+            >
+              {/* Gallery picker */}
+              <button
+                type="button"
+                aria-label={t("galleryAria")}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/50 text-xl text-white shadow active:opacity-70"
+              >
+                🖼
+              </button>
+
+              {/* Shutter button */}
+              <button
+                type="button"
+                aria-label={t("captureAria")}
+                onClick={handleCapture}
+                disabled={!cameraStream}
+                className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 shadow-xl active:scale-95 disabled:opacity-40 transition-transform"
+              >
+                <span className="block h-14 w-14 rounded-full bg-white shadow-inner" />
+              </button>
+
+              {/* Saved scans thumbnail (last saved) */}
+              {savedScans.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setViewingScan(savedScans[0])}
+                  className="h-12 w-12 overflow-hidden rounded-2xl border-2 border-white/50 shadow active:opacity-70"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={savedScans[0].thumb} alt="" className="h-full w-full object-cover" />
+                </button>
+              ) : (
+                <div className="h-12 w-12" />
+              )}
+            </div>
           </div>
 
           <input
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={handleFileChange}
           />

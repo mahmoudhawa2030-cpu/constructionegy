@@ -71,6 +71,7 @@
     "loadingOpenCV": "جاري تحميل محرك الماسح…",
     "backAria": "رجوع",
     "captureAria": "التقاط صورة",
+    "torchAria": "تشغيل/إيقاف الفلاش",
     "galleryAria": "اختيار من المعرض",
     "filterAria": "اختيار فلتر",
     "exportAria": "تصدير المستند",

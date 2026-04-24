@@ -71,6 +71,7 @@
     "loadingOpenCV": "Loading scanner engine…",
     "backAria": "Back",
     "captureAria": "Take photo",
+    "torchAria": "Toggle flash",
     "galleryAria": "Pick from gallery",
     "filterAria": "Select filter",
     "exportAria": "Export document",
