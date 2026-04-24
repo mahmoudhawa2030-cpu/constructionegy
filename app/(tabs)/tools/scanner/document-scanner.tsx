@@ -293,7 +293,10 @@ export function DocumentScanner() {
     if (!container) return;
 
     const maxW = container.clientWidth;
-    const maxH = container.clientHeight - 80; // leave room for bottom bar
+    // Measure actual bottom bar height instead of hardcoding 80px
+    const barEl = container.querySelector<HTMLElement>("[data-crop-bar]");
+    const barH = barEl ? barEl.offsetHeight : 100;
+    const maxH = container.clientHeight - barH;
     const scale = Math.min(maxW / rawImage.naturalWidth, maxH / rawImage.naturalHeight, 1);
     const dw = rawImage.naturalWidth * scale;
     const dh = rawImage.naturalHeight * scale;
@@ -715,8 +718,8 @@ export function DocumentScanner() {
           className="relative flex flex-1 flex-col items-center overflow-hidden"
           style={{ touchAction: "none" }}
         >
-          {/* Image + overlay — takes remaining space above the sticky bar */}
-          <div className="relative min-h-0 flex-1 overflow-hidden w-full flex items-center justify-center">
+          {/* Image + overlay — fills all space above the buttons bar */}
+          <div className="relative min-h-0 flex-1 overflow-hidden w-full flex items-start justify-center">
             <canvas ref={cropCanvasRef} className="block max-h-full max-w-full" />
             <canvas
               ref={cropOverlayRef}
@@ -730,8 +733,8 @@ export function DocumentScanner() {
 
           {/* Sticky bottom bar — never scrolls off screen */}
           <div
-            className="sticky bottom-0 w-full border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 pt-2"
-            style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
+            data-crop-bar
+            className="w-full shrink-0 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 pt-2 pb-3"
           >
             {autoDetectMsg ? (
               <p className="font-bina-display mb-2 text-center text-[11px] text-amber-600 dark:text-amber-400">
