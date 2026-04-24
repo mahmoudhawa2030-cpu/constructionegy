@@ -5,8 +5,10 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { useOpenCV } from "./use-opencv";
+import { useTFLite, runSegmentation } from "./use-tflite";
 import {
   applyFilter,
+  detectCornersFromMask,
   detectCornersWithOpenCV,
   perspectiveWarp,
   sortCorners,
@@ -46,6 +48,7 @@ export function DocumentScanner() {
   const t = useTranslations("scanner");
   const router = useRouter();
   const cvStatus = useOpenCV();
+  const { status: tfliteStatus, model: tfliteModel } = useTFLite();
 
   // Stage
   const [stage, setStage] = useState<Stage>("capture");
@@ -99,7 +102,6 @@ export function DocumentScanner() {
   useEffect(() => {
     if (stage !== "crop" || !rawImage) return;
 
-    // Default corners = full image with 5% inset
     const w = rawImage.naturalWidth;
     const h = rawImage.naturalHeight;
     const inset = 0.05;
@@ -110,29 +112,45 @@ export function DocumentScanner() {
       { x: w * inset,       y: h * (1 - inset) },
     ];
 
-    if (cvStatus === "ready" && window.cv) {
-      setAutoDetectMsg(t("autoDetecting"));
-      setTimeout(() => {
-        try {
-          const detected = detectCornersWithOpenCV(rawImage, window.cv);
-          if (detected && detected.length === 4) {
-            setCorners(sortCorners(detected));
-            setAutoDetectMsg("");
-          } else {
-            setCorners(defaultCorners);
-            setAutoDetectMsg(t("autoDetectFailed"));
+    // Need at least OpenCV ready to do anything
+    if (cvStatus !== "ready" || !window.cv) {
+      setCorners(defaultCorners);
+      return;
+    }
+
+    setAutoDetectMsg(t("autoDetecting"));
+
+    setTimeout(() => {
+      try {
+        let detected: Point[] | null = null;
+
+        // ── Path 1: TFLite AI model (best quality) ──────────────────────────
+        if (tfliteStatus === "ready" && tfliteModel) {
+          const mask = runSegmentation(tfliteModel, rawImage);
+          if (mask) {
+            detected = detectCornersFromMask(mask, w, h, window.cv);
           }
-        } catch {
+        }
+
+        // ── Path 2: OpenCV Canny fallback ───────────────────────────────────
+        if (!detected || detected.length !== 4) {
+          detected = detectCornersWithOpenCV(rawImage, window.cv);
+        }
+
+        if (detected && detected.length === 4) {
+          setCorners(sortCorners(detected));
+          setAutoDetectMsg("");
+        } else {
           setCorners(defaultCorners);
           setAutoDetectMsg(t("autoDetectFailed"));
         }
-      }, 50);
-    } else {
-      setCorners(defaultCorners);
-      setAutoDetectMsg("");
-    }
+      } catch {
+        setCorners(defaultCorners);
+        setAutoDetectMsg(t("autoDetectFailed"));
+      }
+    }, 50);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stage, rawImage, cvStatus]);
+  }, [stage, rawImage, cvStatus, tfliteStatus, tfliteModel]);
 
   // ── Draw crop overlay ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -381,12 +399,13 @@ export function DocumentScanner() {
         )}
       </div>
 
-      {/* Loading OpenCV */}
-      {cvStatus === "loading" && (
+      {/* Loading status — show while either engine is loading */}
+      {(cvStatus === "loading" || tfliteStatus === "loading") && (
         <div className="flex items-center justify-center gap-2 bg-amber-50 px-4 py-2 dark:bg-amber-900/20">
           <span className="h-3 w-3 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
           <span className="font-bina-display text-[12px] text-amber-700 dark:text-amber-400">
             {t("loadingOpenCV")}
+            {tfliteStatus === "ready" ? " · AI ✓" : ""}
           </span>
         </div>
       )}

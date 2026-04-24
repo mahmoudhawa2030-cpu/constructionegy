@@ -11,6 +11,89 @@ export function sortCorners(pts: Point[]): [Point, Point, Point, Point] {
   return [top[0], top[1], bottom[1], bottom[0]];
 }
 
+/**
+ * Convert a TFLite segmentation mask (Float32Array 256×256) into a binary
+ * canvas mask, then use OpenCV to find the 4 document corners from it.
+ */
+export function detectCornersFromMask(
+  mask: Float32Array,
+  originalWidth: number,
+  originalHeight: number,
+  cv: any // eslint-disable-line @typescript-eslint/no-explicit-any
+): Point[] | null {
+  try {
+    const SIZE = 256;
+    const threshold = 0.5;
+
+    // Render mask to a canvas
+    const maskCanvas = document.createElement("canvas");
+    maskCanvas.width = SIZE;
+    maskCanvas.height = SIZE;
+    const mctx = maskCanvas.getContext("2d")!;
+    const imgData = mctx.createImageData(SIZE, SIZE);
+    const d = imgData.data;
+
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const val = mask[i] > threshold ? 255 : 0;
+      d[i * 4]     = val;
+      d[i * 4 + 1] = val;
+      d[i * 4 + 2] = val;
+      d[i * 4 + 3] = 255;
+    }
+    mctx.putImageData(imgData, 0, 0);
+
+    // Use OpenCV to find the largest quadrilateral contour
+    const src = cv.imread(maskCanvas);
+    const gray = new cv.Mat();
+    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+    const contours = new cv.MatVector();
+    const hierarchy = new cv.Mat();
+    cv.findContours(gray, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+    let bestContour: any = null;
+    let bestArea = 0;
+
+    for (let i = 0; i < contours.size(); i++) {
+      const cnt = contours.get(i);
+      const area = cv.contourArea(cnt);
+      if (area < SIZE * SIZE * 0.05) continue;
+
+      const peri = cv.arcLength(cnt, true);
+      const approx = new cv.Mat();
+      cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+
+      if (approx.rows === 4 && area > bestArea) {
+        bestArea = area;
+        bestContour?.delete();
+        bestContour = approx;
+      } else {
+        approx.delete();
+      }
+    }
+
+    let result: Point[] | null = null;
+    if (bestContour) {
+      // Scale from 256×256 mask back to original image dimensions
+      const scaleX = originalWidth / SIZE;
+      const scaleY = originalHeight / SIZE;
+      result = [];
+      for (let i = 0; i < 4; i++) {
+        result.push({
+          x: bestContour.intAt(i, 0) * scaleX,
+          y: bestContour.intAt(i, 1) * scaleY,
+        });
+      }
+      bestContour.delete();
+    }
+
+    src.delete(); gray.delete(); contours.delete(); hierarchy.delete();
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 /** Use OpenCV to auto-detect document corners in an image */
 export function detectCornersWithOpenCV(
   imgEl: HTMLImageElement | HTMLCanvasElement,
