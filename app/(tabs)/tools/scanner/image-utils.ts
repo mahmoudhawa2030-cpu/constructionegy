@@ -244,32 +244,99 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       break;
     }
     case "magicColor": {
-      // Auto white balance + saturation boost + contrast stretch
-      // Step 1: auto levels
-      for (let ch = 0; ch < 3; ch++) {
-        let min = 255, max = 0;
-        for (let i = ch; i < d.length; i += 4) {
-          if (d[i] < min) min = d[i];
-          if (d[i] > max) max = d[i];
-        }
-        const range = max - min || 1;
-        for (let i = ch; i < d.length; i += 4) {
-          d[i] = Math.round(((d[i] - min) / range) * 255);
+      const W = out.width;
+      const H = out.height;
+
+      // ── Step 1: Build luminance map ──────────────────────────────────────
+      const lum = new Float32Array(W * H);
+      for (let i = 0; i < d.length; i += 4) {
+        lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      }
+
+      // ── Step 2: Adaptive background estimation (tile-based) ──────────────
+      // Divide into tiles, estimate background brightness as the 90th
+      // percentile brightness in each tile (background = bright area).
+      const TILE = 32;
+      const tilesX = Math.ceil(W / TILE);
+      const tilesY = Math.ceil(H / TILE);
+      const bgMap = new Float32Array(tilesX * tilesY);
+
+      for (let ty = 0; ty < tilesY; ty++) {
+        for (let tx = 0; tx < tilesX; tx++) {
+          const vals: number[] = [];
+          const x0 = tx * TILE, x1 = Math.min(x0 + TILE, W);
+          const y0 = ty * TILE, y1 = Math.min(y0 + TILE, H);
+          for (let y = y0; y < y1; y++) {
+            for (let x = x0; x < x1; x++) {
+              vals.push(lum[y * W + x]);
+            }
+          }
+          vals.sort((a, b) => a - b);
+          // 90th percentile = paper background brightness for this tile
+          bgMap[ty * tilesX + tx] = vals[Math.floor(vals.length * 0.90)] || 255;
         }
       }
-      // Step 2: saturation boost (convert to HSL-like, boost S)
-      for (let i = 0; i < d.length; i += 4) {
-        const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
-        const max2 = Math.max(r, g, b), min2 = Math.min(r, g, b);
-        const l = (max2 + min2) / 2;
-        if (max2 !== min2) {
-          const s = l > 0.5 ? (max2 - min2) / (2 - max2 - min2) : (max2 - min2) / (max2 + min2);
-          const sNew = Math.min(s * 1.4, 1);
-          const factor = sNew / (s || 0.001);
-          const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-          d[i]     = Math.min(255, Math.max(0, gray + (d[i]     - gray) * factor));
-          d[i + 1] = Math.min(255, Math.max(0, gray + (d[i + 1] - gray) * factor));
-          d[i + 2] = Math.min(255, Math.max(0, gray + (d[i + 2] - gray) * factor));
+
+      // ── Step 3: Bilinear interpolation of background map ─────────────────
+      // For each pixel interpolate its estimated background value smoothly
+      const getBg = (x: number, y: number): number => {
+        const fx = (x / TILE) - 0.5;
+        const fy = (y / TILE) - 0.5;
+        const tx0 = Math.max(0, Math.floor(fx));
+        const tx1 = Math.min(tilesX - 1, tx0 + 1);
+        const ty0 = Math.max(0, Math.floor(fy));
+        const ty1 = Math.min(tilesY - 1, ty0 + 1);
+        const wx = fx - Math.floor(fx);
+        const wy = fy - Math.floor(fy);
+        return (
+          bgMap[ty0 * tilesX + tx0] * (1 - wx) * (1 - wy) +
+          bgMap[ty0 * tilesX + tx1] * wx       * (1 - wy) +
+          bgMap[ty1 * tilesX + tx0] * (1 - wx) * wy       +
+          bgMap[ty1 * tilesX + tx1] * wx       * wy
+        );
+      };
+
+      // ── Step 4: Apply per-pixel: normalize to white + boost + saturation ─
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const idx = (y * W + x) * 4;
+          const bg = Math.max(getBg(x, y), 30); // avoid div by 0
+
+          let r = d[idx]     / 255;
+          let g = d[idx + 1] / 255;
+          let b = d[idx + 2] / 255;
+
+          // Normalize each channel relative to local background
+          // bg is luminance-based, apply same scale to each channel
+          const scale = 255 / bg;
+          r = Math.min(1, r * scale);
+          g = Math.min(1, g * scale);
+          b = Math.min(1, b * scale);
+
+          // White boost +10%: push bright pixels harder toward 1.0
+          r = Math.min(1, r + (1 - r) * 0.10);
+          g = Math.min(1, g + (1 - g) * 0.10);
+          b = Math.min(1, b + (1 - b) * 0.10);
+
+          // Saturation boost +10%
+          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          const SAT = 1.10;
+          r = Math.min(1, Math.max(0, gray + (r - gray) * SAT));
+          g = Math.min(1, Math.max(0, gray + (g - gray) * SAT));
+          b = Math.min(1, Math.max(0, gray + (b - gray) * SAT));
+
+          // Ink sharpening: pixels darker than 55% get pushed darker (text stays crisp)
+          const lumPx = 0.299 * r + 0.587 * g + 0.114 * b;
+          if (lumPx < 0.55) {
+            const inkFactor = 0.75;
+            r = r * inkFactor;
+            g = g * inkFactor;
+            b = b * inkFactor;
+          }
+
+          d[idx]     = Math.round(r * 255);
+          d[idx + 1] = Math.round(g * 255);
+          d[idx + 2] = Math.round(b * 255);
         }
       }
       break;
