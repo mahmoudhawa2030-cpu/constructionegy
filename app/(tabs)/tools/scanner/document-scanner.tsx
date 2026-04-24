@@ -566,7 +566,7 @@ export function DocumentScanner() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex flex-1 flex-col bg-[var(--bina-steel)]">
+    <div className="flex flex-1 flex-col overflow-hidden bg-[var(--bina-steel)]">
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2"
@@ -710,13 +710,17 @@ export function DocumentScanner() {
 
       {/* ── STAGE: crop ── */}
       {stage === "crop" && rawImage && corners && (
-        <div ref={containerRef} className="relative flex flex-1 flex-col items-center overflow-hidden">
+        <div
+          ref={containerRef}
+          className="relative flex flex-1 flex-col items-center overflow-hidden"
+          style={{ touchAction: "none" }}
+        >
           {/* Image + overlay — takes remaining space above the sticky bar */}
           <div className="relative min-h-0 flex-1 overflow-hidden w-full flex items-center justify-center">
             <canvas ref={cropCanvasRef} className="block max-h-full max-w-full" />
             <canvas
               ref={cropOverlayRef}
-              className="absolute inset-0 touch-none"
+              className="absolute inset-0"
               style={{ cursor: "crosshair", touchAction: "none" }}
               onPointerDown={(e) => { e.preventDefault(); onPointerDown(e); }}
               onPointerMove={(e) => { e.preventDefault(); onPointerMove(e); }}
