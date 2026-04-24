@@ -375,7 +375,7 @@ export function DocumentScanner() {
   // ─── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-[var(--bina-steel)]">
+    <div className="flex flex-1 flex-col bg-[var(--bina-steel)]">
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2"
@@ -412,7 +412,7 @@ export function DocumentScanner() {
 
       {/* ── STAGE: capture ── */}
       {stage === "capture" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 py-12">
+        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))", paddingTop: "3rem" }}>
           <span className="text-7xl">📄</span>
           <p className="font-bina-display text-center text-[13px] text-[var(--bina-muted)]">
             {t("adjustCorners")}
@@ -472,7 +472,7 @@ export function DocumentScanner() {
             </p>
           )}
 
-          <div className="flex w-full gap-3 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 py-3">
+          <div className="flex w-full gap-3 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-4 pt-3" style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}>
             <button
               type="button"
               onClick={() => { setStage("capture"); setRawImage(null); }}
@@ -504,7 +504,7 @@ export function DocumentScanner() {
           </div>
 
           {/* Filter strip */}
-          <div className="border-t border-[var(--bina-border)] bg-[var(--bina-steel2)]">
+          <div className="border-t border-[var(--bina-border)] bg-[var(--bina-steel2)]" style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}>
             <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
               {FILTERS.map((f) => (
                 <button
@@ -576,7 +576,7 @@ export function DocumentScanner() {
             ))}
           </div>
 
-          <div className="flex gap-2 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-3">
+          <div className="flex gap-2 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-3" style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
             <button
               type="button"
               onClick={() => setStage("capture")}
