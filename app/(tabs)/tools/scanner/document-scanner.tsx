@@ -123,7 +123,11 @@ export function DocumentScanner() {
   // Web-only live preview (Capacitor native uses getPhoto instead)
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isNative = Capacitor.isNativePlatform();
+  // Runtime check — works even when Capacitor bridge loads after module init
+  const isNative = useCallback(
+    () => !!(typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform?.()),
+    []
+  );
 
   // Canvas/overlay refs
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -172,7 +176,7 @@ export function DocumentScanner() {
 
   // Web: start/stop camera with stage
   useEffect(() => {
-    if (isNative) return;
+    if (isNative()) return;
     if (stage === "capture") startWebCamera();
     else stopCamera();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -199,43 +203,42 @@ export function DocumentScanner() {
     img.src = url;
   }, []);
 
-  // ── Native capture via @capacitor/camera ───────────────────────────────
+  // ── Capture: try Capacitor Camera first, fall back to getUserMedia ────────
   const handleCapture = useCallback(async () => {
     setCameraError("");
-    if (isNative) {
-      try {
-        // Explicitly request permission first
-        const perms = await Camera.requestPermissions({ permissions: ["camera"] });
-        if (perms.camera === "denied") {
-          setCameraError("Camera permission denied. Please allow it in device Settings.");
-          return;
-        }
-        const photo = await Camera.getPhoto({
-          quality: 95,
-          allowEditing: false,
-          resultType: CameraResultType.DataUrl,
-          source: CameraSource.Camera,
-          direction: CameraDirection.Rear,
-          correctOrientation: true,
-        });
-        if (photo.dataUrl) loadImageFromUrl(photo.dataUrl);
-      } catch (err: any) {
-        const msg = String(err?.message ?? err ?? "");
-        if (!msg.toLowerCase().includes("cancel")) {
-          setCameraError(msg || "Camera error");
-        }
+    try {
+      // Always try native Camera plugin first — works on Capacitor Android/iOS
+      const perms = await Camera.requestPermissions({ permissions: ["camera"] });
+      if (perms.camera === "denied") {
+        setCameraError("Camera permission denied. Please allow it in device Settings.");
+        return;
       }
-      return;
+      const photo = await Camera.getPhoto({
+        quality: 95,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        direction: CameraDirection.Rear,
+        correctOrientation: true,
+      });
+      if (photo.dataUrl) loadImageFromUrl(photo.dataUrl);
+    } catch (err: any) {
+      const msg = String(err?.message ?? err ?? "");
+      // If user cancelled — do nothing
+      if (msg.toLowerCase().includes("cancel")) return;
+      // If Capacitor plugin not available (pure web) — fall back to getUserMedia frame
+      if (msg.toLowerCase().includes("not implemented") || msg.toLowerCase().includes("not available") || !isNative()) {
+        const vid = videoRef.current;
+        if (!vid || !cameraStream) { setCameraError("Camera not available"); return; }
+        const w = vid.videoWidth || 1280, h = vid.videoHeight || 720;
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d")!.drawImage(vid, 0, 0, w, h);
+        loadImageFromUrl(canvas.toDataURL("image/jpeg", 0.95));
+        return;
+      }
+      setCameraError(msg || "Camera error");
     }
-    // Web: capture frame from live video
-    const vid = videoRef.current;
-    if (!vid || !cameraStream) return;
-    const w = vid.videoWidth || 1280;
-    const h = vid.videoHeight || 720;
-    const canvas = document.createElement("canvas");
-    canvas.width = w; canvas.height = h;
-    canvas.getContext("2d")!.drawImage(vid, 0, 0, w, h);
-    loadImageFromUrl(canvas.toDataURL("image/jpeg", 0.95));
   }, [isNative, cameraStream, loadImageFromUrl]);
 
   // ── Load image from file input ──────────────────────────────────────────────
@@ -636,13 +639,13 @@ export function DocumentScanner() {
               <p className="font-bina-display text-center text-[13px] text-red-400">{cameraError}</p>
               <button
                 type="button"
-                onClick={isNative ? handleCapture : startWebCamera}
+                onClick={isNative() ? handleCapture : startWebCamera}
                 className="font-bina-display rounded-xl bg-[var(--bina-or)] px-5 py-2.5 text-[13px] font-bold text-white active:opacity-80"
               >
                 {t("retake")}
               </button>
             </div>
-          ) : isNative ? (
+          ) : isNative() ? (
             /* Native: show a camera-icon placeholder — tap shutter to launch native camera */
             <div className="flex flex-1 flex-col items-center justify-center gap-4">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -700,7 +703,7 @@ export function DocumentScanner() {
                 type="button"
                 aria-label={t("galleryAria")}
                 onClick={async () => {
-                  if (isNative) {
+                  if (isNative()) {
                     try {
                       const photo = await Camera.getPhoto({
                         quality: 95,
@@ -725,7 +728,7 @@ export function DocumentScanner() {
                 type="button"
                 aria-label={t("captureAria")}
                 onClick={handleCapture}
-                disabled={!isNative && !cameraStream}
+                disabled={!isNative() && !cameraStream}
                 className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 shadow-xl active:scale-95 disabled:opacity-40 transition-transform"
               >
                 <span className="block h-14 w-14 rounded-full bg-white shadow-inner" />
