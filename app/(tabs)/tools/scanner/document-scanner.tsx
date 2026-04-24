@@ -466,7 +466,7 @@ export function DocumentScanner() {
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2"
-        style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <button
           type="button"
