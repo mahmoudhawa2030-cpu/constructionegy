@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+import { Camera, CameraResultType, CameraSource, CameraDirection } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 import { useOpenCV } from "./use-opencv";
 import { useTFLite, runSegmentation } from "./use-tflite";
 import { useMIRNet, runMIRNet } from "./use-mirnet";
@@ -116,10 +118,12 @@ export function DocumentScanner() {
   }, []);
 
   // Camera
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [torchOn, setTorchOn] = useState(false);
   const [cameraError, setCameraError] = useState<string>("");
+  // Web-only live preview (Capacitor native uses getPhoto instead)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isNative = Capacitor.isNativePlatform();
 
   // Canvas/overlay refs
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -131,7 +135,7 @@ export function DocumentScanner() {
   const draggingIdx = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ── Camera lifecycle ────────────────────────────────────────────────────────
+  // ── Camera lifecycle (web-only live preview) ──────────────────────────────────
   const stopCamera = useCallback(() => {
     if (cameraStream) {
       cameraStream.getTracks().forEach((t) => t.stop());
@@ -139,26 +143,19 @@ export function DocumentScanner() {
     }
   }, [cameraStream]);
 
-  const startCamera = useCallback(async () => {
+  const startWebCamera = useCallback(async () => {
     setCameraError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
+        video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: false,
       });
       setCameraStream(stream);
-      // Try to enable torch
       try {
         const track = stream.getVideoTracks()[0];
         await (track as any).applyConstraints({ advanced: [{ torch: true }] });
         setTorchOn(true);
-      } catch {
-        setTorchOn(false);
-      }
+      } catch { setTorchOn(false); }
     } catch (err: any) {
       setCameraError(err?.message ?? "Camera unavailable");
     }
@@ -173,18 +170,15 @@ export function DocumentScanner() {
     } catch { /* torch not supported */ }
   }, [cameraStream, torchOn]);
 
-  // Start camera when on capture stage, stop otherwise
+  // Web: start/stop camera with stage
   useEffect(() => {
-    if (stage === "capture") {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => { /* stopCamera called on stage change above */ };
+    if (isNative) return;
+    if (stage === "capture") startWebCamera();
+    else stopCamera();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage]);
 
-  // Attach stream to video element
+  // Web: attach stream to video element
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid || !cameraStream) return;
@@ -192,33 +186,50 @@ export function DocumentScanner() {
     vid.play().catch(() => {});
   }, [cameraStream]);
 
-  // Stop camera on unmount
+  // Web: stop camera on unmount
   useEffect(() => {
-    return () => {
-      cameraStream?.getTracks().forEach((t) => t.stop());
-    };
+    return () => { cameraStream?.getTracks().forEach((t) => t.stop()); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Capture frame from video ─────────────────────────────────────────────────
-  const handleCapture = useCallback(() => {
+  // ── Load image from dataUrl (shared between native + web paths) ─────────────
+  const loadImageFromUrl = useCallback((url: string) => {
+    const img = new Image();
+    img.onload = () => { setRawImage(img); setRawDataUrl(url); setStage("crop"); };
+    img.src = url;
+  }, []);
+
+  // ── Native capture via @capacitor/camera ───────────────────────────────
+  const handleCapture = useCallback(async () => {
+    setCameraError("");
+    if (isNative) {
+      try {
+        const photo = await Camera.getPhoto({
+          quality: 95,
+          allowEditing: false,
+          resultType: CameraResultType.DataUrl,
+          source: CameraSource.Camera,
+          direction: CameraDirection.Rear,
+          correctOrientation: true,
+        });
+        if (photo.dataUrl) loadImageFromUrl(photo.dataUrl);
+      } catch (err: any) {
+        if (!String(err).includes("cancelled") && !String(err).includes("User cancelled")) {
+          setCameraError(err?.message ?? "Camera error");
+        }
+      }
+      return;
+    }
+    // Web: capture frame from live video
     const vid = videoRef.current;
     if (!vid || !cameraStream) return;
     const w = vid.videoWidth || 1280;
     const h = vid.videoHeight || 720;
     const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
+    canvas.width = w; canvas.height = h;
     canvas.getContext("2d")!.drawImage(vid, 0, 0, w, h);
-    const url = canvas.toDataURL("image/jpeg", 0.95);
-    const img = new Image();
-    img.onload = () => {
-      setRawImage(img);
-      setRawDataUrl(url);
-      setStage("crop");
-    };
-    img.src = url;
-  }, [cameraStream]);
+    loadImageFromUrl(canvas.toDataURL("image/jpeg", 0.95));
+  }, [isNative, cameraStream, loadImageFromUrl]);
 
   // ── Load image from file input ──────────────────────────────────────────────
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -612,17 +623,26 @@ export function DocumentScanner() {
       {stage === "capture" && (
         <div className="relative flex flex-1 flex-col overflow-hidden bg-black">
 
-          {/* Live camera viewfinder — fills available space */}
+          {/* Live camera viewfinder (web only) / dark bg (native — camera opens as overlay) */}
           {cameraError ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8">
               <p className="font-bina-display text-center text-[13px] text-red-400">{cameraError}</p>
               <button
                 type="button"
-                onClick={startCamera}
+                onClick={isNative ? handleCapture : startWebCamera}
                 className="font-bina-display rounded-xl bg-[var(--bina-or)] px-5 py-2.5 text-[13px] font-bold text-white active:opacity-80"
               >
                 {t("retake")}
               </button>
+            </div>
+          ) : isNative ? (
+            /* Native: show a camera-icon placeholder — tap shutter to launch native camera */
+            <div className="flex flex-1 flex-col items-center justify-center gap-4">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p className="font-bina-display text-[13px] text-white/40">{t("captureAria")}</p>
             </div>
           ) : (
             <video
@@ -672,7 +692,22 @@ export function DocumentScanner() {
               <button
                 type="button"
                 aria-label={t("galleryAria")}
-                onClick={() => fileInputRef.current?.click()}
+                onClick={async () => {
+                  if (isNative) {
+                    try {
+                      const photo = await Camera.getPhoto({
+                        quality: 95,
+                        allowEditing: false,
+                        resultType: CameraResultType.DataUrl,
+                        source: CameraSource.Photos,
+                        correctOrientation: true,
+                      });
+                      if (photo.dataUrl) loadImageFromUrl(photo.dataUrl);
+                    } catch { /* user cancelled */ }
+                  } else {
+                    fileInputRef.current?.click();
+                  }
+                }}
                 className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black/50 text-xl text-white shadow active:opacity-70"
               >
                 🖼
@@ -683,7 +718,7 @@ export function DocumentScanner() {
                 type="button"
                 aria-label={t("captureAria")}
                 onClick={handleCapture}
-                disabled={!cameraStream}
+                disabled={!isNative && !cameraStream}
                 className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-white/20 shadow-xl active:scale-95 disabled:opacity-40 transition-transform"
               >
                 <span className="block h-14 w-14 rounded-full bg-white shadow-inner" />
