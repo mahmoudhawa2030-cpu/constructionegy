@@ -503,23 +503,9 @@ export function DocumentScanner() {
           className="flex flex-1 flex-col overflow-y-auto"
           style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
         >
-          {/* Shutter area */}
-          <div className="flex flex-col items-center gap-4 px-6 pb-4 pt-8">
-            <button
-              type="button"
-              aria-label={t("captureAria")}
-              onClick={() => fileInputRef.current?.click()}
-              className="flex h-24 w-24 items-center justify-center rounded-full bg-[var(--bina-or)] shadow-2xl active:scale-95 active:opacity-80 transition-transform"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="h-12 w-12">
-                <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
-                <path fillRule="evenodd" d="M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <span className="font-bina-display text-[13px] font-semibold text-[var(--bina-text)]">
-              {t("capture")}
-            </span>
-            {pages.length > 0 && (
+          {/* Done button — only shown when pages exist */}
+          {pages.length > 0 && (
+            <div className="flex justify-center px-6 pt-4">
               <button
                 type="button"
                 onClick={() => setStage("pages")}
@@ -527,8 +513,8 @@ export function DocumentScanner() {
               >
                 {t("done")} ({pages.length})
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Saved scans gallery */}
           <div className="border-t border-[var(--bina-border)] px-4 pt-3">
@@ -738,6 +724,22 @@ export function DocumentScanner() {
           </div>
         </div>
       )}
+      {/* ── Floating capture button (bottom-right FAB) ── */}
+      {stage === "capture" && (
+        <button
+          type="button"
+          aria-label={t("captureAria")}
+          onClick={() => fileInputRef.current?.click()}
+          className="fixed bottom-0 right-4 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bina-or)] shadow-xl transition-transform active:scale-90 active:opacity-80"
+          style={{ bottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="h-6 w-6">
+            <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+            <path fillRule="evenodd" d="M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" clipRule="evenodd" />
+          </svg>
+        </button>
+      )}
+
       {/* ── Full-screen image viewer ── */}
       {viewingScan && (
         <div
