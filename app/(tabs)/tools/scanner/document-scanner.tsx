@@ -204,6 +204,12 @@ export function DocumentScanner() {
     setCameraError("");
     if (isNative) {
       try {
+        // Explicitly request permission first
+        const perms = await Camera.requestPermissions({ permissions: ["camera"] });
+        if (perms.camera === "denied") {
+          setCameraError("Camera permission denied. Please allow it in device Settings.");
+          return;
+        }
         const photo = await Camera.getPhoto({
           quality: 95,
           allowEditing: false,
@@ -214,8 +220,9 @@ export function DocumentScanner() {
         });
         if (photo.dataUrl) loadImageFromUrl(photo.dataUrl);
       } catch (err: any) {
-        if (!String(err).includes("cancelled") && !String(err).includes("User cancelled")) {
-          setCameraError(err?.message ?? "Camera error");
+        const msg = String(err?.message ?? err ?? "");
+        if (!msg.toLowerCase().includes("cancel")) {
+          setCameraError(msg || "Camera error");
         }
       }
       return;
