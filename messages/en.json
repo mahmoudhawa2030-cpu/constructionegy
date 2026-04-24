@@ -57,6 +57,8 @@
     "filterOriginal": "Original",
     "filterEnhanced": "Enhanced",
     "filterMagicColor": "Magic Color",
+    "filterMagicColorPro": "Magic Pro",
+    "magicProProcessing": "AI Enhancing…",
     "filterGrayscale": "Grayscale",
     "filterBW": "B&W",
     "filterLight": "Light",
@@ -76,7 +78,8 @@
     "savedScans": "Saved Scans",
     "noScans": "No saved scans yet",
     "deleteScan": "Delete scan",
-    "openScan": "Open"
+    "openScan": "Open",
+    "magicProUnavailable": "AI model loading…"
   },
   "toolsMenu": {
     "menuAria": "Open tools menu",

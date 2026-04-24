@@ -1,7 +1,7 @@
 "use client";
 
 export type Point = { x: number; y: number };
-export type FilterType = "original" | "enhanced" | "magicColor" | "grayscale" | "bw" | "light" | "sketch";
+export type FilterType = "original" | "enhanced" | "magicColor" | "magicColorPro" | "grayscale" | "bw" | "light" | "sketch";
 
 /** Sort 4 points into [topLeft, topRight, bottomRight, bottomLeft] order */
 export function sortCorners(pts: Point[]): [Point, Point, Point, Point] {
@@ -344,6 +344,51 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           d[idx + 1] = Math.round(Math.min(1, Math.max(0, g)) * 255);
           d[idx + 2] = Math.round(Math.min(1, Math.max(0, b)) * 255);
         }
+      }
+      break;
+    }
+    case "magicColorPro": {
+      // Post-processing applied on MIRNet-enhanced image:
+      // MIRNet handles shadow removal + low-light + noise reduction.
+      // We add: saturation boost, ink sharpening, gentle background whitening.
+      const W2 = out.width;
+      const H2 = out.height;
+      const N2 = W2 * H2;
+
+      // Gentle grey world correction (capped at 1.10x)
+      let sR = 0, sG = 0, sB = 0;
+      for (let i = 0; i < d.length; i += 4) { sR += d[i]; sG += d[i + 1]; sB += d[i + 2]; }
+      const mR = sR / N2, mG = sG / N2, mB = sB / N2;
+      const mAll = (mR + mG + mB) / 3;
+      const gR = Math.min(mAll / (mR || 1), 1.10);
+      const gG = Math.min(mAll / (mG || 1), 1.10);
+      const gB = Math.min(mAll / (mB || 1), 1.10);
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = Math.min(255, Math.round(d[i]     * gR));
+        d[i + 1] = Math.min(255, Math.round(d[i + 1] * gG));
+        d[i + 2] = Math.min(255, Math.round(d[i + 2] * gB));
+      }
+
+      // Per-pixel: saturation +15% + ink sharpening
+      for (let i = 0; i < d.length; i += 4) {
+        let r = d[i] / 255, g2 = d[i + 1] / 255, b2 = d[i + 2] / 255;
+        const lp = 0.299 * r + 0.587 * g2 + 0.114 * b2;
+
+        // Saturation +15%
+        const gr = 0.299 * r + 0.587 * g2 + 0.114 * b2;
+        r  = Math.min(1, Math.max(0, gr + (r  - gr) * 1.15));
+        g2 = Math.min(1, Math.max(0, gr + (g2 - gr) * 1.15));
+        b2 = Math.min(1, Math.max(0, gr + (b2 - gr) * 1.15));
+
+        // Ink sharpening
+        if (lp < 0.40) {
+          const f2 = lp < 0.18 ? 0.68 : 0.82;
+          r = r * f2; g2 = g2 * f2; b2 = b2 * f2;
+        }
+
+        d[i]     = Math.round(Math.min(1, Math.max(0, r))  * 255);
+        d[i + 1] = Math.round(Math.min(1, Math.max(0, g2)) * 255);
+        d[i + 2] = Math.round(Math.min(1, Math.max(0, b2)) * 255);
       }
       break;
     }
