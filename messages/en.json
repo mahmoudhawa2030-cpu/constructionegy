@@ -72,7 +72,11 @@
     "galleryAria": "Pick from gallery",
     "filterAria": "Select filter",
     "exportAria": "Export document",
-    "cornerAria": "Drag corner to adjust crop"
+    "cornerAria": "Drag corner to adjust crop",
+    "savedScans": "Saved Scans",
+    "noScans": "No saved scans yet",
+    "deleteScan": "Delete scan",
+    "openScan": "Open"
   },
   "toolsMenu": {
     "menuAria": "Open tools menu",

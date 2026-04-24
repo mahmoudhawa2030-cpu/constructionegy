@@ -72,7 +72,11 @@
     "galleryAria": "اختيار من المعرض",
     "filterAria": "اختيار فلتر",
     "exportAria": "تصدير المستند",
-    "cornerAria": "اسحب الزاوية لضبط القص"
+    "cornerAria": "اسحب الزاوية لضبط القص",
+    "savedScans": "المسوحات المحفوظة",
+    "noScans": "لا توجد مسوحات محفوظة بعد",
+    "deleteScan": "حذف المسح",
+    "openScan": "فتح"
   },
   "toolsMenu": {
     "menuAria": "فتح قائمة الأدوات",

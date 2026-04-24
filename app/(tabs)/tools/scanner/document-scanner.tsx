@@ -27,6 +27,16 @@ interface ScannedPage {
   filter: FilterType;
 }
 
+interface SavedScan {
+  id: string;
+  thumb: string;    // small JPEG data URL for thumbnail
+  dataUrl: string;  // full JPEG data URL
+  label: string;    // filename-style label
+  createdAt: number;
+}
+
+const LS_KEY = "construction-egy:scanner:saved-scans";
+
 const FILTERS: FilterType[] = ["original", "enhanced", "magicColor", "grayscale", "bw", "light", "sketch"];
 
 const FILTER_LABEL_KEYS: Record<FilterType, string> = {
@@ -71,6 +81,17 @@ export function DocumentScanner() {
 
   // Export
   const [exporting, setExporting] = useState(false);
+
+  // Saved scans (persisted in localStorage)
+  const [savedScans, setSavedScans] = useState<SavedScan[]>([]);
+
+  // Load saved scans from localStorage on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LS_KEY);
+      if (raw) setSavedScans(JSON.parse(raw) as SavedScan[]);
+    } catch { /* ignore */ }
+  }, []);
 
   // Canvas/overlay refs
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -330,6 +351,52 @@ export function DocumentScanner() {
     setPages((prev) => prev.filter((p) => p.id !== id));
   }, []);
 
+  // ── Save scan to localStorage ────────────────────────────────────────────────
+  const persistScan = useCallback((canvas: HTMLCanvasElement) => {
+    try {
+      const id = `scan-${Date.now()}`;
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+
+      // Build 120px thumbnail
+      const tc = document.createElement("canvas");
+      const THUMB = 120;
+      const ratio = canvas.width / canvas.height;
+      tc.width = ratio >= 1 ? THUMB : Math.round(THUMB * ratio);
+      tc.height = ratio >= 1 ? Math.round(THUMB / ratio) : THUMB;
+      tc.getContext("2d")!.drawImage(canvas, 0, 0, tc.width, tc.height);
+      const thumb = tc.toDataURL("image/jpeg", 0.7);
+
+      const scan: SavedScan = {
+        id,
+        dataUrl,
+        thumb,
+        label: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+        createdAt: Date.now(),
+      };
+
+      setSavedScans((prev) => {
+        const next = [scan, ...prev];
+        try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* storage full */ }
+        return next;
+      });
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleDeleteSavedScan = useCallback((id: string) => {
+    setSavedScans((prev) => {
+      const next = prev.filter((s) => s.id !== id);
+      try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+
+  const handleDownloadSavedScan = useCallback((scan: SavedScan) => {
+    const a = document.createElement("a");
+    a.href = scan.dataUrl;
+    a.download = `${scan.id}.jpg`;
+    a.click();
+  }, []);
+
   // ── Export ──────────────────────────────────────────────────────────────────
   const exportJpg = useCallback(async () => {
     if (pages.length === 0 && !filteredCanvas) return;
@@ -341,10 +408,11 @@ export function DocumentScanner() {
       a.href = url;
       a.download = `scan-${Date.now()}.jpg`;
       a.click();
+      persistScan(canvas);
     } finally {
       setExporting(false);
     }
-  }, [pages, filteredCanvas]);
+  }, [pages, filteredCanvas, persistScan]);
 
   const exportPdf = useCallback(async () => {
     const allPages = pages.length > 0
@@ -367,10 +435,12 @@ export function DocumentScanner() {
       });
 
       pdf.save(`scan-${Date.now()}.pdf`);
+      // Persist each page to saved scans
+      allPages.forEach((pg) => persistScan(pg.filteredCanvas));
     } finally {
       setExporting(false);
     }
-  }, [pages, filteredCanvas, warpedCanvas, activeFilter]);
+  }, [pages, filteredCanvas, warpedCanvas, activeFilter, persistScan]);
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
@@ -412,30 +482,83 @@ export function DocumentScanner() {
 
       {/* ── STAGE: capture ── */}
       {stage === "capture" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6" style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))", paddingTop: "3rem" }}>
-          <span className="text-7xl">📄</span>
-          <p className="font-bina-display text-center text-[13px] text-[var(--bina-muted)]">
-            {t("adjustCorners")}
-          </p>
-          <div className="flex gap-4">
+        <div
+          className="flex flex-1 flex-col overflow-y-auto"
+          style={{ paddingBottom: "calc(4.75rem + env(safe-area-inset-bottom))" }}
+        >
+          {/* Shutter area */}
+          <div className="flex flex-col items-center gap-4 px-6 pb-4 pt-8">
             <button
               type="button"
               aria-label={t("captureAria")}
               onClick={() => fileInputRef.current?.click()}
-              className="font-bina-display flex items-center gap-2 rounded-2xl bg-[var(--bina-or)] px-6 py-3 text-[14px] font-bold text-white shadow-lg active:opacity-80"
+              className="flex h-24 w-24 items-center justify-center rounded-full bg-[var(--bina-or)] shadow-2xl active:scale-95 active:opacity-80 transition-transform"
             >
-              📷 {t("capture")}
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="h-12 w-12">
+                <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z" />
+                <path fillRule="evenodd" d="M9 2 7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-3.17L15 2H9Zm3 15a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" clipRule="evenodd" />
+              </svg>
             </button>
+            <span className="font-bina-display text-[13px] font-semibold text-[var(--bina-text)]">
+              {t("capture")}
+            </span>
             {pages.length > 0 && (
               <button
                 type="button"
                 onClick={() => setStage("pages")}
-                className="font-bina-display flex items-center gap-2 rounded-2xl border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-6 py-3 text-[14px] font-bold text-[var(--bina-text)] active:opacity-80"
+                className="font-bina-display rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel3)] px-5 py-2 text-[13px] font-semibold text-[var(--bina-text)] active:opacity-80"
               >
-                {t("done")}
+                {t("done")} ({pages.length})
               </button>
             )}
           </div>
+
+          {/* Saved scans gallery */}
+          <div className="border-t border-[var(--bina-border)] px-4 pt-3">
+            <p className="font-bina-display mb-2 text-[12px] font-bold uppercase tracking-wide text-[var(--bina-muted)]">
+              {t("savedScans")}
+            </p>
+            {savedScans.length === 0 ? (
+              <p className="font-bina-display py-6 text-center text-[12px] text-[var(--bina-muted)]">
+                {t("noScans")}
+              </p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 pb-2 sm:grid-cols-4">
+                {savedScans.map((scan) => (
+                  <div
+                    key={scan.id}
+                    className="group relative overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={scan.thumb}
+                      alt={scan.label}
+                      className="block w-full object-cover"
+                      style={{ aspectRatio: "3/4" }}
+                    />
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/60 px-1.5 py-1">
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadSavedScan(scan)}
+                        className="font-bina-display text-[9px] font-bold text-white active:opacity-70"
+                      >
+                        {t("openScan")}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={t("deleteScan")}
+                        onClick={() => handleDeleteSavedScan(scan.id)}
+                        className="text-[11px] text-red-300 active:opacity-70"
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <input
             ref={fileInputRef}
             type="file"
