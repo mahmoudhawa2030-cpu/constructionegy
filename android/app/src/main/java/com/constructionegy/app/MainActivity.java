@@ -1,9 +1,10 @@
 package com.constructionegy.app;
 
+import android.Manifest;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
-import android.webkit.WebView;
+import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
 
@@ -14,16 +15,16 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(LocationAccuracyPlugin.class);
         SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
-    }
 
-    @Override
-    protected void onWebViewCreated(WebView webView) {
-        super.onWebViewCreated(webView);
-        webView.getSettings().setMediaPlaybackRequiresUserGesture(false);
-        webView.setWebChromeClient(new WebChromeClient() {
+        // Request CAMERA permission up-front so getUserMedia works in the WebView
+        ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.CAMERA }, 1001);
+
+        // Allow the WebView to use camera via getUserMedia
+        getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
+        getBridge().getWebView().setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
-                request.grant(request.getResources());
+                runOnUiThread(() -> request.grant(request.getResources()));
             }
         });
     }
