@@ -19,6 +19,11 @@ public class MainActivity extends BridgeActivity {
         // Request CAMERA permission up-front so getUserMedia works in the WebView
         ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.CAMERA }, 1001);
 
+        // Disable pinch-to-zoom at the native WebView level (viewport meta is ignored by Capacitor WebView)
+        getBridge().getWebView().getSettings().setSupportZoom(false);
+        getBridge().getWebView().getSettings().setBuiltInZoomControls(false);
+        getBridge().getWebView().getSettings().setDisplayZoomControls(false);
+
         // Allow the WebView to use camera via getUserMedia
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
         getBridge().getWebView().setWebChromeClient(new WebChromeClient() {
