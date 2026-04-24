@@ -85,6 +85,9 @@ export function DocumentScanner() {
   // Saved scans (persisted in localStorage)
   const [savedScans, setSavedScans] = useState<SavedScan[]>([]);
 
+  // Full-screen viewer
+  const [viewingScan, setViewingScan] = useState<SavedScan | null>(null);
+
   // Load saved scans from localStorage on mount
   useEffect(() => {
     try {
@@ -529,29 +532,32 @@ export function DocumentScanner() {
                     key={scan.id}
                     className="group relative overflow-hidden rounded-xl border border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={scan.thumb}
-                      alt={scan.label}
-                      className="block w-full object-cover"
-                      style={{ aspectRatio: "3/4" }}
-                    />
-                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-black/60 px-1.5 py-1">
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadSavedScan(scan)}
-                        className="font-bina-display text-[9px] font-bold text-white active:opacity-70"
-                      >
-                        {t("openScan")}
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={t("deleteScan")}
-                        onClick={() => handleDeleteSavedScan(scan.id)}
-                        className="text-[11px] text-red-300 active:opacity-70"
-                      >
-                        🗑
-                      </button>
+                    {/* Tap thumbnail to open viewer */}
+                    <button
+                      type="button"
+                      className="block w-full"
+                      onClick={() => setViewingScan(scan)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={scan.thumb}
+                        alt={scan.label}
+                        className="block w-full object-cover"
+                        style={{ aspectRatio: "3/4" }}
+                      />
+                    </button>
+                    {/* Delete button only in corner */}
+                    <button
+                      type="button"
+                      aria-label={t("deleteScan")}
+                      onClick={() => handleDeleteSavedScan(scan.id)}
+                      className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-[11px] text-red-300 active:opacity-70"
+                    >
+                      🗑
+                    </button>
+                    {/* Date label */}
+                    <div className="bg-black/50 px-1.5 py-0.5">
+                      <p className="font-bina-display truncate text-[8px] text-white">{scan.label}</p>
                     </div>
                   </div>
                 ))}
@@ -714,6 +720,55 @@ export function DocumentScanner() {
               className="font-bina-display flex-1 rounded-xl bg-[var(--bina-or)] py-2.5 text-[12px] font-bold text-white disabled:opacity-50 active:opacity-80"
             >
               {exporting ? t("exporting") : t("exportPdf")}
+            </button>
+          </div>
+        </div>
+      )}
+      {/* ── Full-screen image viewer ── */}
+      {viewingScan && (
+        <div
+          className="fixed inset-0 z-50 flex flex-col bg-black"
+          style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        >
+          {/* Toolbar */}
+          <div className="flex items-center gap-3 px-4 py-3" style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}>
+            <button
+              type="button"
+              onClick={() => setViewingScan(null)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white active:opacity-70"
+            >
+              ✕
+            </button>
+            <span className="font-bina-display flex-1 truncate text-[13px] text-white/80">
+              {viewingScan.label}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleDownloadSavedScan(viewingScan)}
+              className="font-bina-display flex items-center gap-1.5 rounded-xl bg-[var(--bina-or)] px-4 py-2 text-[12px] font-bold text-white active:opacity-80"
+            >
+              ⬇ {t("exportJpg")}
+            </button>
+          </div>
+
+          {/* Full image */}
+          <div className="flex flex-1 items-center justify-center overflow-hidden p-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={viewingScan.dataUrl}
+              alt={viewingScan.label}
+              className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+            />
+          </div>
+
+          {/* Delete from viewer */}
+          <div className="flex justify-center px-4 py-3">
+            <button
+              type="button"
+              onClick={() => { handleDeleteSavedScan(viewingScan.id); setViewingScan(null); }}
+              className="font-bina-display rounded-xl border border-red-500/40 px-6 py-2 text-[12px] font-semibold text-red-400 active:opacity-70"
+            >
+              🗑 {t("deleteScan")}
             </button>
           </div>
         </div>
