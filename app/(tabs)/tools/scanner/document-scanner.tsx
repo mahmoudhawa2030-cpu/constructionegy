@@ -9,6 +9,7 @@ import { useTFLite, runSegmentation } from "./use-tflite";
 import { useMIRNet, runMIRNet } from "./use-mirnet";
 import {
   applyFilter,
+  applyFilterAsync,
   detectCornersFromMask,
   detectCornersWithOpenCV,
   perspectiveWarp,
@@ -78,6 +79,7 @@ export function DocumentScanner() {
   const [warpedCanvas, setWarpedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("magicColor");
   const [filteredCanvas, setFilteredCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [filterProcessing, setFilterProcessing] = useState(false);
 
   // Pages
   const [pages, setPages] = useState<ScannedPage[]>([]);
@@ -318,31 +320,36 @@ export function DocumentScanner() {
   }, []);
 
   // ── Apply warp when moving to filter stage ──────────────────────────────────
-  const handleApplyCrop = useCallback(() => {
+  const handleApplyCrop = useCallback(async () => {
     if (!rawImage || !corners || !window.cv) return;
     const sorted = sortCorners(corners);
     const warped = perspectiveWarp(rawImage, sorted, window.cv);
     setWarpedCanvas(warped);
     setActiveFilter("magicColor");
-    const filtered = applyFilter(warped, "magicColor");
-    setFilteredCanvas(filtered);
     setStage("filter");
+    setFilterProcessing(true);
+    try {
+      const filtered = await applyFilterAsync(warped, "magicColor");
+      setFilteredCanvas(filtered);
+    } finally {
+      setFilterProcessing(false);
+    }
   }, [rawImage, corners]);
 
-  // ── Apply filter (with MIRNet support for magicColorPro) ────────────────────
-  const applyFilterWithMIRNet = useCallback(async (f: FilterType, src: HTMLCanvasElement) => {
-    return applyFilter(src, f);
-  }, []);
-
-  // ── Filter selection ────────────────────────────────────────────────────────
+  // ── Filter selection ────────────────────────────────────────────────
   const handleFilterSelect = useCallback(
     async (f: FilterType) => {
       if (!warpedCanvas) return;
       setActiveFilter(f);
-      const result = await applyFilterWithMIRNet(f, warpedCanvas);
-      setFilteredCanvas(result);
+      setFilterProcessing(true);
+      try {
+        const result = await applyFilterAsync(warpedCanvas, f);
+        setFilteredCanvas(result);
+      } finally {
+        setFilterProcessing(false);
+      }
     },
-    [warpedCanvas, applyFilterWithMIRNet]
+    [warpedCanvas]
   );
 
   // ── Draw filtered canvas ────────────────────────────────────────────────────
@@ -631,7 +638,7 @@ export function DocumentScanner() {
       )}
 
       {/* ── STAGE: filter ── */}
-      {stage === "filter" && filteredCanvas && (
+      {stage === "filter" && warpedCanvas && (
         <div className="flex flex-1 flex-col">
           {/* Preview */}
           <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black/80 px-2 py-2">
@@ -639,6 +646,11 @@ export function DocumentScanner() {
               ref={filterCanvasRef}
               className="max-h-full max-w-full rounded-lg shadow-2xl"
             />
+            {filterProcessing && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50">
+                <div className="h-9 w-9 animate-spin rounded-full border-4 border-white border-t-transparent" />
+              </div>
+            )}
           </div>
 
           {/* Filter strip */}

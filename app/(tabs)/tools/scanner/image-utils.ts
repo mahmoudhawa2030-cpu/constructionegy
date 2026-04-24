@@ -199,7 +199,60 @@ export function perspectiveWarp(
   return canvas;
 }
 
-/** Apply a named filter to a canvas and return a new canvas */
+/**
+ * Apply a filter asynchronously in a Web Worker — non-blocking, UI stays responsive.
+ * Use this for full-size filter application in the filter stage.
+ */
+export function applyFilterAsync(
+  source: HTMLCanvasElement,
+  filter: FilterType
+): Promise<HTMLCanvasElement> {
+  return new Promise((resolve, reject) => {
+    if (filter === "original") {
+      const out = document.createElement("canvas");
+      out.width = source.width;
+      out.height = source.height;
+      out.getContext("2d")!.drawImage(source, 0, 0);
+      resolve(out);
+      return;
+    }
+
+    const ctx = document.createElement("canvas");
+    ctx.width = source.width;
+    ctx.height = source.height;
+    const sctx = ctx.getContext("2d")!;
+    sctx.drawImage(source, 0, 0);
+    const imgData = sctx.getImageData(0, 0, source.width, source.height);
+
+    // Copy buffer to transfer to worker (transferable = zero-copy)
+    const buffer = imgData.data.buffer.slice(0);
+
+    const worker = new Worker("/filter-worker.js");
+    worker.onmessage = (ev) => {
+      const { buffer: outBuf, width, height } = ev.data;
+      const outCanvas = document.createElement("canvas");
+      outCanvas.width = width;
+      outCanvas.height = height;
+      const outCtx = outCanvas.getContext("2d")!;
+      const outData = new ImageData(new Uint8ClampedArray(outBuf), width, height);
+      outCtx.putImageData(outData, 0, 0);
+      worker.terminate();
+      resolve(outCanvas);
+    };
+    worker.onerror = (err) => {
+      worker.terminate();
+      // Fallback to sync on worker error
+      resolve(applyFilter(source, filter));
+      console.warn("[FilterWorker] error, fell back to sync:", err);
+    };
+    worker.postMessage(
+      { filter, width: source.width, height: source.height, buffer },
+      [buffer]
+    );
+  });
+}
+
+/** Apply a named filter to a canvas and return a new canvas (sync — used for thumbnails) */
 export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTMLCanvasElement {
   const out = document.createElement("canvas");
   out.width = source.width;
