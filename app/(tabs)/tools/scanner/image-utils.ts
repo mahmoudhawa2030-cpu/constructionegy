@@ -392,15 +392,12 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       };
 
       // ── Step 3: Soft-binarization per pixel ───────────────────────────────
-      // Normalize each pixel against local bg → apply S-curve:
-      // values near 1.0 (background) → pushed to 1.0 (pure white)
-      // values near 0.0 (ink) → pushed to 0.0 (pure black)
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x) * 4;
           const bg = Math.max(getBg2(x, y), 30);
 
-          // Normalize: pixel / bg → 0..1+ range
+          // Normalize: pixel / bg → 0..1
           let r = Math.min(1, d[idx]     / bg);
           let g = Math.min(1, d[idx + 1] / bg);
           let b = Math.min(1, d[idx + 2] / bg);
@@ -408,24 +405,32 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           // Luminance after normalization
           const lp = 0.299 * r + 0.587 * g + 0.114 * b;
 
-          // S-curve: aggressively push bright → white, dark → black
-          // Using sigmoid-like: out = lp^0.5 for bright, lp^2.5 for dark
+          // Steeper S-curve with wider ink zone (threshold raised to 0.50)
           let out2: number;
-          if (lp > 0.75) {
-            // Background zone → pull hard toward white
-            out2 = Math.min(1, lp + (1 - lp) * 0.92);
-          } else if (lp < 0.40) {
-            // Ink zone → push hard toward black
-            out2 = lp * lp * (lp < 0.20 ? 0.3 : 0.55);
+          if (lp > 0.72) {
+            // Background → pure white (99%)
+            out2 = Math.min(1, lp + (1 - lp) * 0.99);
+          } else if (lp < 0.50) {
+            // Ink zone → near black, steeper curve
+            out2 = lp * lp * (lp < 0.18 ? 0.20 : 0.40);
           } else {
-            // Transition zone → smooth S-curve
-            const t = (lp - 0.40) / 0.35; // 0→1 across 0.40..0.75
-            const bright = Math.min(1, lp + (1 - lp) * 0.92);
-            const dark = lp * lp * 0.55;
+            // Narrow transition (0.50..0.72) → steep Hermite blend
+            const t = (lp - 0.50) / 0.22;
+            const bright = Math.min(1, lp + (1 - lp) * 0.99);
+            const dark = lp * lp * 0.40;
             out2 = dark + t * t * (3 - 2 * t) * (bright - dark);
           }
 
-          // Preserve ink hue: scale RGB proportionally to new luminance
+          // Desaturate ink toward black (ink = dark pixels)
+          // Background pixels keep full white, ink pixels lose color → near black
+          const inkness = Math.max(0, 1 - lp / 0.50); // 1.0 at lp=0, 0.0 at lp=0.50+
+          const desat = inkness * 0.85; // up to 85% desaturation for darkest ink
+          const lumOut = 0.299 * r + 0.587 * g + 0.114 * b;
+          r = r + (lumOut - r) * desat;
+          g = g + (lumOut - g) * desat;
+          b = b + (lumOut - b) * desat;
+
+          // Apply S-curve luminance scaling
           const scl = lp > 0.01 ? out2 / lp : 0;
           r = Math.min(1, Math.max(0, r * scl));
           g = Math.min(1, Math.max(0, g * scl));
