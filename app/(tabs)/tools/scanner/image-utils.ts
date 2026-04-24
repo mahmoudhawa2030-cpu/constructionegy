@@ -348,47 +348,93 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       break;
     }
     case "magicColorPro": {
-      // Post-processing applied on MIRNet-enhanced image:
-      // MIRNet handles shadow removal + low-light + noise reduction.
-      // We add: saturation boost, ink sharpening, gentle background whitening.
+      // Adaptive soft-binarization — matches CamScanner Magic Pro output:
+      // Background → pure white (255), Ink → pure black, stains/yellowing removed.
       const W2 = out.width;
       const H2 = out.height;
-      const N2 = W2 * H2;
 
-      // Gentle grey world correction (capped at 1.10x)
-      let sR = 0, sG = 0, sB = 0;
-      for (let i = 0; i < d.length; i += 4) { sR += d[i]; sG += d[i + 1]; sB += d[i + 2]; }
-      const mR = sR / N2, mG = sG / N2, mB = sB / N2;
-      const mAll = (mR + mG + mB) / 3;
-      const gR = Math.min(mAll / (mR || 1), 1.10);
-      const gG = Math.min(mAll / (mG || 1), 1.10);
-      const gB = Math.min(mAll / (mB || 1), 1.10);
+      // ── Step 1: Build luminance map ───────────────────────────────────────
+      const lum2 = new Float32Array(W2 * H2);
       for (let i = 0; i < d.length; i += 4) {
-        d[i]     = Math.min(255, Math.round(d[i]     * gR));
-        d[i + 1] = Math.min(255, Math.round(d[i + 1] * gG));
-        d[i + 2] = Math.min(255, Math.round(d[i + 2] * gB));
+        lum2[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // Per-pixel: saturation +15% + ink sharpening
-      for (let i = 0; i < d.length; i += 4) {
-        let r = d[i] / 255, g2 = d[i + 1] / 255, b2 = d[i + 2] / 255;
-        const lp = 0.299 * r + 0.587 * g2 + 0.114 * b2;
-
-        // Saturation +15%
-        const gr = 0.299 * r + 0.587 * g2 + 0.114 * b2;
-        r  = Math.min(1, Math.max(0, gr + (r  - gr) * 1.15));
-        g2 = Math.min(1, Math.max(0, gr + (g2 - gr) * 1.15));
-        b2 = Math.min(1, Math.max(0, gr + (b2 - gr) * 1.15));
-
-        // Ink sharpening
-        if (lp < 0.40) {
-          const f2 = lp < 0.18 ? 0.68 : 0.82;
-          r = r * f2; g2 = g2 * f2; b2 = b2 * f2;
+      // ── Step 2: Adaptive background map (64px tiles, 92nd percentile) ────
+      // Higher percentile → more aggressive background whitening
+      const TILE2 = 64;
+      const tX2 = Math.ceil(W2 / TILE2);
+      const tY2 = Math.ceil(H2 / TILE2);
+      const bgMap2 = new Float32Array(tX2 * tY2);
+      for (let tyi = 0; tyi < tY2; tyi++) {
+        for (let txi = 0; txi < tX2; txi++) {
+          const vals: number[] = [];
+          const x0 = txi * TILE2, x1 = Math.min(x0 + TILE2, W2);
+          const y0 = tyi * TILE2, y1 = Math.min(y0 + TILE2, H2);
+          for (let py = y0; py < y1; py++)
+            for (let px = x0; px < x1; px++) vals.push(lum2[py * W2 + px]);
+          vals.sort((a, b) => a - b);
+          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.92)] || 240;
         }
+      }
 
-        d[i]     = Math.round(Math.min(1, Math.max(0, r))  * 255);
-        d[i + 1] = Math.round(Math.min(1, Math.max(0, g2)) * 255);
-        d[i + 2] = Math.round(Math.min(1, Math.max(0, b2)) * 255);
+      // Bilinear interpolation of bg map
+      const getBg2 = (x: number, y: number): number => {
+        const fx = x / TILE2 - 0.5, fy = y / TILE2 - 0.5;
+        const tx0 = Math.max(0, Math.floor(fx)), tx1 = Math.min(tX2 - 1, tx0 + 1);
+        const ty0 = Math.max(0, Math.floor(fy)), ty1 = Math.min(tY2 - 1, ty0 + 1);
+        const wx = fx - Math.floor(fx), wy = fy - Math.floor(fy);
+        return (
+          bgMap2[ty0 * tX2 + tx0] * (1 - wx) * (1 - wy) +
+          bgMap2[ty0 * tX2 + tx1] * wx        * (1 - wy) +
+          bgMap2[ty1 * tX2 + tx0] * (1 - wx)  * wy +
+          bgMap2[ty1 * tX2 + tx1] * wx         * wy
+        );
+      };
+
+      // ── Step 3: Soft-binarization per pixel ───────────────────────────────
+      // Normalize each pixel against local bg → apply S-curve:
+      // values near 1.0 (background) → pushed to 1.0 (pure white)
+      // values near 0.0 (ink) → pushed to 0.0 (pure black)
+      for (let y = 0; y < H2; y++) {
+        for (let x = 0; x < W2; x++) {
+          const idx = (y * W2 + x) * 4;
+          const bg = Math.max(getBg2(x, y), 30);
+
+          // Normalize: pixel / bg → 0..1+ range
+          let r = Math.min(1, d[idx]     / bg);
+          let g = Math.min(1, d[idx + 1] / bg);
+          let b = Math.min(1, d[idx + 2] / bg);
+
+          // Luminance after normalization
+          const lp = 0.299 * r + 0.587 * g + 0.114 * b;
+
+          // S-curve: aggressively push bright → white, dark → black
+          // Using sigmoid-like: out = lp^0.5 for bright, lp^2.5 for dark
+          let out2: number;
+          if (lp > 0.75) {
+            // Background zone → pull hard toward white
+            out2 = Math.min(1, lp + (1 - lp) * 0.92);
+          } else if (lp < 0.40) {
+            // Ink zone → push hard toward black
+            out2 = lp * lp * (lp < 0.20 ? 0.3 : 0.55);
+          } else {
+            // Transition zone → smooth S-curve
+            const t = (lp - 0.40) / 0.35; // 0→1 across 0.40..0.75
+            const bright = Math.min(1, lp + (1 - lp) * 0.92);
+            const dark = lp * lp * 0.55;
+            out2 = dark + t * t * (3 - 2 * t) * (bright - dark);
+          }
+
+          // Preserve ink hue: scale RGB proportionally to new luminance
+          const scl = lp > 0.01 ? out2 / lp : 0;
+          r = Math.min(1, Math.max(0, r * scl));
+          g = Math.min(1, Math.max(0, g * scl));
+          b = Math.min(1, Math.max(0, b * scl));
+
+          d[idx]     = Math.round(r * 255);
+          d[idx + 1] = Math.round(g * 255);
+          d[idx + 2] = Math.round(b * 255);
+        }
       }
       break;
     }

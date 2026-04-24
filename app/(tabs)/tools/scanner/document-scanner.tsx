@@ -78,7 +78,6 @@ export function DocumentScanner() {
   const [warpedCanvas, setWarpedCanvas] = useState<HTMLCanvasElement | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("magicColor");
   const [filteredCanvas, setFilteredCanvas] = useState<HTMLCanvasElement | null>(null);
-  const [mirnetProcessing, setMirnetProcessing] = useState(false);
 
   // Pages
   const [pages, setPages] = useState<ScannedPage[]>([]);
@@ -332,23 +331,8 @@ export function DocumentScanner() {
 
   // ── Apply filter (with MIRNet support for magicColorPro) ────────────────────
   const applyFilterWithMIRNet = useCallback(async (f: FilterType, src: HTMLCanvasElement) => {
-    if (f === "magicColorPro") {
-      if (mirnetStatus !== "ready" || !mirnetModel) {
-        // Fallback to magicColor if model not ready
-        return applyFilter(src, "magicColor");
-      }
-      setMirnetProcessing(true);
-      try {
-        const enhanced = await runMIRNet(mirnetModel, src);
-        if (!enhanced) return applyFilter(src, "magicColor");
-        // Apply canvas post-processing on top of MIRNet output
-        return applyFilter(enhanced, "magicColorPro");
-      } finally {
-        setMirnetProcessing(false);
-      }
-    }
     return applyFilter(src, f);
-  }, [mirnetStatus, mirnetModel]);
+  }, []);
 
   // ── Filter selection ────────────────────────────────────────────────────────
   const handleFilterSelect = useCallback(
@@ -655,12 +639,6 @@ export function DocumentScanner() {
               ref={filterCanvasRef}
               className="max-h-full max-w-full rounded-lg shadow-2xl"
             />
-            {mirnetProcessing && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 rounded-lg">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent" />
-                <p className="font-bina-display text-[12px] font-semibold text-white">{t("magicProProcessing")}</p>
-              </div>
-            )}
           </div>
 
           {/* Filter strip */}
