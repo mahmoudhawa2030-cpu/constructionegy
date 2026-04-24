@@ -316,8 +316,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
 
       // Shadow map: large 128px tiles, 95th percentile
       const shadow = buildTileMap(128, 0.95);
-      // Fine background map: 32px tiles, 90th percentile
-      const fine = buildTileMap(32, 0.90);
+      // Fine background map: 32px tiles, 85th percentile (less aggressive whitening)
+      const fine = buildTileMap(32, 0.85);
       // HDR tile map: 64px tiles, full range per tile
       const HDR_TILE = 64;
       const hdrTX = Math.ceil(W / HDR_TILE);
@@ -388,10 +388,6 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
             b = b + (lumNow - b) * flatten;
           }
 
-          // White boost +5% (reduced from original +10%)
-          r = Math.min(1, r + (1 - r) * 0.05);
-          g = Math.min(1, g + (1 - g) * 0.05);
-          b = Math.min(1, b + (1 - b) * 0.05);
 
           // Saturation +10% (ink color preservation)
           const gray = 0.299 * r + 0.587 * g + 0.114 * b;
