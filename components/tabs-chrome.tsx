@@ -29,10 +29,12 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
   const { unreadTotal } = useMessageNotifications();
   /** Industry feed uses its own chrome (FeedTopbar); skip hamburger bar to match mobile mock. */
   const isMobileFeedHome = pathname === "/" || pathname === "";
+  /** Scanner has its own header — hide the global one */
+  const isScannerPage = pathname?.includes("/tools/scanner");
 
   return (
     <div className="flex h-full flex-col">
-      {!isMobileFeedHome ? (
+      {!isMobileFeedHome && !isScannerPage ? (
         <header
           className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2 backdrop-blur-md md:hidden"
           style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
