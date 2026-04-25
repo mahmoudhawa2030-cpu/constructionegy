@@ -102,7 +102,8 @@
     "count": "عد الأشياء",
     "totalObjects": "إجمالي الأشياء",
     "confidence": "عتبة الثقة",
-    "filterByClass": "تصفية حسب الفئة"
+    "filterByClass": "تصفية حسب الفئة",
+    "retry": "إعادة المحاولة"
   },
   "commentNotifications": {
     "bellAria": "الإشعارات",

@@ -102,7 +102,8 @@
     "count": "Count Objects",
     "totalObjects": "Total Objects",
     "confidence": "Confidence Threshold",
-    "filterByClass": "Filter by Class"
+    "filterByClass": "Filter by Class",
+    "retry": "Retry"
   },
   "commentNotifications": {
     "bellAria": "Notifications",

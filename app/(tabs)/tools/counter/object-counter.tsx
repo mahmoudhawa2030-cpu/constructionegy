@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useYOLO12n, runObjectDetection, Detection, countByClass } from "./use-yolo12n";
+import { useYOLO12n, runObjectDetection, Detection, countByClass, loadYOLOModel } from "./use-yolo12n";
 import { Camera, Upload, RotateCcw, X, Check, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function ObjectCounter() {
@@ -193,6 +193,12 @@ export default function ObjectCounter() {
         <span className="text-4xl">⚠️</span>
         <p className="font-bina-display text-sm text-[var(--bina-muted)]">{t("modelError")}</p>
         <p className="text-xs text-[var(--bina-muted)]">{t("modelErrorDesc")}</p>
+        <button
+          onClick={() => loadYOLOModel()}
+          className="mt-4 rounded-lg bg-[var(--bina-primary)] px-4 py-2 text-sm font-medium text-white hover:bg-[var(--bina-primary)]/90"
+        >
+          {t("retry") || "Retry"}
+        </button>
       </div>
     );
   }
