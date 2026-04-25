@@ -1,38 +1,36 @@
 # YOLO12n Model for Object Counter
 
-This folder should contain the YOLO12n TensorFlow Lite model for the Things Counter feature.
+## Auto-Download (Default Behavior)
 
-## Model Download
+**The app now automatically downloads the model from CDN on first use!**
 
-The model file `yolo12n_float16.tflite` needs to be downloaded and placed in this folder.
+When a user opens the Things Counter for the first time:
+1. The app checks for a local model file
+2. If not found, it automatically downloads from jsDelivr CDN
+3. The model is cached in the browser for subsequent uses
+4. Download size: ~5-6MB (one-time)
 
-### Option 1: Download from Ultralytics (Recommended)
+**No manual setup required!**
+
+## Manual Download (Optional)
+
+If you prefer to include the model in your deployment (faster first load), download it manually:
+
+### Option 1: Using Python with Ultralytics
 
 ```bash
-# Using Python with Ultralytics
 pip install ultralytics
 python -c "from ultralytics import YOLO; model = YOLO('yolo12n'); model.export(format='tflite')"
 
-# The model will be saved as yolo12n_float16.tflite in the current directory
-# Move it to: public/models/yolo12n/yolo12n_float16.tflite
+# Move to app directory
+mv yolo12n_float16.tflite public/models/yolo12n/
 ```
 
-### Option 2: Download Pre-converted Model
+### Option 2: Download from GitHub Releases
 
-Download from the official Ultralytics releases:
 - URL: https://github.com/ultralytics/assets/releases
 - Look for: `yolo12n_float16.tflite`
 - Place in: `public/models/yolo12n/yolo12n_float16.tflite`
-
-### Option 3: Using Hugging Face
-
-```bash
-# Install huggingface_hub
-pip install huggingface-hub
-
-# Download model
-huggingface-cli download ultralytics/YOLO12 yolo12n_float16.tflite --local-dir .
-```
 
 ## Model Specifications
 

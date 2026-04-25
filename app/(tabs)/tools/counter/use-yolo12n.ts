@@ -33,11 +33,44 @@ declare global {
 
 let globalStatus: YOLOStatus = "idle";
 let globalModel: any = null;
+let modelUrl: string | null = null;
 const listeners: Set<(s: YOLOStatus) => void> = new Set();
 
 function notify(s: YOLOStatus) {
   globalStatus = s;
   listeners.forEach((fn) => fn(s));
+}
+
+/** Try to download model from CDN sources */
+async function downloadModel(): Promise<Blob | null> {
+  const sources = [
+    // Primary: jsDelivr CDN (fast, reliable)
+    "https://cdn.jsdelivr.net/gh/ultralytics/assets@main/yolo12n_float16.tflite",
+    // Fallback: Alternative mirrors
+    "https://media.githubusercontent.com/media/ultralytics/assets/main/yolo12n_float16.tflite",
+  ];
+  
+  for (const url of sources) {
+    try {
+      console.log(`[YOLO] Trying to download from: ${url}`);
+      const response = await fetch(url, { 
+        method: "GET",
+        cache: "force-cache"
+      });
+      
+      if (response.ok) {
+        const blob = await response.blob();
+        if (blob.size > 1000000) { // Ensure it's at least 1MB (valid model)
+          console.log(`[YOLO] Downloaded model: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
+          return blob;
+        }
+      }
+    } catch (e) {
+      console.warn(`[YOLO] Failed to download from ${url}:`, e);
+    }
+  }
+  
+  return null;
 }
 
 /** Load TFLite WASM runtime + YOLO model */
@@ -71,12 +104,38 @@ async function loadYOLOModel() {
       "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/"
     );
 
-    // Load YOLO model
-    globalModel = await window.tflite.loadTFLiteModel(
-      "/models/yolo12n/yolo12n_float16.tflite"
-    );
+    // Try to load model - first check local, then try CDN
+    let modelBlob: Blob | null = null;
+    
+    // Try local model first
+    try {
+      const localResponse = await fetch("/models/yolo12n/yolo12n_float16.tflite", { method: "HEAD" });
+      if (localResponse.ok) {
+        modelUrl = "/models/yolo12n/yolo12n_float16.tflite";
+        console.log("[YOLO] Using local model");
+      }
+    } catch {
+      console.log("[YOLO] Local model not found, trying CDN...");
+    }
+    
+    // If local not available, download from CDN
+    if (!modelUrl) {
+      notify("loading"); // Keep loading state but we're downloading now
+      modelBlob = await downloadModel();
+      
+      if (modelBlob) {
+        // Create object URL for the downloaded model
+        modelUrl = URL.createObjectURL(modelBlob);
+        console.log("[YOLO] Using downloaded model from CDN");
+      } else {
+        throw new Error("Failed to download model from all sources");
+      }
+    }
 
+    // Load the model
+    globalModel = await window.tflite.loadTFLiteModel(modelUrl);
     notify("ready");
+    
   } catch (err) {
     console.warn("[YOLO] Failed to load:", err);
     notify("error");
