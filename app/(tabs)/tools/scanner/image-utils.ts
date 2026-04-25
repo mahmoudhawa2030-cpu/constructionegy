@@ -380,9 +380,9 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           const nLum = normLum[lumIdx];
 
           // Detect background: grayscale OR any color channel is very bright
-          // This catches blue-tinted paper that has low luminance but high B value
+          // Lower threshold 0.68 catches lighter blue/cyan tints that 0.78 missed
           const isGrayBackground = nLum > 0.50 || (nLum > 0.65 && nLum < 0.995);
-          const isColorBackground = rNorm > 0.78 || gNorm > 0.78 || bNorm > 0.78;
+          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
 
           if (isGrayBackground || isColorBackground) {
             // Background/shadow/color-tint → pure white (CamScanner style)
@@ -493,7 +493,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           const isShadowOrBg = normLum[lumIdx] > 0.70 && normLum[lumIdx] < 0.995;
 
           // Color detection: if ANY channel is bright, it's background (catches color tint)
-          const isColorBackground = rNorm > 0.78 || gNorm > 0.78 || bNorm > 0.78;
+          // Lower threshold 0.68 catches lighter blue/cyan tints that 0.78 missed
+          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
 
           // Lower threshold = more pixels become pure white
           let outVal: number;
