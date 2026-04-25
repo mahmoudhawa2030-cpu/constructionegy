@@ -365,22 +365,35 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           const idx = (y * W + x) * 4;
           const lumIdx = y * W + x;
 
-          // Use grayscale for threshold decision (ink vs background)
+          // Get original color
+          let rRaw = origR[lumIdx] / 255;
+          let gRaw = origG[lumIdx] / 255;
+          let bRaw = origB[lumIdx] / 255;
+
+          // Normalize against local background
+          const bgVal = Math.max(getBg(x, y), 60);
+          const rNorm = Math.min(1, rRaw * 255 / bgVal);
+          const gNorm = Math.min(1, gRaw * 255 / bgVal);
+          const bNorm = Math.min(1, bRaw * 255 / bgVal);
+
+          // Grayscale luminance for threshold
           const nLum = normLum[lumIdx];
 
-          // WIDE detection: 0.68-0.995 = background or shadow → pure white
-          const isBackground = nLum > 0.68 && nLum < 0.995;
+          // Detect background: grayscale OR any color channel is very bright
+          // This catches blue-tinted paper that has low luminance but high B value
+          const isGrayBackground = nLum > 0.50 || (nLum > 0.65 && nLum < 0.995);
+          const isColorBackground = rNorm > 0.78 || gNorm > 0.78 || bNorm > 0.78;
 
-          if (nLum > 0.50 || isBackground) {
-            // Background/shadow → pure white (CamScanner style)
+          if (isGrayBackground || isColorBackground) {
+            // Background/shadow/color-tint → pure white (CamScanner style)
             d[idx] = 255;
             d[idx + 1] = 255;
             d[idx + 2] = 255;
           } else {
-            // Ink pixel → use ORIGINAL color, saturate and darken
-            let r = origR[lumIdx] / 255;
-            let g = origG[lumIdx] / 255;
-            let b = origB[lumIdx] / 255;
+            // Ink pixel → saturate and darken for vivid contrast
+            let r = rRaw;
+            let g = gRaw;
+            let b = bRaw;
 
             // High saturation boost (40%) to make ink vivid
             const gray = 0.299 * r + 0.587 * g + 0.114 * b;
@@ -389,7 +402,6 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
             b = Math.min(1, Math.max(0, gray + (b - gray) * 1.40));
 
             // Darken ink for crisp contrast against white background
-            // Factor based on original darkness: darker = more darkening
             const inkDarkness = 1 - gray;
             const darkenFactor = 0.75 - (inkDarkness * 0.15); // 0.60 to 0.75
             r = r * darkenFactor;
