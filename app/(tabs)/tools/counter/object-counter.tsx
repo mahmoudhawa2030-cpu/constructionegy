@@ -14,7 +14,7 @@ export default function ObjectCounter() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showClassList, setShowClassList] = useState(false);
   const [selectedClasses, setSelectedClasses] = useState<Set<string>>(new Set());
-  const [confidenceThreshold, setConfidenceThreshold] = useState(0.3);
+  const [confidenceThreshold, setConfidenceThreshold] = useState(0.001);
   const [torchOn, setTorchOn] = useState(false);
   const [debugInfo, setDebugInfo] = useState<string>("");
   
@@ -352,7 +352,7 @@ export default function ObjectCounter() {
                 </div>
                 <input
                   type="range"
-                  min="10"
+                  min="1"
                   max="90"
                   value={confidenceThreshold * 100}
                   onChange={(e) => setConfidenceThreshold(Number(e.target.value) / 100)}

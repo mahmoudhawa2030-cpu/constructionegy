@@ -231,7 +231,8 @@ export async function runObjectDetection(
     const filtered = applyNMS(detections, 0.45);
     console.log(`[YOLO] Found ${detections.length} raw detections, ${filtered.length} after NMS`);
     
-    const debugInfo = `Input: ${inputName}\nShape: ${dims.join('x')}\nMaxConf: ${maxConf.toFixed(3)}\nRaw: ${detections.length} | NMS: ${filtered.length}`;
+    const topClass = maxConf > 0 ? COCO_CLASSES[maxConfClass] : 'none';
+    const debugInfo = `Input: ${inputName}\nShape: ${dims.join('x')}\nMaxConf: ${maxConf.toFixed(3)} (${topClass})\nRaw: ${detections.length} | NMS: ${filtered.length}`;
     
     return { results: filtered, debug: debugInfo };
   } catch (err) {
