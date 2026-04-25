@@ -134,9 +134,13 @@ export async function runObjectDetection(
     // Run inference with ONNX Runtime Web
     const inputTensor = new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]);
     
-    // Use correct input name - YOLOv8 uses 'images'
-    const feeds: Record<string, ort.Tensor> = { images: inputTensor };
+    // Get correct input name from model
+    const inputName = model.inputNames[0];
+    const feeds: Record<string, ort.Tensor> = { [inputName]: inputTensor };
     
+    console.log("[YOLO] Input name:", inputName);
+    console.log("[YOLO] Input tensor shape:", inputTensor.dims);
+    console.log("[YOLO] Sample input values:", Array.from(input.slice(0, 10)));
     console.log("[YOLO] Running inference...");
     const outputMap = await model.run(feeds);
     
@@ -227,7 +231,7 @@ export async function runObjectDetection(
     const filtered = applyNMS(detections, 0.45);
     console.log(`[YOLO] Found ${detections.length} raw detections, ${filtered.length} after NMS`);
     
-    const debugInfo = `Shape: ${dims.join('x')}\nMaxConf: ${maxConf.toFixed(3)}\nRaw: ${detections.length} | NMS: ${filtered.length}`;
+    const debugInfo = `Input: ${inputName}\nShape: ${dims.join('x')}\nMaxConf: ${maxConf.toFixed(3)}\nRaw: ${detections.length} | NMS: ${filtered.length}`;
     
     return { results: filtered, debug: debugInfo };
   } catch (err) {
