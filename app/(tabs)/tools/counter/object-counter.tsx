@@ -344,13 +344,21 @@ export default function ObjectCounter() {
                 />
               </div>
 
-              {/* Debug Panel */}
-              {debugInfo && (
-                <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/10 p-3">
-                  <p className="mb-1 text-xs font-bold text-yellow-600">Debug Info:</p>
-                  <pre className="whitespace-pre-wrap text-xs text-yellow-700">{debugInfo}</pre>
+              {/* Debug Panel - always visible */}
+              <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/10 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-xs font-bold text-yellow-600">Debug Info:</p>
+                  {model && !isProcessing && (
+                    <button
+                      onClick={runDetection}
+                      className="rounded bg-yellow-600 px-2 py-1 text-xs text-white"
+                    >
+                      Test Model
+                    </button>
+                  )}
                 </div>
-              )}
+                <pre className="whitespace-pre-wrap text-xs text-yellow-700">{debugInfo || "Press 'عد الأشياء' or Test Model"}</pre>
+              </div>
 
               {/* Class filter */}
               {detections.length > 0 && (
