@@ -124,6 +124,7 @@ export function DocumentScanner() {
   // Canvas/overlay refs
   const cropCanvasRef = useRef<HTMLCanvasElement>(null);
   const cropOverlayRef = useRef<HTMLCanvasElement>(null);
+  const cropWrapperRef = useRef<HTMLDivElement>(null);
   const filterCanvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -305,6 +306,13 @@ export function DocumentScanner() {
     canvas.height = dh;
     overlay.width = dw;
     overlay.height = dh;
+
+    // Size the wrapper div to exactly match the canvas pixel dimensions
+    const wrapper = cropWrapperRef.current;
+    if (wrapper) {
+      wrapper.style.width = `${dw}px`;
+      wrapper.style.height = `${dh}px`;
+    }
 
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(rawImage, 0, 0, dw, dh);
@@ -720,15 +728,18 @@ export function DocumentScanner() {
         >
           {/* Image + overlay — fills all space above the buttons bar */}
           <div className="relative min-h-0 flex-1 overflow-hidden w-full flex items-start justify-center">
-            <canvas ref={cropCanvasRef} className="block max-h-full max-w-full" />
-            <canvas
-              ref={cropOverlayRef}
-              className="absolute inset-0"
-              style={{ cursor: "crosshair", touchAction: "none" }}
-              onPointerDown={(e) => { e.preventDefault(); onPointerDown(e); }}
-              onPointerMove={(e) => { e.preventDefault(); onPointerMove(e); }}
-              onPointerUp={(e) => { e.preventDefault(); onPointerUp(); }}
-            />
+            {/* Wrapper sized exactly to the scaled image — both canvases align perfectly */}
+            <div ref={cropWrapperRef} className="relative">
+              <canvas ref={cropCanvasRef} className="block max-h-full max-w-full" />
+              <canvas
+                ref={cropOverlayRef}
+                className="absolute inset-0"
+                style={{ cursor: "crosshair", touchAction: "none" }}
+                onPointerDown={(e) => { e.preventDefault(); onPointerDown(e); }}
+                onPointerMove={(e) => { e.preventDefault(); onPointerMove(e); }}
+                onPointerUp={(e) => { e.preventDefault(); onPointerUp(); }}
+              />
+            </div>
           </div>
 
           {/* Sticky bottom bar — never scrolls off screen */}
