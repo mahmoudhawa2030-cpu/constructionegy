@@ -16,6 +16,7 @@ export default function ObjectCounter() {
   const [selectedClasses, setSelectedClasses] = useState<Set<string>>(new Set());
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.3);
   const [torchOn, setTorchOn] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string>("");
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -105,20 +106,23 @@ export default function ObjectCounter() {
     if (!model || !capturedImage) return;
     
     setIsProcessing(true);
+    setDebugInfo("Running inference...");
     
     try {
       const img = new Image();
       img.src = capturedImage;
       await new Promise((resolve) => { img.onload = resolve; });
       
-      const results = await runObjectDetection(model, img, confidenceThreshold);
+      const { results, debug } = await runObjectDetection(model, img, confidenceThreshold);
       setDetections(results);
+      setDebugInfo(debug);
       
       // Auto-select all detected classes
       const classes = new Set(results.map(d => d.class));
       setSelectedClasses(classes);
     } catch (err) {
       console.warn("[Detection] Failed:", err);
+      setDebugInfo(`Error: ${err}`);
     } finally {
       setIsProcessing(false);
     }
@@ -339,6 +343,14 @@ export default function ObjectCounter() {
                   className="w-full"
                 />
               </div>
+
+              {/* Debug Panel */}
+              {debugInfo && (
+                <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/10 p-3">
+                  <p className="mb-1 text-xs font-bold text-yellow-600">Debug Info:</p>
+                  <pre className="whitespace-pre-wrap text-xs text-yellow-700">{debugInfo}</pre>
+                </div>
+              )}
 
               {/* Class filter */}
               {detections.length > 0 && (

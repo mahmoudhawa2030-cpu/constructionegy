@@ -73,11 +73,16 @@ export function useYOLO12n(): { status: YOLOStatus; model: ort.InferenceSession 
  * Run YOLO object detection on an image.
  * Returns array of detections with class, confidence, and bounding box.
  */
+export interface DetectionResult {
+  results: Detection[];
+  debug: string;
+}
+
 export async function runObjectDetection(
   model: ort.InferenceSession,
   imgEl: HTMLImageElement | HTMLCanvasElement,
   confidenceThreshold: number = 0.3
-): Promise<Detection[]> {
+): Promise<DetectionResult> {
   try {
     const INPUT_SIZE = 640; // YOLO input size
 
@@ -221,10 +226,13 @@ export async function runObjectDetection(
     // Apply Non-Maximum Suppression (NMS) to remove overlapping boxes
     const filtered = applyNMS(detections, 0.45);
     console.log(`[YOLO] Found ${detections.length} raw detections, ${filtered.length} after NMS`);
-    return filtered;
+    
+    const debugInfo = `Shape: ${dims.join('x')}\nMaxConf: ${maxConf.toFixed(3)}\nRaw: ${detections.length} | NMS: ${filtered.length}`;
+    
+    return { results: filtered, debug: debugInfo };
   } catch (err) {
     console.warn("[YOLO] Inference error:", err);
-    return [];
+    return { results: [], debug: `Error: ${err}` };
   }
 }
 
