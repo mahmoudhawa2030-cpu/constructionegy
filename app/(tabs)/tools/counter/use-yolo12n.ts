@@ -110,22 +110,38 @@ export async function runObjectDetection(
     const imageData = ctx.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE);
     const pixels = imageData.data;
 
-    // Convert to Float32 RGB normalized [0, 1]
-    const input = new Float32Array(INPUT_SIZE * INPUT_SIZE * 3);
-    for (let i = 0, j = 0; i < pixels.length; i += 4, j += 3) {
-      input[j] = pixels[i] / 255.0;
-      input[j + 1] = pixels[i + 1] / 255.0;
-      input[j + 2] = pixels[i + 2] / 255.0;
+    // Convert to Float32 RGB normalized [0, 1] in CHW format (channels first)
+    // YOLOv8 expects [1, 3, 640, 640] = all R values, then all G, then all B
+    const input = new Float32Array(3 * INPUT_SIZE * INPUT_SIZE);
+    const planeSize = INPUT_SIZE * INPUT_SIZE;
+    
+    for (let y = 0; y < INPUT_SIZE; y++) {
+      for (let x = 0; x < INPUT_SIZE; x++) {
+        const srcIdx = (y * INPUT_SIZE + x) * 4; // RGBA in pixel data
+        const dstIdx = y * INPUT_SIZE + x; // Index within each plane
+        
+        input[dstIdx] = pixels[srcIdx] / 255.0;           // R plane
+        input[dstIdx + planeSize] = pixels[srcIdx + 1] / 255.0;  // G plane
+        input[dstIdx + planeSize * 2] = pixels[srcIdx + 2] / 255.0; // B plane
+      }
     }
 
     // Run inference with ONNX Runtime Web
     const inputTensor = new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]);
-    const feeds = { images: inputTensor }; // YOLOv8 ONNX input name is 'images'
+    
+    // Use correct input name - YOLOv8 uses 'images'
+    const feeds: Record<string, ort.Tensor> = { images: inputTensor };
+    
+    console.log("[YOLO] Running inference...");
     const outputMap = await model.run(feeds);
     
-    // Get output tensor - YOLOv8 outputs [batch, 84, 8400] where 84 = 80 classes + 4 bbox
-    const outputTensor = outputMap.output0 || Object.values(outputMap)[0];
+    // Get output tensor - YOLOv8 outputs [1, 84, 8400]
+    const outputTensor = outputMap.output0 || outputMap[model.outputNames[0]] || Object.values(outputMap)[0];
     const outputData = outputTensor.data as Float32Array;
+    
+    console.log("[YOLO] Input shape:", [1, 3, INPUT_SIZE, INPUT_SIZE]);
+    console.log("[YOLO] Output shape:", outputTensor.dims);
+    console.log("[YOLO] Output sample:", outputData.slice(0, 10));
 
     // Parse YOLOv8 ONNX output: [84, 8400] where 84 = 4 bbox + 80 classes
     const detections: Detection[] = [];
@@ -177,7 +193,9 @@ export async function runObjectDetection(
     }
 
     // Apply Non-Maximum Suppression (NMS) to remove overlapping boxes
-    return applyNMS(detections, 0.45);
+    const filtered = applyNMS(detections, 0.45);
+    console.log(`[YOLO] Found ${detections.length} raw detections, ${filtered.length} after NMS`);
+    return filtered;
   } catch (err) {
     console.warn("[YOLO] Inference error:", err);
     return [];
