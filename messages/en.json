@@ -98,6 +98,7 @@
     "loadingModel": "Downloading AI model (one-time)...",
     "modelError": "Failed to load AI model",
     "modelErrorDesc": "Please check your internet connection. The model downloads automatically on first use.",
+    "flashlight": "Flashlight",
     "detecting": "Detecting objects...",
     "count": "Count Objects",
     "totalObjects": "Total Objects",

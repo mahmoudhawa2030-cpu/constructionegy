@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useYOLO12n, runObjectDetection, Detection, countByClass, loadYOLOModel } from "./use-yolo12n";
-import { Camera, Upload, RotateCcw, X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Camera, Upload, RotateCcw, X, Check, ChevronDown, ChevronUp, Flashlight } from "lucide-react";
 
 export default function ObjectCounter() {
   const t = useTranslations("counter");
@@ -15,13 +15,14 @@ export default function ObjectCounter() {
   const [showClassList, setShowClassList] = useState(false);
   const [selectedClasses, setSelectedClasses] = useState<Set<string>>(new Set());
   const [confidenceThreshold, setConfidenceThreshold] = useState(0.3);
+  const [torchOn, setTorchOn] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Start camera
+  // Start camera with flashlight
   const startCamera = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -31,6 +32,15 @@ export default function ObjectCounter() {
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+      }
+      
+      // Try to enable torch
+      try {
+        const track = stream.getVideoTracks()[0];
+        await (track as any).applyConstraints({ advanced: [{ torch: true }] });
+        setTorchOn(true);
+      } catch {
+        setTorchOn(false);
       }
     } catch (err) {
       console.warn("[Camera] Failed to start:", err);
@@ -248,6 +258,21 @@ export default function ObjectCounter() {
                 aria-label={t("capture")}
               >
                 <Camera className="h-8 w-8 text-white" />
+              </button>
+              
+              <button
+                onClick={() => {
+                  if (streamRef.current) {
+                    const track = streamRef.current.getVideoTracks()[0];
+                    const newState = !torchOn;
+                    (track as any).applyConstraints({ advanced: [{ torch: newState }] }).catch(() => {});
+                    setTorchOn(newState);
+                  }
+                }}
+                className={`flex h-12 w-12 items-center justify-center rounded-full ${torchOn ? 'bg-yellow-500' : 'bg-white/20'} text-white hover:bg-white/30`}
+                aria-label={t("flashlight")}
+              >
+                <Flashlight className="h-6 w-6" />
               </button>
             </div>
             
