@@ -324,10 +324,9 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
         lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // ── Step 3: Single adaptive background map (64px, 88th percentile) ────
-      // One pass only — no double-whitening stacking
-      // 88th percentile keeps paper as natural off-white/cream, not pure white
-      const TILE = 64;
+      // ── Step 3: Adaptive background map (32px tiles, 94th percentile) ─────
+      // Smaller tiles catch hand shadows, 94th percentile finds true paper white
+      const TILE = 32;
       const tilesX = Math.ceil(W / TILE);
       const tilesY = Math.ceil(H / TILE);
       const bgMap = new Float32Array(tilesX * tilesY);
@@ -340,7 +339,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
             for (let px = x0; px < x1; px++) vals.push(lum[py * W + px]);
           }
           vals.sort((a, b) => a - b);
-          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.88)] || 200;
+          // 94th percentile: ignores hand shadows, captures true paper brightness
+          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.94)] || 220;
         }
       }
 
@@ -362,10 +362,21 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
         );
       };
 
-      // ── Step 4: Per-pixel pipeline ────────────────────────────────────────
+      // ── Step 4: Build normalized luminance for shadow detection ──────────
+      const normLum = new Float32Array(N);
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const idx = y * W + x;
+          const bg = Math.max(getBg(x, y), 50);
+          normLum[idx] = Math.min(1, lum[idx] / bg);
+        }
+      }
+
+      // ── Step 5: Per-pixel pipeline with shadow removal ────────────────────
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
           const idx = (y * W + x) * 4;
+          const lumIdx = y * W + x;
 
           let r = d[idx]     / 255;
           let g = d[idx + 1] / 255;
@@ -373,11 +384,20 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           const lumPx = 0.299 * r + 0.587 * g + 0.114 * b;
 
           // Adaptive normalization — cap scale at 1.5x so paper stays off-white
-          const bg = Math.max(getBg(x, y), 40);
-          const scale = Math.min(220 / bg, 1.5); // target 220/255 ≈ natural off-white
+          const bg = Math.max(getBg(x, y), 50);
+          const scale = Math.min(235 / bg, 1.5); // target 235/255 for brighter paper
           r = Math.min(1, r * scale);
           g = Math.min(1, g * scale);
           b = Math.min(1, b * scale);
+
+          // Hand shadow detection: if pixel is close to but not quite background
+          const isShadow = normLum[lumIdx] > 0.85 && normLum[lumIdx] < 0.98;
+          if (isShadow) {
+            // Force shadow to background brightness
+            r = Math.min(1, r * 1.3);
+            g = Math.min(1, g * 1.3);
+            b = Math.min(1, b * 1.3);
+          }
 
           // Saturation +10% (keeps ink colors vivid)
           const gray = 0.299 * r + 0.587 * g + 0.114 * b;
@@ -402,7 +422,7 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
     }
     case "magicColorPro": {
       // CamScanner Magic Pro style: pure white background (255), crisp black ink (0-20),
-      // aggressive shadow removal, all color casts removed.
+      // aggressive hand shadow removal, all color casts removed.
       const W2 = out.width;
       const H2 = out.height;
 
@@ -412,9 +432,9 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
         lum2[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // ── Step 2: Adaptive background map (32px tiles, 95th percentile) ───────
-      // Smaller tiles = finer shadow removal, 95th percentile = aggressive whitening
-      const TILE2 = 32;
+      // ── Step 2: Adaptive background map (16px tiles, 97th percentile) ─────
+      // Ultra-fine tiles catch hand-sized shadows, 97th percentile = only brightest 3%
+      const TILE2 = 16;
       const tX2 = Math.ceil(W2 / TILE2);
       const tY2 = Math.ceil(H2 / TILE2);
       const bgMap2 = new Float32Array(tX2 * tY2);
@@ -426,8 +446,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           for (let py = y0; py < y1; py++)
             for (let px = x0; px < x1; px++) vals.push(lum2[py * W2 + px]);
           vals.sort((a, b) => a - b);
-          // 95th percentile: almost brightest pixel in each tile = paper white
-          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.95)] || 240;
+          // 97th percentile: only brightest pixels = true paper white, ignores shadows
+          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.97)] || 245;
         }
       }
 
@@ -445,11 +465,23 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
         );
       };
 
-      // ── Step 3: Aggressive hard-binarization per pixel ──────────────────────
+      // ── Step 3: Build normalized luminance map for shadow detection ────────
+      const normLum = new Float32Array(W2 * H2);
+      for (let y = 0; y < H2; y++) {
+        for (let x = 0; x < W2; x++) {
+          const idx = (y * W2 + x);
+          const bg = Math.max(getBg2(x, y), 40); // Higher floor = lift shadows more
+          const rawLum = lum2[idx];
+          normLum[idx] = Math.min(1, rawLum / bg); // 0-1 normalized
+        }
+      }
+
+      // ── Step 4: Aggressive hard-binarization with shadow removal ────────────
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x) * 4;
-          const bg = Math.max(getBg2(x, y), 20);
+          const lumIdx = y * W2 + x;
+          const bg = Math.max(getBg2(x, y), 40);
 
           // Normalize pixel against local background
           const rNorm = Math.min(1, d[idx]     / bg);
@@ -459,20 +491,21 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           // Convert to grayscale luminance (remove color cast)
           const lumNorm = 0.299 * rNorm + 0.587 * gNorm + 0.114 * bNorm;
 
-          // Hard threshold: CamScanner Magic Pro style
-          // < 0.55 = ink (black), >= 0.55 = background (white)
-          // Very narrow transition zone for crisp edges
+          // Shadow detection: if normalized lum > 0.92, it's pure background
+          const isShadow = normLum[lumIdx] > 0.88 && normLum[lumIdx] < 0.98;
+
+          // Hard threshold with shadow override
           let outVal: number;
-          if (lumNorm > 0.62) {
-            // Background → pure white
+          if (lumNorm > 0.58 || isShadow) {
+            // Background or detected shadow → pure white
             outVal = 255;
-          } else if (lumNorm < 0.55) {
+          } else if (lumNorm < 0.48) {
             // Ink → near black with slight curve for anti-aliasing
-            outVal = Math.round(lumNorm * lumNorm * 60); // 0-15 range
+            outVal = Math.round(lumNorm * lumNorm * 55); // 0-13 range
           } else {
-            // Tiny transition zone (0.55-0.62) for edge smoothing
-            const t = (lumNorm - 0.55) / 0.07;
-            outVal = Math.round(15 + t * t * (3 - 2 * t) * 240);
+            // Transition zone (0.48-0.58) for edge smoothing
+            const t = (lumNorm - 0.48) / 0.10;
+            outVal = Math.round(13 + t * t * (3 - 2 * t) * 242);
           }
 
           d[idx]     = outVal;
