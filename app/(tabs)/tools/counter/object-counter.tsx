@@ -261,12 +261,12 @@ export default function ObjectCounter() {
           </div>
         ) : (
           /* Preview with detection */
-          <div className="flex flex-1 flex-col">
-            {/* Image canvas */}
-            <div className="relative flex-1 bg-black">
+          <div className="flex flex-1 flex-col overflow-hidden">
+            {/* Image canvas - constrained height so controls are visible */}
+            <div className="relative flex-1 min-h-0 bg-black">
               <canvas
                 ref={canvasRef}
-                className="h-full w-full object-contain"
+                className="h-full w-full max-h-[60vh] object-contain"
               />
               
               {isProcessing && (
@@ -279,8 +279,8 @@ export default function ObjectCounter() {
               )}
             </div>
 
-            {/* Controls */}
-            <div className="border-t border-[var(--bina-border)] bg-[var(--bina-bg)] p-4">
+            {/* Controls - always visible, scrollable if needed */}
+            <div className="border-t border-[var(--bina-border)] bg-[var(--bina-bg)] p-4 shrink-0 max-h-[40vh] overflow-y-auto">
               {/* Count summary */}
               <div className="mb-4 flex items-center justify-between">
                 <div>
