@@ -291,6 +291,22 @@ export default function ObjectCounter() {
         ) : (
           /* Preview with detection */
           <div className="flex flex-1 flex-col overflow-hidden">
+            {/* Debug Panel - fixed at top */}
+            <div className="z-10 rounded border border-yellow-500/30 bg-yellow-500/10 p-2 m-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-yellow-600">Debug:</p>
+                {model && !isProcessing && (
+                  <button
+                    onClick={runDetection}
+                    className="rounded bg-yellow-600 px-2 py-0.5 text-xs text-white"
+                  >
+                    Test
+                  </button>
+                )}
+              </div>
+              <pre className="mt-1 whitespace-pre-wrap text-xs text-yellow-800">{debugInfo || "Tap Test after taking photo"}</pre>
+            </div>
+
             {/* Image canvas - constrained height so controls are visible */}
             <div className="relative flex-1 min-h-0 bg-black">
               <canvas
@@ -342,22 +358,6 @@ export default function ObjectCounter() {
                   onChange={(e) => setConfidenceThreshold(Number(e.target.value) / 100)}
                   className="w-full"
                 />
-              </div>
-
-              {/* Debug Panel - always visible */}
-              <div className="mb-4 rounded border border-yellow-500/30 bg-yellow-500/10 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-bold text-yellow-600">Debug Info:</p>
-                  {model && !isProcessing && (
-                    <button
-                      onClick={runDetection}
-                      className="rounded bg-yellow-600 px-2 py-1 text-xs text-white"
-                    >
-                      Test Model
-                    </button>
-                  )}
-                </div>
-                <pre className="whitespace-pre-wrap text-xs text-yellow-700">{debugInfo || "Press 'عد الأشياء' or Test Model"}</pre>
               </div>
 
               {/* Class filter */}
