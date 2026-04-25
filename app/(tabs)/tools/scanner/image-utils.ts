@@ -446,8 +446,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           for (let py = y0; py < y1; py++)
             for (let px = x0; px < x1; px++) vals.push(lum2[py * W2 + px]);
           vals.sort((a, b) => a - b);
-          // 97th percentile: only brightest pixels = true paper white, ignores shadows
-          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.97)] || 245;
+          // 98th percentile: absolute brightest pixels only = true paper white
+          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.98)] || 250;
         }
       }
 
@@ -470,42 +470,44 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x);
-          const bg = Math.max(getBg2(x, y), 40); // Higher floor = lift shadows more
+          // Higher floor (60) = aggressively lift all shadows toward white
+          const bg = Math.max(getBg2(x, y), 60);
           const rawLum = lum2[idx];
           normLum[idx] = Math.min(1, rawLum / bg); // 0-1 normalized
         }
       }
 
-      // ── Step 4: Aggressive hard-binarization with shadow removal ────────────
+      // ── Step 4: Ultra-aggressive binarization matching CamScanner exactly ───
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x) * 4;
           const lumIdx = y * W2 + x;
-          const bg = Math.max(getBg2(x, y), 40);
+          // High floor forces all non-ink pixels toward white
+          const bg = Math.max(getBg2(x, y), 60);
 
           // Normalize pixel against local background
           const rNorm = Math.min(1, d[idx]     / bg);
           const gNorm = Math.min(1, d[idx + 1] / bg);
           const bNorm = Math.min(1, d[idx + 2] / bg);
 
-          // Convert to grayscale luminance (remove color cast)
+          // Convert to grayscale luminance (remove all color cast)
           const lumNorm = 0.299 * rNorm + 0.587 * gNorm + 0.114 * bNorm;
 
-          // Shadow detection: if normalized lum > 0.92, it's pure background
-          const isShadow = normLum[lumIdx] > 0.88 && normLum[lumIdx] < 0.98;
+          // WIDE shadow detection: 0.70-0.995 catches ALL shadow gradients
+          const isShadowOrBg = normLum[lumIdx] > 0.70 && normLum[lumIdx] < 0.995;
 
-          // Hard threshold with shadow override
+          // Lower threshold = more pixels become pure white
           let outVal: number;
-          if (lumNorm > 0.58 || isShadow) {
-            // Background or detected shadow → pure white
+          if (lumNorm > 0.52 || isShadowOrBg) {
+            // Background, shadow, or near-background → pure white (255)
             outVal = 255;
-          } else if (lumNorm < 0.48) {
-            // Ink → near black with slight curve for anti-aliasing
-            outVal = Math.round(lumNorm * lumNorm * 55); // 0-13 range
+          } else if (lumNorm < 0.40) {
+            // Dark ink → near black
+            outVal = Math.round(lumNorm * lumNorm * 50); // 0-8 range
           } else {
-            // Transition zone (0.48-0.58) for edge smoothing
-            const t = (lumNorm - 0.48) / 0.10;
-            outVal = Math.round(13 + t * t * (3 - 2 * t) * 242);
+            // Narrow transition (0.40-0.52) for crisp edges
+            const t = (lumNorm - 0.40) / 0.12;
+            outVal = Math.round(8 + t * t * (3 - 2 * t) * 247);
           }
 
           d[idx]     = outVal;
