@@ -489,25 +489,22 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           // Convert to grayscale luminance (remove all color cast)
           const lumNorm = 0.299 * rNorm + 0.587 * gNorm + 0.114 * bNorm;
 
-          // WIDE shadow detection: 0.70-0.995 catches ALL shadow gradients
-          const isShadowOrBg = normLum[lumIdx] > 0.70 && normLum[lumIdx] < 0.995;
+          // WIDE shadow detection: 0.75-0.995 catches shadow gradients (stricter)
+          const isShadowOrBg = normLum[lumIdx] > 0.75 && normLum[lumIdx] < 0.995;
 
-          // Color detection: if ANY channel is bright, it's background (catches color tint)
-          // Lower threshold 0.68 catches lighter blue/cyan tints that 0.78 missed
-          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
-
-          // Lower threshold = more pixels become pure white
+          // Higher white threshold (0.60) = only very bright pixels become white
+          // Lower black threshold (0.35) = more pixels stay dark/black
           let outVal: number;
-          if (lumNorm > 0.52 || isShadowOrBg || isColorBackground) {
-            // Background, shadow, color-tint, or near-background → pure white (255)
+          if (lumNorm > 0.60 || isShadowOrBg) {
+            // Background or shadow → pure white (255)
             outVal = 255;
-          } else if (lumNorm < 0.40) {
+          } else if (lumNorm < 0.35) {
             // Dark ink → near black
-            outVal = Math.round(lumNorm * lumNorm * 50); // 0-8 range
+            outVal = Math.round(lumNorm * lumNorm * 55); // 0-7 range
           } else {
-            // Narrow transition (0.40-0.52) for crisp edges
-            const t = (lumNorm - 0.40) / 0.12;
-            outVal = Math.round(8 + t * t * (3 - 2 * t) * 247);
+            // Transition zone (0.35-0.60) for edge smoothing
+            const t = (lumNorm - 0.35) / 0.25;
+            outVal = Math.round(7 + t * t * (3 - 2 * t) * 248);
           }
 
           d[idx]     = outVal;
