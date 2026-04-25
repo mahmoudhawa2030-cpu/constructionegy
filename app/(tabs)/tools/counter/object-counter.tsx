@@ -101,7 +101,7 @@ export default function ObjectCounter() {
       img.src = capturedImage;
       await new Promise((resolve) => { img.onload = resolve; });
       
-      const results = runObjectDetection(model, img, confidenceThreshold);
+      const results = await runObjectDetection(model, img, confidenceThreshold);
       setDetections(results);
       
       // Auto-select all detected classes

@@ -73,11 +73,11 @@ export function useYOLO12n(): { status: YOLOStatus; model: ort.InferenceSession 
  * Run YOLO object detection on an image.
  * Returns array of detections with class, confidence, and bounding box.
  */
-export function runObjectDetection(
-  model: any,
+export async function runObjectDetection(
+  model: ort.InferenceSession,
   imgEl: HTMLImageElement | HTMLCanvasElement,
   confidenceThreshold: number = 0.3
-): Detection[] {
+): Promise<Detection[]> {
   try {
     const INPUT_SIZE = 640; // YOLO input size
 
@@ -118,45 +118,60 @@ export function runObjectDetection(
       input[j + 2] = pixels[i + 2] / 255.0;
     }
 
-    // Run inference
-    const outputTensor = model.predict(
-      { input: { data: input, shape: [1, INPUT_SIZE, INPUT_SIZE, 3] } }
-    );
+    // Run inference with ONNX Runtime Web
+    const inputTensor = new ort.Tensor("float32", input, [1, 3, INPUT_SIZE, INPUT_SIZE]);
+    const feeds = { images: inputTensor }; // YOLOv8 ONNX input name is 'images'
+    const outputMap = await model.run(feeds);
+    
+    // Get output tensor - YOLOv8 outputs [batch, 84, 8400] where 84 = 80 classes + 4 bbox
+    const outputTensor = outputMap.output0 || Object.values(outputMap)[0];
+    const outputData = outputTensor.data as Float32Array;
 
-    // Parse YOLO output format [batch, num_boxes, 6] where 6 = [x, y, w, h, confidence, class]
-    const outputData = outputTensor instanceof Float32Array
-      ? outputTensor
-      : Object.values(outputTensor)[0] as Float32Array;
-
-    // Parse detections
+    // Parse YOLOv8 ONNX output: [84, 8400] where 84 = 4 bbox + 80 classes
     const detections: Detection[] = [];
-    const numDetections = outputData.length / 6;
-
-    for (let i = 0; i < numDetections; i++) {
-      const offset = i * 6;
-      const x = outputData[offset];
-      const y = outputData[offset + 1];
-      const w = outputData[offset + 2];
-      const h = outputData[offset + 3];
-      const confidence = outputData[offset + 4];
-      const classId = Math.round(outputData[offset + 5]);
-
-      if (confidence > confidenceThreshold && classId >= 0 && classId < COCO_CLASSES.length) {
-        // Adjust bbox coordinates to account for letterboxing
+    const numAnchors = 8400;
+    const numClasses = 80;
+    
+    for (let i = 0; i < numAnchors; i++) {
+      // Get bbox (center_x, center_y, width, height)
+      const cx = outputData[i];
+      const cy = outputData[numAnchors + i];
+      const w = outputData[numAnchors * 2 + i];
+      const h = outputData[numAnchors * 3 + i];
+      
+      // Find best class
+      let bestClass = -1;
+      let bestScore = 0;
+      
+      for (let c = 0; c < numClasses; c++) {
+        const score = outputData[numAnchors * 4 + c * numAnchors + i];
+        if (score > bestScore) {
+          bestScore = score;
+          bestClass = c;
+        }
+      }
+      
+      if (bestScore > confidenceThreshold && bestClass >= 0) {
+        // Convert to normalized bbox [x1, y1, x2, y2]
         const scale = Math.min(INPUT_SIZE / imgEl.width, INPUT_SIZE / imgEl.height);
         const padX = (INPUT_SIZE - imgEl.width * scale) / 2;
         const padY = (INPUT_SIZE - imgEl.height * scale) / 2;
         
-        const x1 = (x - w / 2 - padX) / scale / imgEl.width;
-        const y1 = (y - h / 2 - padY) / scale / imgEl.height;
-        const x2 = (x + w / 2 - padX) / scale / imgEl.width;
-        const y2 = (y + h / 2 - padY) / scale / imgEl.height;
-
+        const x1 = (cx - w / 2 - padX) / scale;
+        const y1 = (cy - h / 2 - padY) / scale;
+        const x2 = (cx + w / 2 - padX) / scale;
+        const y2 = (cy + h / 2 - padY) / scale;
+        
         detections.push({
-          class: COCO_CLASSES[classId],
-          classId,
-          confidence,
-          bbox: [Math.max(0, x1), Math.max(0, y1), Math.min(1, x2 - x1), Math.min(1, y2 - y1)]
+          class: COCO_CLASSES[bestClass],
+          classId: bestClass,
+          confidence: bestScore,
+          bbox: [
+            Math.max(0, x1 / imgEl.width), 
+            Math.max(0, y1 / imgEl.height), 
+            Math.min(1, (x2 - x1) / imgEl.width), 
+            Math.min(1, (y2 - y1) / imgEl.height)
+          ]
         });
       }
     }
