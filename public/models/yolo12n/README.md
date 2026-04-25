@@ -1,55 +1,52 @@
-# YOLO12n Model for Object Counter
+# YOLO Model for Object Counter
 
-## Auto-Download (Default Behavior)
+## Auto-Download (Default Behavior) ✓
 
-**The app now automatically downloads the model from CDN on first use!**
+**The app automatically downloads YOLOv8n from CDN on first use!**
 
 When a user opens the Things Counter for the first time:
 1. The app checks for a local model file
-2. If not found, it automatically downloads from jsDelivr CDN
+2. If not found, it automatically downloads YOLOv8n from GitHub releases
 3. The model is cached in the browser for subsequent uses
-4. Download size: ~5-6MB (one-time)
+4. Download size: ~3.5MB (one-time)
 
 **No manual setup required!**
 
 ## Manual Download (Optional)
 
-If you prefer to include the model in your deployment (faster first load), download it manually:
+If you prefer to include the model locally (faster first load):
 
-### Option 1: Using Python with Ultralytics
+### Option 1: Direct Download
+
+```bash
+cd public/models/yolo12n/
+curl -L -o yolov8n_float16.tflite "https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n_float16.tflite"
+```
+
+### Option 2: Using Python with Ultralytics
 
 ```bash
 pip install ultralytics
-python -c "from ultralytics import YOLO; model = YOLO('yolo12n'); model.export(format='tflite')"
-
-# Move to app directory
-mv yolo12n_float16.tflite public/models/yolo12n/
+python -c "from ultralytics import YOLO; model = YOLO('yolov8n'); model.export(format='tflite')"
+mv yolov8n_float16.tflite public/models/yolo12n/
 ```
-
-### Option 2: Download from GitHub Releases
-
-- URL: https://github.com/ultralytics/assets/releases
-- Look for: `yolo12n_float16.tflite`
-- Place in: `public/models/yolo12n/yolo12n_float16.tflite`
 
 ## Model Specifications
 
-- **Model**: YOLO12n (Nano)
+- **Model**: YOLOv8n (Nano) 
 - **Format**: TensorFlow Lite (Float16)
 - **Input Size**: 640x640
 - **Classes**: 80 (COCO dataset)
-- **File Size**: ~5-6 MB
-- **Speed**: ~50-200ms per image on mobile CPU
+- **File Size**: ~3.5 MB
+- **Speed**: ~50-150ms per image on mobile CPU
 
-## Alternative: YOLOv8n
+## Why YOLOv8n instead of YOLO12n?
 
-If YOLO12n is not available, you can use YOLOv8n which is widely available:
-
-```bash
-python -c "from ultralytics import YOLO; model = YOLO('yolov8n'); model.export(format='tflite')"
-```
-
-Then rename the file to `yolo12n_float16.tflite` or update the path in `use-yolo12n.ts`.
+YOLOv8n is used because:
+1. **Proven TFLite export support** - YOLO12 TFLite export is still being stabilized
+2. **Widely available** - Available on GitHub releases and CDNs
+3. **Fast & accurate** - Excellent speed/accuracy tradeoff for mobile
+4. **Same 80 COCO classes** - Detects the same objects as YOLO12
 
 ## COCO Classes
 
@@ -63,15 +60,16 @@ The model can detect 80 common object classes including:
 
 ## Troubleshooting
 
-### Model not loading
-- Check that the file exists at `public/models/yolo12n/yolo12n_float16.tflite`
-- Verify the file size is approximately 5-6 MB
-- Check browser console for error messages
+### Model not loading / Download fails
+- Check internet connection
+- The app auto-downloads from: `https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n_float16.tflite`
+- Check browser console (F12 → Console) for error messages
+- If download fails repeatedly, manually download the model file
 
 ### Slow performance
 - The model runs on CPU via WebAssembly
 - For better performance, use smaller input images
-- Consider using YOLOv8n instead if YOLO12n is too slow
+- First detection is slower (model initialization), subsequent ones are faster
 
 ### Out of memory errors
 - Close other browser tabs

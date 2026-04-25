@@ -44,10 +44,10 @@ function notify(s: YOLOStatus) {
 /** Try to download model from CDN sources */
 async function downloadModel(): Promise<Blob | null> {
   const sources = [
-    // Primary: jsDelivr CDN (fast, reliable)
-    "https://cdn.jsdelivr.net/gh/ultralytics/assets@main/yolo12n_float16.tflite",
-    // Fallback: Alternative mirrors
-    "https://media.githubusercontent.com/media/ultralytics/assets/main/yolo12n_float16.tflite",
+    // Primary: YOLOv8n TFLite (widely available, fast)
+    "https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n_float16.tflite",
+    // Fallback: jsDelivr mirror
+    "https://cdn.jsdelivr.net/gh/ultralytics/assets@v8.2.0/yolov8n_float16.tflite",
   ];
   
   for (const url of sources) {
@@ -109,9 +109,9 @@ async function loadYOLOModel() {
     
     // Try local model first
     try {
-      const localResponse = await fetch("/models/yolo12n/yolo12n_float16.tflite", { method: "HEAD" });
+      const localResponse = await fetch("/models/yolo12n/yolov8n_float16.tflite", { method: "HEAD" });
       if (localResponse.ok) {
-        modelUrl = "/models/yolo12n/yolo12n_float16.tflite";
+        modelUrl = "/models/yolo12n/yolov8n_float16.tflite";
         console.log("[YOLO] Using local model");
       }
     } catch {
