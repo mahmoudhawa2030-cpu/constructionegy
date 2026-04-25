@@ -232,8 +232,8 @@ export default function ObjectCounter() {
               className="h-full w-full object-cover"
             />
             
-            {/* Capture button */}
-            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent p-6">
+            {/* Capture button - with safe area padding for mobile */}
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent px-6 pb-20 pt-6">
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
