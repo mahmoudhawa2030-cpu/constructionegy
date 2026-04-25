@@ -492,10 +492,13 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           // WIDE shadow detection: 0.70-0.995 catches ALL shadow gradients
           const isShadowOrBg = normLum[lumIdx] > 0.70 && normLum[lumIdx] < 0.995;
 
+          // Color detection: if ANY channel is bright, it's background (catches color tint)
+          const isColorBackground = rNorm > 0.78 || gNorm > 0.78 || bNorm > 0.78;
+
           // Lower threshold = more pixels become pure white
           let outVal: number;
-          if (lumNorm > 0.52 || isShadowOrBg) {
-            // Background, shadow, or near-background → pure white (255)
+          if (lumNorm > 0.52 || isShadowOrBg || isColorBackground) {
+            // Background, shadow, color-tint, or near-background → pure white (255)
             outVal = 255;
           } else if (lumNorm < 0.40) {
             // Dark ink → near black
