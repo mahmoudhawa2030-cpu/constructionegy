@@ -401,20 +401,20 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       break;
     }
     case "magicColorPro": {
-      // Adaptive soft-binarization — matches CamScanner Magic Pro output:
-      // Background → pure white (255), Ink → pure black, stains/yellowing removed.
+      // CamScanner Magic Pro style: pure white background (255), crisp black ink (0-20),
+      // aggressive shadow removal, all color casts removed.
       const W2 = out.width;
       const H2 = out.height;
 
-      // ── Step 1: Build luminance map ───────────────────────────────────────
+      // ── Step 1: Build luminance map (grayscale for processing) ───────────────
       const lum2 = new Float32Array(W2 * H2);
       for (let i = 0; i < d.length; i += 4) {
         lum2[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // ── Step 2: Adaptive background map (64px tiles, 92nd percentile) ────
-      // Higher percentile → more aggressive background whitening
-      const TILE2 = 64;
+      // ── Step 2: Adaptive background map (32px tiles, 95th percentile) ───────
+      // Smaller tiles = finer shadow removal, 95th percentile = aggressive whitening
+      const TILE2 = 32;
       const tX2 = Math.ceil(W2 / TILE2);
       const tY2 = Math.ceil(H2 / TILE2);
       const bgMap2 = new Float32Array(tX2 * tY2);
@@ -426,7 +426,8 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           for (let py = y0; py < y1; py++)
             for (let px = x0; px < x1; px++) vals.push(lum2[py * W2 + px]);
           vals.sort((a, b) => a - b);
-          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.92)] || 240;
+          // 95th percentile: almost brightest pixel in each tile = paper white
+          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.95)] || 240;
         }
       }
 
@@ -444,54 +445,39 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
         );
       };
 
-      // ── Step 3: Soft-binarization per pixel ───────────────────────────────
+      // ── Step 3: Aggressive hard-binarization per pixel ──────────────────────
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x) * 4;
-          const bg = Math.max(getBg2(x, y), 30);
+          const bg = Math.max(getBg2(x, y), 20);
 
-          // Normalize: pixel / bg → 0..1
-          let r = Math.min(1, d[idx]     / bg);
-          let g = Math.min(1, d[idx + 1] / bg);
-          let b = Math.min(1, d[idx + 2] / bg);
+          // Normalize pixel against local background
+          const rNorm = Math.min(1, d[idx]     / bg);
+          const gNorm = Math.min(1, d[idx + 1] / bg);
+          const bNorm = Math.min(1, d[idx + 2] / bg);
 
-          // Luminance after normalization
-          const lp = 0.299 * r + 0.587 * g + 0.114 * b;
+          // Convert to grayscale luminance (remove color cast)
+          const lumNorm = 0.299 * rNorm + 0.587 * gNorm + 0.114 * bNorm;
 
-          // Steeper S-curve with wider ink zone (threshold raised to 0.50)
-          let out2: number;
-          if (lp > 0.72) {
-            // Background → pure white (99%)
-            out2 = Math.min(1, lp + (1 - lp) * 0.99);
-          } else if (lp < 0.50) {
-            // Ink zone → near black, steeper curve
-            out2 = lp * lp * (lp < 0.18 ? 0.20 : 0.40);
+          // Hard threshold: CamScanner Magic Pro style
+          // < 0.55 = ink (black), >= 0.55 = background (white)
+          // Very narrow transition zone for crisp edges
+          let outVal: number;
+          if (lumNorm > 0.62) {
+            // Background → pure white
+            outVal = 255;
+          } else if (lumNorm < 0.55) {
+            // Ink → near black with slight curve for anti-aliasing
+            outVal = Math.round(lumNorm * lumNorm * 60); // 0-15 range
           } else {
-            // Narrow transition (0.50..0.72) → steep Hermite blend
-            const t = (lp - 0.50) / 0.22;
-            const bright = Math.min(1, lp + (1 - lp) * 0.99);
-            const dark = lp * lp * 0.40;
-            out2 = dark + t * t * (3 - 2 * t) * (bright - dark);
+            // Tiny transition zone (0.55-0.62) for edge smoothing
+            const t = (lumNorm - 0.55) / 0.07;
+            outVal = Math.round(15 + t * t * (3 - 2 * t) * 240);
           }
 
-          // Desaturate ink toward black (ink = dark pixels)
-          // Background pixels keep full white, ink pixels lose color → near black
-          const inkness = Math.max(0, 1 - lp / 0.50); // 1.0 at lp=0, 0.0 at lp=0.50+
-          const desat = inkness * 0.85; // up to 85% desaturation for darkest ink
-          const lumOut = 0.299 * r + 0.587 * g + 0.114 * b;
-          r = r + (lumOut - r) * desat;
-          g = g + (lumOut - g) * desat;
-          b = b + (lumOut - b) * desat;
-
-          // Apply S-curve luminance scaling
-          const scl = lp > 0.01 ? out2 / lp : 0;
-          r = Math.min(1, Math.max(0, r * scl));
-          g = Math.min(1, Math.max(0, g * scl));
-          b = Math.min(1, Math.max(0, b * scl));
-
-          d[idx]     = Math.round(r * 255);
-          d[idx + 1] = Math.round(g * 255);
-          d[idx + 2] = Math.round(b * 255);
+          d[idx]     = outVal;
+          d[idx + 1] = outVal;
+          d[idx + 2] = outVal;
         }
       }
       break;
