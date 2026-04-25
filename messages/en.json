@@ -90,6 +90,20 @@
     "dwgViewer": "DWG Viewer",
     "comingSoon": "Coming Soon"
   },
+  "counter": {
+    "title": "Things Counter",
+    "retake": "Retake",
+    "upload": "Upload from gallery",
+    "capture": "Take photo",
+    "loadingModel": "Loading AI model...",
+    "modelError": "Failed to load AI model",
+    "modelErrorDesc": "Please check your internet connection and try again.",
+    "detecting": "Detecting objects...",
+    "count": "Count Objects",
+    "totalObjects": "Total Objects",
+    "confidence": "Confidence Threshold",
+    "filterByClass": "Filter by Class"
+  },
   "commentNotifications": {
     "bellAria": "Notifications",
     "panelTitle": "Notifications",

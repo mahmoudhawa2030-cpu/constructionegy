@@ -90,6 +90,20 @@
     "dwgViewer": "عارض DWG",
     "comingSoon": "قريباً"
   },
+  "counter": {
+    "title": "عداد الأشياء",
+    "retake": "إعادة التصوير",
+    "upload": "رفع من المعرض",
+    "capture": "التقاط صورة",
+    "loadingModel": "جاري تحميل نموذج الذكاء الاصطناعي...",
+    "modelError": "فشل تحميل نموذج الذكاء الاصطناعي",
+    "modelErrorDesc": "يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.",
+    "detecting": "جاري الكشف عن الأشياء...",
+    "count": "عد الأشياء",
+    "totalObjects": "إجمالي الأشياء",
+    "confidence": "عتبة الثقة",
+    "filterByClass": "تصفية حسب الفئة"
+  },
   "commentNotifications": {
     "bellAria": "الإشعارات",
     "panelTitle": "الإشعارات",
