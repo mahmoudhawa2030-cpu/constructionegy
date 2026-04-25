@@ -141,26 +141,52 @@ export async function runObjectDetection(
     
     console.log("[YOLO] Input shape:", [1, 3, INPUT_SIZE, INPUT_SIZE]);
     console.log("[YOLO] Output shape:", outputTensor.dims);
-    console.log("[YOLO] Output sample:", outputData.slice(0, 10));
-
-    // Parse YOLOv8 ONNX output: [84, 8400] where 84 = 4 bbox + 80 classes
-    const detections: Detection[] = [];
-    const numAnchors = 8400;
+    console.log("[YOLO] Output length:", outputData.length);
+    
+    // Check output format - could be [1, 84, 8400] or [84, 8400]
+    const dims = outputTensor.dims;
+    const hasBatch = dims.length === 3;
+    const numAnchors = hasBatch ? dims[2] : dims[1];
     const numClasses = 80;
+    
+    console.log("[YOLO] Detected format:", hasBatch ? "[batch, 84, 8400]" : "[84, 8400]", "anchors:", numAnchors);
+    console.log("[YOLO] First 20 values:", Array.from(outputData.slice(0, 20)));
+    
+    // Find max confidence for debugging
+    let maxConf = 0;
+    let maxConfAnchor = 0;
+    let maxConfClass = 0;
+    for (let i = 0; i < Math.min(1000, numAnchors); i++) {
+      for (let c = 0; c < numClasses; c++) {
+        const score = outputData[(4 + c) * numAnchors + i];
+        if (score > maxConf) {
+          maxConf = score;
+          maxConfAnchor = i;
+          maxConfClass = c;
+        }
+      }
+    }
+    console.log("[YOLO] Max confidence found:", maxConf, "at anchor", maxConfAnchor, "class", COCO_CLASSES[maxConfClass]);
+
+    const detections: Detection[] = [];
+    
+    // YOLOv8 output format: 84 channels × 8400 anchors
+    // Channels 0-3: bbox (cx, cy, w, h), Channels 4-83: class scores
+    // Index = channel * numAnchors + anchor
     
     for (let i = 0; i < numAnchors; i++) {
       // Get bbox (center_x, center_y, width, height)
-      const cx = outputData[i];
-      const cy = outputData[numAnchors + i];
-      const w = outputData[numAnchors * 2 + i];
-      const h = outputData[numAnchors * 3 + i];
+      const cx = outputData[i];                    // channel 0
+      const cy = outputData[numAnchors + i];       // channel 1
+      const w = outputData[2 * numAnchors + i];    // channel 2
+      const h = outputData[3 * numAnchors + i];    // channel 3
       
-      // Find best class
+      // Find best class (channels 4-83)
       let bestClass = -1;
       let bestScore = 0;
       
       for (let c = 0; c < numClasses; c++) {
-        const score = outputData[numAnchors * 4 + c * numAnchors + i];
+        const score = outputData[(4 + c) * numAnchors + i];
         if (score > bestScore) {
           bestScore = score;
           bestClass = c;
