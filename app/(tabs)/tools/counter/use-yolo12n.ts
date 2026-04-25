@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+import * as ort from "onnxruntime-web";
 
 export type YOLOStatus = "idle" | "loading" | "ready" | "error";
 
@@ -8,7 +9,7 @@ export interface Detection {
   class: string;
   classId: number;
   confidence: number;
-  bbox: [number, number, number, number]; // [x, y, width, height] normalized 0-1
+  bbox: [number, number, number, number];
 }
 
 // COCO dataset 80 classes
@@ -25,15 +26,8 @@ const COCO_CLASSES = [
   "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
 ];
 
-declare global {
-  interface Window {
-    tflite: any;
-  }
-}
-
 let globalStatus: YOLOStatus = "idle";
-let globalModel: any = null;
-let modelUrl: string | null = null;
+let globalModel: ort.InferenceSession | null = null;
 const listeners: Set<(s: YOLOStatus) => void> = new Set();
 
 function notify(s: YOLOStatus) {
@@ -41,145 +35,28 @@ function notify(s: YOLOStatus) {
   listeners.forEach((fn) => fn(s));
 }
 
-/** Try to download model from CDN sources */
-async function downloadModel(): Promise<Blob | null> {
-  const sources = [
-    // Primary: GitHub releases (direct download)
-    "https://github.com/ultralytics/assets/releases/download/v8.2.0/yolov8n_float16.tflite",
-  ];
-  
-  for (const url of sources) {
-    try {
-      console.log(`[YOLO] Trying to download from: ${url}`);
-      
-      // Use no-cors mode for cross-origin requests that don't support CORS
-      const response = await fetch(url, { 
-        method: "GET",
-        mode: "cors",
-        cache: "no-cache",
-        redirect: "follow"
-      });
-      
-      console.log(`[YOLO] Response status: ${response.status} ${response.statusText}`);
-      console.log(`[YOLO] Content-Type: ${response.headers.get('content-type')}`);
-      console.log(`[YOLO] Content-Length: ${response.headers.get('content-length')}`);
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        console.log(`[YOLO] Downloaded blob size: ${blob.size} bytes`);
-        
-        if (blob.size > 1000000) { // Ensure it's at least 1MB (valid model)
-          console.log(`[YOLO] Downloaded model: ${(blob.size / 1024 / 1024).toFixed(2)}MB`);
-          return blob;
-        } else {
-          console.warn(`[YOLO] Downloaded file too small: ${blob.size} bytes`);
-        }
-      } else {
-        console.warn(`[YOLO] HTTP error: ${response.status}`);
-      }
-    } catch (e: any) {
-      console.warn(`[YOLO] Failed to download from ${url}:`, e.message || e);
-    }
-  }
-  
-  return null;
-}
-
-/** Load TFLite WASM runtime + YOLO model */
 export async function loadYOLOModel() {
-  console.log("[YOLO] Starting model load, current status:", globalStatus);
+  console.log("[YOLO] Starting ONNX model load...");
   if (globalStatus !== "idle" && globalStatus !== "error") return;
   notify("loading");
 
   try {
-    // Step 1: Load TFLite WASM runtime from CDN
-    console.log("[YOLO] Step 1: Loading TFLite runtime...");
-    await new Promise<void>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js";
-      script.async = true;
-      script.onload = () => {
-        console.log("[YOLO] TFLite script loaded");
-        resolve();
-      };
-      script.onerror = (e) => {
-        console.error("[YOLO] Failed to load TFLite runtime script:", e);
-        reject(new Error("Failed to load TFLite runtime"));
-      };
-      document.head.appendChild(script);
+    // Load ONNX model
+    console.log("[YOLO] Loading ONNX model...");
+    globalModel = await ort.InferenceSession.create("/models/yolo12n/yolov8n.onnx", {
+      executionProviders: ["wasm"],
+      graphOptimizationLevel: "all"
     });
-
-    // Step 2: Wait for tflite to be available
-    console.log("[YOLO] Step 2: Waiting for tflite global...");
-    await new Promise<void>((resolve, reject) => {
-      let tries = 0;
-      const check = () => {
-        if (window.tflite) { 
-          console.log("[YOLO] tflite global found");
-          resolve(); 
-          return; 
-        }
-        if (++tries > 50) { 
-          console.error("[YOLO] tflite global not initialized after 5s");
-          reject(new Error("tflite not initialized")); 
-          return; 
-        }
-        setTimeout(check, 100);
-      };
-      check();
-    });
-
-    // Step 3: Set WASM path
-    console.log("[YOLO] Step 3: Setting WASM path...");
-    window.tflite.setWasmPath(
-      "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/wasm/"
-    );
-    console.log("[YOLO] WASM path set");
-
-    // Step 4: Try to load model - first check local, then try CDN
-    console.log("[YOLO] Step 4: Loading model...");
-    let modelBlob: Blob | null = null;
     
-    // Try local model first
-    try {
-      console.log("[YOLO] Checking for local model...");
-      const localResponse = await fetch("/models/yolo12n/yolov8n_float16.tflite", { method: "HEAD" });
-      console.log("[YOLO] Local model check response:", localResponse.status);
-      if (localResponse.ok) {
-        modelUrl = "/models/yolo12n/yolov8n_float16.tflite";
-        console.log("[YOLO] Using local model");
-      }
-    } catch (e: any) {
-      console.log("[YOLO] Local model not found:", e.message);
-    }
-    
-    // If local not available, download from CDN
-    if (!modelUrl) {
-      console.log("[YOLO] Downloading from CDN...");
-      modelBlob = await downloadModel();
-      
-      if (modelBlob) {
-        // Create object URL for the downloaded model
-        modelUrl = URL.createObjectURL(modelBlob);
-        console.log("[YOLO] Using downloaded model from CDN, URL:", modelUrl.substring(0, 50) + "...");
-      } else {
-        throw new Error("Failed to download model from all sources");
-      }
-    }
-
-    // Step 5: Load the model
-    console.log("[YOLO] Step 5: Loading TFLite model...");
-    globalModel = await window.tflite.loadTFLiteModel(modelUrl);
-    console.log("[YOLO] Model loaded successfully!");
+    console.log("[YOLO] ONNX model loaded successfully!");
     notify("ready");
-    
   } catch (err: any) {
     console.error("[YOLO] Failed to load:", err.message || err);
     notify("error");
   }
 }
 
-export function useYOLO12n(): { status: YOLOStatus; model: any } {
+export function useYOLO12n(): { status: YOLOStatus; model: ort.InferenceSession | null } {
   const [status, setStatus] = useState<YOLOStatus>(globalStatus);
 
   useEffect(() => {
