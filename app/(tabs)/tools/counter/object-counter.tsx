@@ -20,7 +20,6 @@ export default function ObjectCounter() {
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   // Start camera with flashlight
@@ -257,19 +256,18 @@ export default function ObjectCounter() {
             
             {/* Capture button - with safe area padding for mobile */}
             <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent px-6 pb-20 pt-6">
-              <button
-                onClick={() => {
-                  console.log("[Upload] Button clicked");
-                  fileInputRef.current?.click();
-                }}
-                className="flex flex-col items-center justify-center gap-1"
-                aria-label={t("upload")}
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/30 text-white hover:bg-white/50">
+              <label className="flex flex-col items-center justify-center gap-1 cursor-pointer">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/30 text-white active:bg-white/50">
                   <Upload className="h-6 w-6" />
                 </div>
                 <span className="text-xs text-white/80">{t("upload")}</span>
-              </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+              </label>
               
               <button
                 onClick={captureImage}
@@ -294,14 +292,6 @@ export default function ObjectCounter() {
                 <Flashlight className="h-6 w-6" />
               </button>
             </div>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
           </div>
         ) : (
           /* Preview with detection */
