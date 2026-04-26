@@ -82,13 +82,22 @@ export default function ObjectCounter() {
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("[Upload] File selected:", e.target.files);
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      console.log("[Upload] No file selected");
+      return;
+    }
     
+    console.log("[Upload] Reading file:", file.name, file.size);
     const reader = new FileReader();
     reader.onload = (event) => {
+      console.log("[Upload] File loaded, length:", (event.target?.result as string)?.length);
       setCapturedImage(event.target?.result as string);
       stopCamera();
+    };
+    reader.onerror = (err) => {
+      console.error("[Upload] File read error:", err);
     };
     reader.readAsDataURL(file);
   }, [stopCamera]);
@@ -249,11 +258,17 @@ export default function ObjectCounter() {
             {/* Capture button - with safe area padding for mobile */}
             <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent px-6 pb-20 pt-6">
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30"
+                onClick={() => {
+                  console.log("[Upload] Button clicked");
+                  fileInputRef.current?.click();
+                }}
+                className="flex flex-col items-center justify-center gap-1"
                 aria-label={t("upload")}
               >
-                <Upload className="h-6 w-6" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/30 text-white hover:bg-white/50">
+                  <Upload className="h-6 w-6" />
+                </div>
+                <span className="text-xs text-white/80">{t("upload")}</span>
               </button>
               
               <button
