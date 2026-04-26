@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useYOLO12n, runObjectDetection, Detection, countByClass, loadYOLOModel } from "./use-yolo12n";
 import { Camera, Upload, RotateCcw, X, Check, ChevronDown, ChevronUp, Flashlight } from "lucide-react";
+import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 
 export default function ObjectCounter() {
   const t = useTranslations("counter");
@@ -79,28 +80,23 @@ export default function ObjectCounter() {
     stopCamera();
   }, [stopCamera]);
 
-  // Handle file upload
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    alert("[Upload] onChange triggered!");
-    console.log("[Upload] File selected:", e.target.files);
-    const file = e.target.files?.[0];
-    if (!file) {
-      alert("[Upload] No file selected");
-      return;
+  // Handle file upload using Capacitor
+  const handleFileUpload = useCallback(async () => {
+    try {
+      const image = await CapCamera.getPhoto({
+        quality: 90,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Photos // Open gallery
+      });
+
+      if (image.dataUrl) {
+        setCapturedImage(image.dataUrl);
+        stopCamera();
+      }
+    } catch (error) {
+      console.log("[Upload] User cancelled or error:", error);
     }
-    
-    alert("[Upload] Reading file: " + file.name + " (" + file.size + " bytes)");
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      alert("[Upload] File loaded! Length: " + result?.length);
-      setCapturedImage(result);
-      stopCamera();
-    };
-    reader.onerror = (err) => {
-      alert("[Upload] File read ERROR: " + err);
-    };
-    reader.readAsDataURL(file);
   }, [stopCamera]);
 
   // Reset and retake
@@ -258,18 +254,16 @@ export default function ObjectCounter() {
             
             {/* Capture button - with safe area padding for mobile */}
             <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-4 bg-gradient-to-t from-black/60 to-transparent px-6 pb-20 pt-6">
-              <label className="flex flex-col items-center justify-center gap-1 cursor-pointer">
+              <button
+                onClick={handleFileUpload}
+                className="flex flex-col items-center justify-center gap-1 cursor-pointer"
+                aria-label={t("upload")}
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/30 text-white active:bg-white/50">
                   <Upload className="h-6 w-6" />
                 </div>
                 <span className="text-xs text-white/80">{t("upload")}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
+              </button>
               
               <button
                 onClick={captureImage}
