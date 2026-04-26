@@ -81,22 +81,24 @@ export default function ObjectCounter() {
 
   // Handle file upload
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    alert("[Upload] onChange triggered!");
     console.log("[Upload] File selected:", e.target.files);
     const file = e.target.files?.[0];
     if (!file) {
-      console.log("[Upload] No file selected");
+      alert("[Upload] No file selected");
       return;
     }
     
-    console.log("[Upload] Reading file:", file.name, file.size);
+    alert("[Upload] Reading file: " + file.name + " (" + file.size + " bytes)");
     const reader = new FileReader();
     reader.onload = (event) => {
-      console.log("[Upload] File loaded, length:", (event.target?.result as string)?.length);
-      setCapturedImage(event.target?.result as string);
+      const result = event.target?.result as string;
+      alert("[Upload] File loaded! Length: " + result?.length);
+      setCapturedImage(result);
       stopCamera();
     };
     reader.onerror = (err) => {
-      console.error("[Upload] File read error:", err);
+      alert("[Upload] File read ERROR: " + err);
     };
     reader.readAsDataURL(file);
   }, [stopCamera]);
