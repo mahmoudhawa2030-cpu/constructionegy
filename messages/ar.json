@@ -110,6 +110,23 @@
     "noCirclesFound": "لم يتم اكتشاف مواسير. جرب ضبط الإعدادات.",
     "pipesFound": "تم اكتشاف {count} ماسورة"
   },
+  "dwgViewer": {
+    "title": "عارض DWG",
+    "dragDrop": "اسحب ملف DWG هنا",
+    "orBrowse": "أو انقر للتصفح",
+    "maxSize": "الحد الأقصى للملف: 50 ميجابايت",
+    "convert": "تحويل إلى PDF",
+    "converting": "جاري التحويل...",
+    "conversionTime": "يستغرق التحويل 10-30 ثانية",
+    "convertedToPDF": "تم التحويل إلى PDF بنجاح",
+    "download": "تحميل PDF",
+    "newFile": "ملف جديد",
+    "invalidFileType": "الرجاء اختيار ملف .dwg صالح",
+    "fileTooLarge": "الملف كبير جداً. الحد الأقصى هو 50 ميجابايت.",
+    "conversionFailed": "فشل تحويل الملف. يرجى المحاولة مرة أخرى.",
+    "error": "خطأ",
+    "pdfViewer": "عارض PDF"
+  },
   "commentNotifications": {
     "bellAria": "الإشعارات",
     "panelTitle": "الإشعارات",
