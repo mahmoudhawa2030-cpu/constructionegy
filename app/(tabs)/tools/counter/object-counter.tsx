@@ -62,6 +62,14 @@ export default function ObjectCounter() {
     if (mode && stage === "camera") { startCamera(); return () => stopCamera(); }
   }, [mode, stage, startCamera, stopCamera]);
 
+  // Reset crop box when new image is captured
+  const captureImage = useCallback((src: string) => {
+    setCapturedImage(src);
+    setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+    setStage("cropping");
+    stopCamera();
+  }, [stopCamera]);
+
   // Capture from camera
   const captureFromCamera = useCallback(() => {
     if (!videoRef.current) return;
@@ -97,14 +105,6 @@ export default function ObjectCounter() {
     setStage("camera");
     startCamera();
   }, [startCamera]);
-
-  // Reset crop box when new image is captured
-  const captureImage = useCallback((src: string) => {
-    setCapturedImage(src);
-    setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
-    setStage("cropping");
-    stopCamera();
-  }, [stopCamera]);
 
   // ── Crop handle drag handlers ──────────────────────────────────────────────
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
