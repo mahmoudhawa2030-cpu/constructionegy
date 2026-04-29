@@ -272,7 +272,7 @@ export default function ObjectCounter() {
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--bina-border)] px-4 py-3">
         <button
-          onClick={() => { setMode(null); setCapturedImage(null); setCroppedImage(null); setCropRect(null); setPredictions([]); setErrorMsg(null); setStage("camera"); stopCamera(); }}
+          onClick={() => { setMode(null); setCapturedImage(null); setCroppedImage(null); setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }); setPredictions([]); setErrorMsg(null); setStage("camera"); stopCamera(); }}
           className="text-sm font-medium text-[var(--bina-primary)]"
         >← {t("selectMode")}</button>
         {stage !== "camera" && (
