@@ -3,10 +3,10 @@ package com.constructionegy.app;
 import android.Manifest;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
 import androidx.core.app.ActivityCompat;
 import androidx.core.splashscreen.SplashScreen;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 
 public class MainActivity extends BridgeActivity {
 
@@ -26,7 +26,10 @@ public class MainActivity extends BridgeActivity {
 
         // Allow the WebView to use camera via getUserMedia
         getBridge().getWebView().getSettings().setMediaPlaybackRequiresUserGesture(false);
-        getBridge().getWebView().setWebChromeClient(new WebChromeClient() {
+
+        // Extend BridgeWebChromeClient (not plain WebChromeClient) so HTML file inputs
+        // and Capacitor camera both work. Plain WebChromeClient breaks <input type="file">.
+        getBridge().getWebView().setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
                 runOnUiThread(() -> request.grant(request.getResources()));
