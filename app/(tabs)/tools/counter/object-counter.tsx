@@ -376,21 +376,17 @@ export default function ObjectCounter() {
                   />
                 );
               })}
-            </div>
-
-            {/* Bottom bar with hint + Count button */}
-            <div
-              className="shrink-0 flex items-center justify-between bg-[var(--bina-bg)] border-t border-[var(--bina-border)] px-4 pt-3"
-              style={{ paddingBottom: "0.75rem" }}
-            >
-              <p className="text-xs text-[var(--bina-muted)] flex-1 me-3">{t("cropHint")}</p>
-              <button
-                onClick={cropAndDetect}
-                className="flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-6 py-3 text-sm font-bold text-white active:opacity-80 shrink-0"
-              >
-                <Check className="h-4 w-4" />
-                {t("count")}
-              </button>
+              {/* Count button — absolute, bottom-center, above tab bar */}
+              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/70 to-transparent pb-4 pt-6 pointer-events-none">
+                <p className="text-xs text-white/80 pointer-events-none">{t("cropHint")}</p>
+                <button
+                  onClick={cropAndDetect}
+                  className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-[var(--bina-primary)] px-8 py-3 text-base font-bold text-white shadow-lg active:opacity-80"
+                >
+                  <Check className="h-5 w-5" />
+                  {t("count")}
+                </button>
+              </div>
             </div>
           </div>
         )}
