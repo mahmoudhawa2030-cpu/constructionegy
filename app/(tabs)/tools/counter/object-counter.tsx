@@ -61,8 +61,8 @@ export default function ObjectCounter() {
   }, []);
 
   useEffect(() => {
-    if (mode) { startCamera(); return () => stopCamera(); }
-  }, [mode, startCamera, stopCamera]);
+    if (mode && stage === "camera") { startCamera(); return () => stopCamera(); }
+  }, [mode, stage, startCamera, stopCamera]);
 
   // Capture from camera
   const captureImage = useCallback((src: string) => {
@@ -340,8 +340,8 @@ export default function ObjectCounter() {
 
             {/* Floating Count button — sits above the tab bar */}
             <div
-              className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-6 pt-3 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
-              style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+              className="absolute bottom-0 left-0 right-0 flex items-center justify-center pt-8 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
+              style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
             >
               <button
                 onClick={cropAndDetect}
