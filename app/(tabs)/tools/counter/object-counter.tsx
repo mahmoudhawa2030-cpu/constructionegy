@@ -323,7 +323,7 @@ export default function ObjectCounter() {
             {/* Image + crop overlay */}
             <div
               ref={cropContainerRef}
-              className="relative flex-1 select-none overflow-hidden"
+              className="relative min-h-0 flex-1 select-none overflow-hidden"
               style={{ touchAction: "none" }}
               onPointerMove={onContainerPointerMove}
               onPointerUp={onContainerPointerUp}
@@ -381,7 +381,7 @@ export default function ObjectCounter() {
             {/* Bottom bar with hint + Count button */}
             <div
               className="shrink-0 flex items-center justify-between bg-[var(--bina-bg)] border-t border-[var(--bina-border)] px-4 pt-3"
-              style={{ paddingBottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}
+              style={{ paddingBottom: "0.75rem" }}
             >
               <p className="text-xs text-[var(--bina-muted)] flex-1 me-3">{t("cropHint")}</p>
               <button
