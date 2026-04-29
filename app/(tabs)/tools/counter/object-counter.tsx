@@ -296,10 +296,11 @@ export default function ObjectCounter() {
 
         {/* ── Crop ── */}
         {stage === "cropping" && capturedImage && (
-          <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="relative flex flex-1 flex-col overflow-hidden bg-black">
+            {/* Touch area with image */}
             <div
               ref={cropContainerRef}
-              className="relative min-h-0 flex-1 select-none touch-none bg-black"
+              className="relative flex-1 select-none touch-none"
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -312,16 +313,22 @@ export default function ObjectCounter() {
                 className="h-full w-full object-contain pointer-events-none"
                 draggable={false}
               />
+
+              {/* Instruction banner at top */}
+              {!cropRect && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-1.5 pointer-events-none">
+                  <p className="text-xs font-medium text-white whitespace-nowrap">{t("cropHint")}</p>
+                </div>
+              )}
+
               {/* Crop selection overlay */}
-              {cropRect && cropRect.w > 0 && (
+              {cropRect && cropRect.w > 0.005 && (
                 <>
-                  {/* Dark mask outside selection */}
                   <div className="absolute inset-0 pointer-events-none" style={{
-                    background: `rgba(0,0,0,0.45)`,
+                    background: `rgba(0,0,0,0.5)`,
                     clipPath: `polygon(0% 0%, 0% 100%, ${cropRect.x * 100}% 100%, ${cropRect.x * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% 100%, 100% 100%, 100% 0%)`,
                   }} />
-                  {/* Selection border */}
-                  <div className="absolute pointer-events-none border-2 border-white" style={{
+                  <div className="absolute pointer-events-none border-2 border-white rounded-sm" style={{
                     left: `${cropRect.x * 100}%`,
                     top: `${cropRect.y * 100}%`,
                     width: `${cropRect.w * 100}%`,
@@ -330,14 +337,18 @@ export default function ObjectCounter() {
                 </>
               )}
             </div>
-            {/* Crop action bar */}
-            <div className="shrink-0 flex items-center justify-between border-t border-[var(--bina-border)] bg-[var(--bina-bg)] px-4 py-3">
-              <p className="text-xs text-[var(--bina-muted)]">{t("cropHint")}</p>
+
+            {/* Floating Count button — sits above the tab bar */}
+            <div
+              className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-6 pt-3 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
+              style={{ paddingBottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+            >
               <button
                 onClick={cropAndDetect}
-                className="flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-5 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-[var(--bina-primary)] px-8 py-3.5 text-base font-bold text-white shadow-xl active:opacity-80"
               >
-                <Check className="h-4 w-4" />{t("count")}
+                <Check className="h-5 w-5" />
+                {t("count")}
               </button>
             </div>
           </div>
