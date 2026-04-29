@@ -103,6 +103,7 @@
     "modePipes": "Pipes",
     "modePipesDesc": "Steel pipes viewed from the end",
     "modeMore": "More coming soon",
+    "cropHint": "Draw a box to select the area to count, or tap Count for the full image.",
     "confidence": "Confidence",
     "noPipesFound": "Tap Count to detect pipes in the image.",
     "pipesFound": "{count} pipe(s) detected"

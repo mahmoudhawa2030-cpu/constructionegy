@@ -2,22 +2,34 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Camera, Upload, RotateCcw, Flashlight } from "lucide-react";
+import { Camera, Upload, RotateCcw, Flashlight, Check } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
 import { detectObjects, type BoundingBox } from "@/lib/tools/roboflow-detect";
 
 type DetectionMode = "pipes";
+type Stage = "camera" | "cropping" | "result";
+
+type CropRect = { x: number; y: number; w: number; h: number };
 
 export default function ObjectCounter() {
   const t = useTranslations("counter");
 
   const [mode, setMode] = useState<DetectionMode | null>(null);
+  const [stage, setStage] = useState<Stage>("camera");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [predictions, setPredictions] = useState<BoundingBox[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [torchOn, setTorchOn] = useState(false);
-  const [confidence, setConfidence] = useState(40);
+  const confidence = 40;
+
+  // Crop state
+  const cropImgRef = useRef<HTMLImageElement>(null);
+  const cropContainerRef = useRef<HTMLDivElement>(null);
+  const [cropRect, setCropRect] = useState<CropRect | null>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const isDragging = useRef(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,15 +65,21 @@ export default function ObjectCounter() {
   }, [mode, startCamera, stopCamera]);
 
   // Capture from camera
-  const captureImage = useCallback(() => {
+  const captureImage = useCallback((src: string) => {
+    setCapturedImage(src);
+    setCropRect(null);
+    setStage("cropping");
+    stopCamera();
+  }, [stopCamera]);
+
+  const captureFromCamera = useCallback(() => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     canvas.getContext("2d")!.drawImage(videoRef.current, 0, 0);
-    setCapturedImage(canvas.toDataURL("image/jpeg", 0.9));
-    stopCamera();
-  }, [stopCamera]);
+    captureImage(canvas.toDataURL("image/jpeg", 0.9));
+  }, [captureImage]);
 
   // Upload from gallery via Capacitor
   const handleUpload = useCallback(async () => {
@@ -72,63 +90,82 @@ export default function ObjectCounter() {
         resultType: CameraResultType.DataUrl,
         source: CameraSource.Photos,
       });
-      if (image.dataUrl) { setCapturedImage(image.dataUrl); stopCamera(); }
+      if (image.dataUrl) captureImage(image.dataUrl);
     } catch (err) {
       console.log("[Upload] Cancelled or error:", err);
     }
-  }, [stopCamera]);
+  }, [captureImage]);
 
   // Retake
   const retake = useCallback(() => {
     setCapturedImage(null);
+    setCroppedImage(null);
+    setCropRect(null);
     setPredictions([]);
     setErrorMsg(null);
+    setStage("camera");
     startCamera();
   }, [startCamera]);
 
-  // Draw bounding boxes on canvas
-  const drawPredictions = useCallback(
-    (img: HTMLImageElement, preds: BoundingBox[]) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(img, 0, 0);
+  // ── Crop pointer handlers ──────────────────────────────────────────────────
+  const getRelativePos = (e: React.PointerEvent, el: HTMLDivElement) => {
+    const rect = el.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
+      y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
+    };
+  };
 
-      preds.forEach((p, i) => {
-        const x = p.x - p.width / 2;
-        const y = p.y - p.height / 2;
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const pos = getRelativePos(e, e.currentTarget);
+    dragStart.current = pos;
+    isDragging.current = true;
+    setCropRect({ x: pos.x, y: pos.y, w: 0, h: 0 });
+  }, []);
 
-        // Bounding box
-        ctx.strokeStyle = "#00ff00";
-        ctx.lineWidth = 3;
-        ctx.strokeRect(x, y, p.width, p.height);
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current || !dragStart.current) return;
+    const pos = getRelativePos(e, e.currentTarget);
+    const x = Math.min(dragStart.current.x, pos.x);
+    const y = Math.min(dragStart.current.y, pos.y);
+    const w = Math.abs(pos.x - dragStart.current.x);
+    const h = Math.abs(pos.y - dragStart.current.y);
+    setCropRect({ x, y, w, h });
+  }, []);
 
-        // Number label
-        const label = String(i + 1);
-        ctx.font = "bold 16px Arial";
-        const tm = ctx.measureText(label);
-        const lw = tm.width + 10;
-        const lh = 22;
-        ctx.fillStyle = "#00ff00";
-        ctx.fillRect(x, y - lh, lw, lh);
-        ctx.fillStyle = "#000";
-        ctx.textAlign = "start";
-        ctx.textBaseline = "top";
-        ctx.fillText(label, x + 5, y - lh + 3);
-      });
-    },
-    [],
-  );
+  const onPointerUp = useCallback(() => {
+    isDragging.current = false;
+  }, []);
 
-  // Run Roboflow detection
-  const runDetection = useCallback(async () => {
+  // ── Crop and detect ────────────────────────────────────────────────────────
+  const cropAndDetect = useCallback(async () => {
     if (!capturedImage) return;
     setIsProcessing(true);
     setErrorMsg(null);
+    setStage("result");
 
-    const result = await detectObjects(capturedImage, confidence);
+    let imageToSend = capturedImage;
+
+    if (cropRect && cropRect.w > 0.01 && cropRect.h > 0.01) {
+      const img = new Image();
+      await new Promise<void>((res) => { img.onload = () => res(); img.src = capturedImage; });
+      const cropCanvas = document.createElement("canvas");
+      const cw = Math.round(cropRect.w * img.width);
+      const ch = Math.round(cropRect.h * img.height);
+      cropCanvas.width = cw;
+      cropCanvas.height = ch;
+      cropCanvas.getContext("2d")!.drawImage(
+        img,
+        Math.round(cropRect.x * img.width),
+        Math.round(cropRect.y * img.height),
+        cw, ch, 0, 0, cw, ch,
+      );
+      imageToSend = cropCanvas.toDataURL("image/jpeg", 0.92);
+    }
+
+    setCroppedImage(imageToSend);
+    const result = await detectObjects(imageToSend, confidence);
 
     if (!result.ok) {
       setErrorMsg(result.error);
@@ -138,22 +175,36 @@ export default function ObjectCounter() {
 
     setPredictions(result.predictions);
 
-    // Draw results on canvas
     const img = new Image();
     img.onload = () => {
-      drawPredictions(img, result.predictions);
+      const canvas = canvasRef.current;
+      if (!canvas) { setIsProcessing(false); return; }
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      result.predictions.forEach((p, i) => {
+        const x = p.x - p.width / 2;
+        const y = p.y - p.height / 2;
+        ctx.strokeStyle = "#00ff00";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(x, y, p.width, p.height);
+        const label = String(i + 1);
+        ctx.font = "bold 16px Arial";
+        const lw = ctx.measureText(label).width + 10;
+        const lh = 22;
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(x, y - lh, lw, lh);
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "start";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, x + 5, y - lh + 3);
+      });
       setIsProcessing(false);
     };
     img.onerror = () => setIsProcessing(false);
-    img.src = capturedImage;
-  }, [capturedImage, confidence, drawPredictions]);
-
-  // Auto-detect as soon as an image is captured or uploaded
-  useEffect(() => {
-    if (!capturedImage) return;
-    void runDetection();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [capturedImage]);
+    img.src = imageToSend;
+  }, [capturedImage, cropRect, confidence]);
 
   // Mode selection screen
   if (!mode) {
@@ -197,9 +248,11 @@ export default function ObjectCounter() {
     <div className="flex flex-1 flex-col bg-[var(--bina-bg)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--bina-border)] px-4 py-3">
-        <button onClick={() => { setMode(null); setCapturedImage(null); setPredictions([]); setErrorMsg(null); stopCamera(); }}
-          className="text-sm font-medium text-[var(--bina-primary)]">← {t("selectMode")}</button>
-        {capturedImage && (
+        <button
+          onClick={() => { setMode(null); setCapturedImage(null); setCroppedImage(null); setCropRect(null); setPredictions([]); setErrorMsg(null); setStage("camera"); stopCamera(); }}
+          className="text-sm font-medium text-[var(--bina-primary)]"
+        >← {t("selectMode")}</button>
+        {stage !== "camera" && (
           <button onClick={retake} className="flex items-center gap-1 text-sm font-medium text-[var(--bina-primary)]">
             <RotateCcw className="h-4 w-4" />{t("retake")}
           </button>
@@ -207,8 +260,8 @@ export default function ObjectCounter() {
       </div>
 
       <div className="flex flex-1 flex-col">
-        {!capturedImage ? (
-          /* Camera view */
+        {/* ── Camera ── */}
+        {stage === "camera" && (
           <div className="relative flex flex-1 flex-col">
             <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" />
             <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-6 bg-gradient-to-t from-black/70 to-transparent px-6 pb-20 pt-8">
@@ -218,26 +271,81 @@ export default function ObjectCounter() {
                 </div>
                 <span className="text-xs text-white/80">{t("upload")}</span>
               </button>
-              <button onClick={captureImage}
-                className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[var(--bina-primary)]">
+              <button
+                onClick={captureFromCamera}
+                className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[var(--bina-primary)]"
+              >
                 <Camera className="h-8 w-8 text-white" />
               </button>
-              <button onClick={() => {
-                if (streamRef.current) {
-                  const track = streamRef.current.getVideoTracks()[0];
-                  const next = !torchOn;
-                  (track as any).applyConstraints({ advanced: [{ torch: next }] }).catch(() => {});
-                  setTorchOn(next);
-                }
-              }} className={`flex h-12 w-12 items-center justify-center rounded-full ${torchOn ? "bg-yellow-500" : "bg-white/30"} text-white`}>
+              <button
+                onClick={() => {
+                  if (streamRef.current) {
+                    const track = streamRef.current.getVideoTracks()[0];
+                    const next = !torchOn;
+                    (track as any).applyConstraints({ advanced: [{ torch: next }] }).catch(() => {});
+                    setTorchOn(next);
+                  }
+                }}
+                className={`flex h-12 w-12 items-center justify-center rounded-full ${torchOn ? "bg-yellow-500" : "bg-white/30"} text-white`}
+              >
                 <Flashlight className="h-6 w-6" />
               </button>
             </div>
           </div>
-        ) : (
-          /* Result view */
+        )}
+
+        {/* ── Crop ── */}
+        {stage === "cropping" && capturedImage && (
           <div className="flex flex-1 flex-col overflow-hidden">
-            {/* Canvas */}
+            <div
+              ref={cropContainerRef}
+              className="relative min-h-0 flex-1 select-none touch-none bg-black"
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                ref={cropImgRef}
+                src={capturedImage}
+                alt=""
+                className="h-full w-full object-contain pointer-events-none"
+                draggable={false}
+              />
+              {/* Crop selection overlay */}
+              {cropRect && cropRect.w > 0 && (
+                <>
+                  {/* Dark mask outside selection */}
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: `rgba(0,0,0,0.45)`,
+                    clipPath: `polygon(0% 0%, 0% 100%, ${cropRect.x * 100}% 100%, ${cropRect.x * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% 100%, 100% 100%, 100% 0%)`,
+                  }} />
+                  {/* Selection border */}
+                  <div className="absolute pointer-events-none border-2 border-white" style={{
+                    left: `${cropRect.x * 100}%`,
+                    top: `${cropRect.y * 100}%`,
+                    width: `${cropRect.w * 100}%`,
+                    height: `${cropRect.h * 100}%`,
+                  }} />
+                </>
+              )}
+            </div>
+            {/* Crop action bar */}
+            <div className="shrink-0 flex items-center justify-between border-t border-[var(--bina-border)] bg-[var(--bina-bg)] px-4 py-3">
+              <p className="text-xs text-[var(--bina-muted)]">{t("cropHint")}</p>
+              <button
+                onClick={cropAndDetect}
+                className="flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-5 py-2.5 text-sm font-semibold text-white active:opacity-80"
+              >
+                <Check className="h-4 w-4" />{t("count")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Result ── */}
+        {stage === "result" && (
+          <div className="flex flex-1 flex-col overflow-hidden">
             <div className="relative min-h-0 flex-1 bg-black">
               <canvas ref={canvasRef} className="h-full w-full object-contain" style={{ maxHeight: "55vh" }} />
               {isProcessing && (
@@ -246,8 +354,6 @@ export default function ObjectCounter() {
                 </div>
               )}
             </div>
-
-            {/* Result panel */}
             <div className="shrink-0 border-t border-[var(--bina-border)] bg-[var(--bina-bg)] p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -260,13 +366,11 @@ export default function ObjectCounter() {
                   <p className="text-sm text-[var(--bina-muted)]">{t("detecting")}</p>
                 )}
               </div>
-
               {errorMsg && (
                 <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
                   {errorMsg}
                 </p>
               )}
-
               {predictions.length === 0 && !isProcessing && !errorMsg && (
                 <p className="mt-1 text-xs text-[var(--bina-muted)]">{t("noPipesFound")}</p>
               )}
