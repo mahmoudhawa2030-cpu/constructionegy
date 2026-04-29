@@ -148,17 +148,11 @@ export default function ObjectCounter() {
     img.src = capturedImage;
   }, [capturedImage, confidence, drawPredictions]);
 
-  // Draw captured image on canvas when first captured (before detection)
+  // Auto-detect as soon as an image is captured or uploaded
   useEffect(() => {
-    if (!capturedImage || !canvasRef.current) return;
-    const img = new Image();
-    img.onload = () => {
-      const canvas = canvasRef.current!;
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0);
-    };
-    img.src = capturedImage;
+    if (!capturedImage) return;
+    void runDetection();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [capturedImage]);
 
   // Mode selection screen
@@ -253,40 +247,29 @@ export default function ObjectCounter() {
               )}
             </div>
 
-            {/* Controls */}
-            <div className="shrink-0 overflow-y-auto border-t border-[var(--bina-border)] bg-[var(--bina-bg)] p-4" style={{ maxHeight: "45vh" }}>
-              {/* Count + detect button */}
-              <div className="mb-4 flex items-center justify-between">
+            {/* Result panel */}
+            <div className="shrink-0 border-t border-[var(--bina-border)] bg-[var(--bina-bg)] p-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs text-[var(--bina-muted)]">{t("totalObjects")}</p>
-                  <p className="text-3xl font-bold text-[var(--bina-primary)]">{predictions.length}</p>
+                  <p className="text-3xl font-bold text-[var(--bina-primary)]">
+                    {isProcessing ? "…" : predictions.length}
+                  </p>
                 </div>
-                <button onClick={runDetection} disabled={isProcessing}
-                  className="rounded-xl bg-[var(--bina-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {isProcessing ? t("detecting") : t("count")}
-                </button>
+                {isProcessing && (
+                  <p className="text-sm text-[var(--bina-muted)]">{t("detecting")}</p>
+                )}
               </div>
 
               {errorMsg && (
-                <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                <p className="mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
                   {errorMsg}
                 </p>
               )}
 
               {predictions.length === 0 && !isProcessing && !errorMsg && (
-                <p className="mb-3 text-xs text-[var(--bina-muted)]">{t("noPipesFound")}</p>
+                <p className="mt-1 text-xs text-[var(--bina-muted)]">{t("noPipesFound")}</p>
               )}
-
-              {/* Confidence slider */}
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-xs text-[var(--bina-muted)]">
-                    <span>{t("confidence")}</span><span>{confidence}%</span>
-                  </div>
-                  <input type="range" min="10" max="90" value={confidence}
-                    onChange={(e) => setConfidence(Number(e.target.value))} className="w-full" />
-                </div>
-              </div>
             </div>
           </div>
         )}
