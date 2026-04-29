@@ -166,7 +166,7 @@ export default function DWGViewer() {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".dwg"
+              accept="*/*"
               onChange={handleFileInput}
               className="hidden"
             />
