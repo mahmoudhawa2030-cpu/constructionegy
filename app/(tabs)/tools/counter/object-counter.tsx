@@ -24,12 +24,10 @@ export default function ObjectCounter() {
   const [torchOn, setTorchOn] = useState(false);
   const confidence = 40;
 
-  // Crop state
-  const cropImgRef = useRef<HTMLImageElement>(null);
+  // Crop state — box starts at 10%/10% → 90%/90% of image
   const cropContainerRef = useRef<HTMLDivElement>(null);
-  const [cropRect, setCropRect] = useState<CropRect | null>(null);
-  const dragStart = useRef<{ x: number; y: number } | null>(null);
-  const isDragging = useRef(false);
+  const [cropRect, setCropRect] = useState<CropRect>({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  const dragInfo = useRef<{ handle: string; startX: number; startY: number; rect: CropRect } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,13 +63,6 @@ export default function ObjectCounter() {
   }, [mode, stage, startCamera, stopCamera]);
 
   // Capture from camera
-  const captureImage = useCallback((src: string) => {
-    setCapturedImage(src);
-    setCropRect(null);
-    setStage("cropping");
-    stopCamera();
-  }, [stopCamera]);
-
   const captureFromCamera = useCallback(() => {
     if (!videoRef.current) return;
     const canvas = document.createElement("canvas");
@@ -100,42 +91,74 @@ export default function ObjectCounter() {
   const retake = useCallback(() => {
     setCapturedImage(null);
     setCroppedImage(null);
-    setCropRect(null);
+    setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
     setPredictions([]);
     setErrorMsg(null);
     setStage("camera");
     startCamera();
   }, [startCamera]);
 
-  // ── Crop pointer handlers ──────────────────────────────────────────────────
-  const getRelativePos = (e: React.PointerEvent, el: HTMLDivElement) => {
-    const rect = el.getBoundingClientRect();
-    return {
-      x: Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)),
-      y: Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height)),
-    };
-  };
+  // Reset crop box when new image is captured
+  const captureImage = useCallback((src: string) => {
+    setCapturedImage(src);
+    setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+    setStage("cropping");
+    stopCamera();
+  }, [stopCamera]);
 
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  // ── Crop handle drag handlers ──────────────────────────────────────────────
+  const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+  const MIN_SIZE = 0.05;
+
+  const onHandlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, handle: string) => {
+    e.stopPropagation();
     e.currentTarget.setPointerCapture(e.pointerId);
-    const pos = getRelativePos(e, e.currentTarget);
-    dragStart.current = pos;
-    isDragging.current = true;
-    setCropRect({ x: pos.x, y: pos.y, w: 0, h: 0 });
+    const el = cropContainerRef.current!;
+    const br = el.getBoundingClientRect();
+    dragInfo.current = {
+      handle,
+      startX: (e.clientX - br.left) / br.width,
+      startY: (e.clientY - br.top) / br.height,
+      rect: { ...cropRect },
+    };
+  }, [cropRect]);
+
+  const onContainerPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragInfo.current) return;
+    const el = cropContainerRef.current!;
+    const br = el.getBoundingClientRect();
+    const cx = (e.clientX - br.left) / br.width;
+    const cy = (e.clientY - br.top) / br.height;
+    const dx = cx - dragInfo.current.startX;
+    const dy = cy - dragInfo.current.startY;
+    const r = { ...dragInfo.current.rect };
+    const h = dragInfo.current.handle;
+
+    if (h === "move") {
+      r.x = clamp(r.x + dx, 0, 1 - r.w);
+      r.y = clamp(r.y + dy, 0, 1 - r.h);
+      dragInfo.current.startX = cx;
+      dragInfo.current.startY = cy;
+      dragInfo.current.rect = { ...r };
+    } else {
+      if (h.includes("e")) { r.w = clamp(r.w + dx, MIN_SIZE, 1 - r.x); dragInfo.current.startX = cx; }
+      if (h.includes("s")) { r.h = clamp(r.h + dy, MIN_SIZE, 1 - r.y); dragInfo.current.startY = cy; }
+      if (h.includes("w")) {
+        const newX = clamp(r.x + dx, 0, r.x + r.w - MIN_SIZE);
+        r.w = r.w + (r.x - newX); r.x = newX; dragInfo.current.startX = cx;
+        dragInfo.current.rect.x = r.x; dragInfo.current.rect.w = r.w;
+      }
+      if (h.includes("n")) {
+        const newY = clamp(r.y + dy, 0, r.y + r.h - MIN_SIZE);
+        r.h = r.h + (r.y - newY); r.y = newY; dragInfo.current.startY = cy;
+        dragInfo.current.rect.y = r.y; dragInfo.current.rect.h = r.h;
+      }
+    }
+    setCropRect({ x: r.x, y: r.y, w: r.w, h: r.h });
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging.current || !dragStart.current) return;
-    const pos = getRelativePos(e, e.currentTarget);
-    const x = Math.min(dragStart.current.x, pos.x);
-    const y = Math.min(dragStart.current.y, pos.y);
-    const w = Math.abs(pos.x - dragStart.current.x);
-    const h = Math.abs(pos.y - dragStart.current.y);
-    setCropRect({ x, y, w, h });
-  }, []);
-
-  const onPointerUp = useCallback(() => {
-    isDragging.current = false;
+  const onContainerPointerUp = useCallback(() => {
+    dragInfo.current = null;
   }, []);
 
   // ── Crop and detect ────────────────────────────────────────────────────────
@@ -296,58 +319,73 @@ export default function ObjectCounter() {
 
         {/* ── Crop ── */}
         {stage === "cropping" && capturedImage && (
-          <div className="relative flex flex-1 flex-col overflow-hidden bg-black">
-            {/* Touch area with image */}
+          <div className="flex flex-1 flex-col overflow-hidden bg-black">
+            {/* Image + crop overlay */}
             <div
               ref={cropContainerRef}
-              className="relative flex-1 select-none touch-none"
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
+              className="relative flex-1 select-none overflow-hidden"
+              style={{ touchAction: "none" }}
+              onPointerMove={onContainerPointerMove}
+              onPointerUp={onContainerPointerUp}
+              onPointerCancel={onContainerPointerUp}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                ref={cropImgRef}
                 src={capturedImage}
                 alt=""
                 className="h-full w-full object-contain pointer-events-none"
                 draggable={false}
               />
 
-              {/* Instruction banner at top */}
-              {!cropRect && (
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-4 py-1.5 pointer-events-none">
-                  <p className="text-xs font-medium text-white whitespace-nowrap">{t("cropHint")}</p>
-                </div>
-              )}
+              {/* Dark mask — 4 rectangles around the selection */}
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.55)",
+                clipPath: `polygon(0% 0%, 0% 100%, ${cropRect.x*100}% 100%, ${cropRect.x*100}% ${cropRect.y*100}%, ${(cropRect.x+cropRect.w)*100}% ${cropRect.y*100}%, ${(cropRect.x+cropRect.w)*100}% ${(cropRect.y+cropRect.h)*100}%, ${cropRect.x*100}% ${(cropRect.y+cropRect.h)*100}%, ${cropRect.x*100}% 100%, 100% 100%, 100% 0%)`
+              }} />
 
-              {/* Crop selection overlay */}
-              {cropRect && cropRect.w > 0.005 && (
-                <>
-                  <div className="absolute inset-0 pointer-events-none" style={{
-                    background: `rgba(0,0,0,0.5)`,
-                    clipPath: `polygon(0% 0%, 0% 100%, ${cropRect.x * 100}% 100%, ${cropRect.x * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${cropRect.y * 100}%, ${(cropRect.x + cropRect.w) * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% ${(cropRect.y + cropRect.h) * 100}%, ${cropRect.x * 100}% 100%, 100% 100%, 100% 0%)`,
-                  }} />
-                  <div className="absolute pointer-events-none border-2 border-white rounded-sm" style={{
-                    left: `${cropRect.x * 100}%`,
-                    top: `${cropRect.y * 100}%`,
-                    width: `${cropRect.w * 100}%`,
-                    height: `${cropRect.h * 100}%`,
-                  }} />
-                </>
-              )}
+              {/* Selection box border */}
+              <div className="absolute border-2 border-white pointer-events-none" style={{
+                left: `${cropRect.x*100}%`, top: `${cropRect.y*100}%`,
+                width: `${cropRect.w*100}%`, height: `${cropRect.h*100}%`,
+              }} />
+
+              {/* Move handle — drag entire box */}
+              <div className="absolute" style={{
+                left: `${cropRect.x*100}%`, top: `${cropRect.y*100}%`,
+                width: `${cropRect.w*100}%`, height: `${cropRect.h*100}%`,
+                cursor: "move",
+              }} onPointerDown={(e) => onHandlePointerDown(e, "move")} />
+
+              {/* 8 resize handles */}
+              {(["nw","n","ne","e","se","s","sw","w"] as const).map((dir) => {
+                const isV = dir === "n" || dir === "s";
+                const isH = dir === "e" || dir === "w";
+                const left = dir.includes("w") ? cropRect.x*100 - 2
+                  : dir.includes("e") ? (cropRect.x+cropRect.w)*100 - 2
+                  : cropRect.x*100 + cropRect.w*50 - 2;
+                const top  = dir.includes("n") ? cropRect.y*100 - 2
+                  : dir.includes("s") ? (cropRect.y+cropRect.h)*100 - 2
+                  : cropRect.y*100 + cropRect.h*50 - 2;
+                return (
+                  <div key={dir}
+                    className="absolute bg-white rounded-full shadow-md z-10"
+                    style={{ left: `${left}%`, top: `${top}%`, width: 20, height: 20,
+                      transform: "translate(-50%,-50%)",
+                      cursor: isV ? "ns-resize" : isH ? "ew-resize" : "nwse-resize",
+                    }}
+                    onPointerDown={(e) => onHandlePointerDown(e, dir)}
+                  />
+                );
+              })}
             </div>
 
-            {/* Floating Count button — sits above the tab bar */}
-            <div
-              className="absolute bottom-0 left-0 right-0 flex items-center justify-center pt-8 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
-              style={{ paddingBottom: "calc(5rem + env(safe-area-inset-bottom))" }}
-            >
+            {/* Bottom bar with hint + Count button */}
+            <div className="shrink-0 flex items-center justify-between bg-[var(--bina-bg)] border-t border-[var(--bina-border)] px-4 py-3">
+              <p className="text-xs text-[var(--bina-muted)] flex-1 me-3">{t("cropHint")}</p>
               <button
                 onClick={cropAndDetect}
-                className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-[var(--bina-primary)] px-8 py-3.5 text-base font-bold text-white shadow-xl active:opacity-80"
+                className="flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-6 py-3 text-sm font-bold text-white active:opacity-80 shrink-0"
               >
-                <Check className="h-5 w-5" />
+                <Check className="h-4 w-4" />
                 {t("count")}
               </button>
             </div>
