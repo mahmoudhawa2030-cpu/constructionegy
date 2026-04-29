@@ -379,7 +379,10 @@ export default function ObjectCounter() {
             </div>
 
             {/* Bottom bar with hint + Count button */}
-            <div className="shrink-0 flex items-center justify-between bg-[var(--bina-bg)] border-t border-[var(--bina-border)] px-4 py-3">
+            <div
+              className="shrink-0 flex items-center justify-between bg-[var(--bina-bg)] border-t border-[var(--bina-border)] px-4 pt-3"
+              style={{ paddingBottom: "calc(3.5rem + env(safe-area-inset-bottom, 0px))" }}
+            >
               <p className="text-xs text-[var(--bina-muted)] flex-1 me-3">{t("cropHint")}</p>
               <button
                 onClick={cropAndDetect}
