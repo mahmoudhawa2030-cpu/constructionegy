@@ -151,12 +151,12 @@ export default function DWGViewer() {
       <div className="flex flex-1 flex-col overflow-y-auto p-4">
         {!file && !result ? (
           /* Upload Area */
-          <div
+          <label
+            htmlFor="dwg-file-input"
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
-            onClick={handleBrowse}
             className={`flex flex-1 cursor-pointer flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed p-8 transition-colors ${
               dragActive
                 ? "border-[var(--bina-primary)] bg-[var(--bina-primary)]/5"
@@ -164,35 +164,31 @@ export default function DWGViewer() {
             }`}
           >
             <input
+              id="dwg-file-input"
               ref={fileInputRef}
               type="file"
               accept="*/*"
               onChange={handleFileInput}
-              className="hidden"
+              style={{ position: "absolute", left: "-9999px", opacity: 0, pointerEvents: "none" }}
             />
-            
+
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--bina-primary)]/10">
               <FileUp className="h-10 w-10 text-[var(--bina-primary)]" />
             </div>
-            
+
             <div className="text-center">
               <p className="font-semibold text-[var(--bina-text)]">{t("dragDrop")}</p>
               <p className="mt-1 text-sm text-[var(--bina-muted)]">{t("orBrowse")}</p>
               <p className="mt-2 text-xs text-[var(--bina-muted)]">{t("maxSize")}</p>
             </div>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleBrowse();
-              }}
+            <span
               className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-6 py-3 text-base font-semibold text-white shadow-lg active:scale-95 transition-transform"
             >
               <FileUp className="h-5 w-5" />
               {t("uploadFile")}
-            </button>
-          </div>
+            </span>
+          </label>
         ) : (
           /* File Selected or Result */
           <div className="flex flex-1 flex-col gap-4">
