@@ -1275,5 +1275,20 @@
     "brandName": "construction-egy",
     "brandTagline": "BUILD · CONNECT · TRADE",
     "brandRegion": "Egypt · مصر"
+  },
+  "profileViews": {
+    "title": "Who Viewed My Profile",
+    "subtitle": "People who visited your profile recently.",
+    "empty": "No profile views yet.",
+    "emptyHint": "When someone views your public profile, they will appear here.",
+    "loginRequired": "Sign in to see who viewed your profile.",
+    "viewedAt": "Viewed {date}",
+    "contractor": "Contractor / construction",
+    "supplier": "Supplier",
+    "verifiedBusiness": "Verified business",
+    "expert": "Expert",
+    "viewProfile": "View profile",
+    "loadError": "Could not load profile views. Try again.",
+    "totalViews": "{count} view(s)"
   }
 }

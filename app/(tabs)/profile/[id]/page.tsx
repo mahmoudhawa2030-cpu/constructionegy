@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
+import { ProfileViewTracker } from "@/components/profile-view-tracker";
 import { ProfileTabStrip } from "@/components/profile-tab-strip";
 import { UserPresenceBadge } from "@/components/user-presence-badge";
 import { ExpertBadge } from "@/components/expert-badge";
@@ -111,6 +112,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-8 px-4 py-6 sm:py-8">
+      <ProfileViewTracker subjectId={id} />
       <div className="mx-auto flex w-full max-w-lg flex-col gap-2">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
           <Link className="text-zinc-600 underline dark:text-zinc-400" href="/gallery">

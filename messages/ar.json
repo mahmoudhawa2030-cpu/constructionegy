@@ -1275,5 +1275,20 @@
     "brandName": "construction-egy",
     "brandTagline": "ابنِ · تواصل · تداول",
     "brandRegion": "مصر · Egypt"
+  },
+  "profileViews": {
+    "title": "من زار ملفي الشخصي",
+    "subtitle": "الأشخاص الذين زاروا ملفك الشخصي مؤخراً.",
+    "empty": "لا توجد زيارات للملف الشخصي بعد.",
+    "emptyHint": "عندما يزور شخص ما ملفك الشخصي العام، سيظهر هنا.",
+    "loginRequired": "سجّل الدخول لترى من زار ملفك الشخصي.",
+    "viewedAt": "زار في {date}",
+    "contractor": "مقاول / إنشاءات",
+    "supplier": "مورّد",
+    "verifiedBusiness": "منشأة موثّقة",
+    "expert": "خبير",
+    "viewProfile": "عرض الملف الشخصي",
+    "loadError": "تعذّر تحميل زيارات الملف الشخصي. حاول مرة أخرى.",
+    "totalViews": "{count} زيارة"
   }
 }
