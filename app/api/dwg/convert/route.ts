@@ -178,9 +178,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Max file size: 50MB
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = "nodejs";
+export const maxDuration = 60;
