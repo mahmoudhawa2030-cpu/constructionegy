@@ -2,24 +2,22 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useOpenCV, detectPipes, Circle } from "./use-opencv";
 import { Camera, Upload, RotateCcw, Flashlight } from "lucide-react";
 import { Camera as CapCamera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { detectObjects, type BoundingBox } from "@/lib/tools/roboflow-detect";
 
 type DetectionMode = "pipes";
 
 export default function ObjectCounter() {
   const t = useTranslations("counter");
-  const { status: cvStatus, cv } = useOpenCV();
 
   const [mode, setMode] = useState<DetectionMode | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [circles, setCircles] = useState<Circle[]>([]);
+  const [predictions, setPredictions] = useState<BoundingBox[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [torchOn, setTorchOn] = useState(false);
-  const [minRadius, setMinRadius] = useState(15);
-  const [maxRadius, setMaxRadius] = useState(80);
-  const [sensitivity, setSensitivity] = useState(60);
+  const [confidence, setConfidence] = useState(40);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,50 +81,85 @@ export default function ObjectCounter() {
   // Retake
   const retake = useCallback(() => {
     setCapturedImage(null);
-    setCircles([]);
+    setPredictions([]);
+    setErrorMsg(null);
     startCamera();
   }, [startCamera]);
 
-  // Run pipe detection
-  const runDetection = useCallback(() => {
-    if (!cv || !capturedImage || !canvasRef.current) return;
-    setIsProcessing(true);
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = canvasRef.current!;
+  // Draw bounding boxes on canvas
+  const drawPredictions = useCallback(
+    (img: HTMLImageElement, preds: BoundingBox[]) => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0);
 
-      const result = detectPipes(cv, canvas, { minRadius, maxRadius, sensitivity });
-      setCircles(result.circles);
+      preds.forEach((p, i) => {
+        const x = p.x - p.width / 2;
+        const y = p.y - p.height / 2;
 
-      // Draw circles on canvas
-      ctx.drawImage(img, 0, 0);
-      result.circles.forEach((c, i) => {
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, c.radius, 0, 2 * Math.PI);
+        // Bounding box
         ctx.strokeStyle = "#00ff00";
         ctx.lineWidth = 3;
-        ctx.stroke();
-        // Number label
-        ctx.fillStyle = "#00ff00";
-        ctx.beginPath();
-        ctx.arc(c.x, c.y, 14, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.fillStyle = "#000";
-        ctx.font = "bold 14px Arial";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(String(i + 1), c.x, c.y);
-      });
+        ctx.strokeRect(x, y, p.width, p.height);
 
+        // Number label
+        const label = String(i + 1);
+        ctx.font = "bold 16px Arial";
+        const tm = ctx.measureText(label);
+        const lw = tm.width + 10;
+        const lh = 22;
+        ctx.fillStyle = "#00ff00";
+        ctx.fillRect(x, y - lh, lw, lh);
+        ctx.fillStyle = "#000";
+        ctx.textAlign = "start";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, x + 5, y - lh + 3);
+      });
+    },
+    [],
+  );
+
+  // Run Roboflow detection
+  const runDetection = useCallback(async () => {
+    if (!capturedImage) return;
+    setIsProcessing(true);
+    setErrorMsg(null);
+
+    const result = await detectObjects(capturedImage, confidence);
+
+    if (!result.ok) {
+      setErrorMsg(result.error);
+      setIsProcessing(false);
+      return;
+    }
+
+    setPredictions(result.predictions);
+
+    // Draw results on canvas
+    const img = new Image();
+    img.onload = () => {
+      drawPredictions(img, result.predictions);
       setIsProcessing(false);
     };
+    img.onerror = () => setIsProcessing(false);
     img.src = capturedImage;
-  }, [cv, capturedImage, minRadius, maxRadius, sensitivity]);
+  }, [capturedImage, confidence, drawPredictions]);
+
+  // Draw captured image on canvas when first captured (before detection)
+  useEffect(() => {
+    if (!capturedImage || !canvasRef.current) return;
+    const img = new Image();
+    img.onload = () => {
+      const canvas = canvasRef.current!;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+    };
+    img.src = capturedImage;
+  }, [capturedImage]);
 
   // Mode selection screen
   if (!mode) {
@@ -166,21 +199,11 @@ export default function ObjectCounter() {
     );
   }
 
-  // OpenCV loading
-  if (cvStatus === "loading") {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--bina-primary)] border-t-transparent" />
-        <p className="text-sm text-[var(--bina-muted)]">{t("loadingOpenCV")}</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-1 flex-col bg-[var(--bina-bg)]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--bina-border)] px-4 py-3">
-        <button onClick={() => { setMode(null); setCapturedImage(null); setCircles([]); stopCamera(); }}
+        <button onClick={() => { setMode(null); setCapturedImage(null); setPredictions([]); setErrorMsg(null); stopCamera(); }}
           className="text-sm font-medium text-[var(--bina-primary)]">← {t("selectMode")}</button>
         {capturedImage && (
           <button onClick={retake} className="flex items-center gap-1 text-sm font-medium text-[var(--bina-primary)]">
@@ -236,40 +259,32 @@ export default function ObjectCounter() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-[var(--bina-muted)]">{t("totalObjects")}</p>
-                  <p className="text-3xl font-bold text-[var(--bina-primary)]">{circles.length}</p>
+                  <p className="text-3xl font-bold text-[var(--bina-primary)]">{predictions.length}</p>
                 </div>
-                <button onClick={runDetection} disabled={isProcessing || !cv}
+                <button onClick={runDetection} disabled={isProcessing}
                   className="rounded-xl bg-[var(--bina-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {t("count")}
+                  {isProcessing ? t("detecting") : t("count")}
                 </button>
               </div>
 
-              {circles.length === 0 && !isProcessing && (
-                <p className="mb-3 text-xs text-[var(--bina-muted)]">{t("noCirclesFound")}</p>
+              {errorMsg && (
+                <p className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+                  {errorMsg}
+                </p>
               )}
 
-              {/* Sliders */}
+              {predictions.length === 0 && !isProcessing && !errorMsg && (
+                <p className="mb-3 text-xs text-[var(--bina-muted)]">{t("noPipesFound")}</p>
+              )}
+
+              {/* Confidence slider */}
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs text-[var(--bina-muted)]">
-                    <span>{t("sensitivity")}</span><span>{sensitivity}%</span>
+                    <span>{t("confidence")}</span><span>{confidence}%</span>
                   </div>
-                  <input type="range" min="10" max="95" value={sensitivity}
-                    onChange={(e) => setSensitivity(Number(e.target.value))} className="w-full" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-[var(--bina-muted)]">
-                    <span>{t("minRadius")}</span><span>{minRadius}px</span>
-                  </div>
-                  <input type="range" min="5" max="150" value={minRadius}
-                    onChange={(e) => setMinRadius(Number(e.target.value))} className="w-full" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-xs text-[var(--bina-muted)]">
-                    <span>{t("maxRadius")}</span><span>{maxRadius}px</span>
-                  </div>
-                  <input type="range" min="20" max="300" value={maxRadius}
-                    onChange={(e) => setMaxRadius(Number(e.target.value))} className="w-full" />
+                  <input type="range" min="10" max="90" value={confidence}
+                    onChange={(e) => setConfidence(Number(e.target.value))} className="w-full" />
                 </div>
               </div>
             </div>

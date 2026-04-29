@@ -103,11 +103,8 @@
     "modePipes": "Pipes",
     "modePipesDesc": "Steel pipes viewed from the end",
     "modeMore": "More coming soon",
-    "sensitivity": "Sensitivity",
-    "minRadius": "Min Size",
-    "maxRadius": "Max Size",
-    "loadingOpenCV": "Loading detection engine...",
-    "noCirclesFound": "No pipes detected. Try adjusting the sliders.",
+    "confidence": "Confidence",
+    "noPipesFound": "Tap Count to detect pipes in the image.",
     "pipesFound": "{count} pipe(s) detected"
   },
   "dwgViewer": {
