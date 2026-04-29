@@ -180,6 +180,18 @@ export default function DWGViewer() {
               <p className="mt-1 text-sm text-[var(--bina-muted)]">{t("orBrowse")}</p>
               <p className="mt-2 text-xs text-[var(--bina-muted)]">{t("maxSize")}</p>
             </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleBrowse();
+              }}
+              className="mt-2 flex items-center gap-2 rounded-xl bg-[var(--bina-primary)] px-6 py-3 text-base font-semibold text-white shadow-lg active:scale-95 transition-transform"
+            >
+              <FileUp className="h-5 w-5" />
+              {t("uploadFile")}
+            </button>
           </div>
         ) : (
           /* File Selected or Result */

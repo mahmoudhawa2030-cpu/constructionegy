@@ -114,6 +114,7 @@
     "title": "DWG Viewer",
     "dragDrop": "Drop your DWG file here",
     "orBrowse": "or click to browse",
+    "uploadFile": "Upload File",
     "maxSize": "Maximum file size: 50MB",
     "convert": "Convert to PDF",
     "converting": "Converting...",

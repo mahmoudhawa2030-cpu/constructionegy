@@ -114,6 +114,7 @@
     "title": "عارض DWG",
     "dragDrop": "اسحب ملف DWG هنا",
     "orBrowse": "أو انقر للتصفح",
+    "uploadFile": "رفع ملف",
     "maxSize": "الحد الأقصى للملف: 50 ميجابايت",
     "convert": "تحويل إلى PDF",
     "converting": "جاري التحويل...",
