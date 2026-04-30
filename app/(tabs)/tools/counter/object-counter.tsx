@@ -113,54 +113,62 @@ export default function ObjectCounter() {
   const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
   const MIN_SIZE = 0.05;
 
+  const imgBoxRef = useRef(imgBox);
+  useEffect(() => { imgBoxRef.current = imgBox; }, [imgBox]);
+
   const onHandlePointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>, handle: string) => {
     e.stopPropagation();
-    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
     const el = cropContainerRef.current!;
     const br = el.getBoundingClientRect();
-    // Convert to imgBox-relative coords (0-1 within the actual image)
-    const cx = ((e.clientX - br.left) / br.width  - imgBox.left) / imgBox.width;
-    const cy = ((e.clientY - br.top)  / br.height - imgBox.top)  / imgBox.height;
+    const ib = imgBoxRef.current;
+    const cx = ((e.clientX - br.left) / br.width  - ib.left) / ib.width;
+    const cy = ((e.clientY - br.top)  / br.height - ib.top)  / ib.height;
     dragInfo.current = { handle, startX: cx, startY: cy, rect: { ...cropRect } };
-  }, [cropRect, imgBox]);
 
-  const onContainerPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (!dragInfo.current) return;
-    const el = cropContainerRef.current!;
-    const br = el.getBoundingClientRect();
-    const cx = ((e.clientX - br.left) / br.width  - imgBox.left) / imgBox.width;
-    const cy = ((e.clientY - br.top)  / br.height - imgBox.top)  / imgBox.height;
-    const dx = cx - dragInfo.current.startX;
-    const dy = cy - dragInfo.current.startY;
-    const r = { ...dragInfo.current.rect };
-    const h = dragInfo.current.handle;
-
-    if (h === "move") {
-      r.x = clamp(r.x + dx, 0, 1 - r.w);
-      r.y = clamp(r.y + dy, 0, 1 - r.h);
-      dragInfo.current.startX = cx;
-      dragInfo.current.startY = cy;
-      dragInfo.current.rect = { ...r };
-    } else {
-      if (h.includes("e")) { r.w = clamp(r.w + dx, MIN_SIZE, 1 - r.x); dragInfo.current.startX = cx; }
-      if (h.includes("s")) { r.h = clamp(r.h + dy, MIN_SIZE, 1 - r.y); dragInfo.current.startY = cy; }
-      if (h.includes("w")) {
-        const newX = clamp(r.x + dx, 0, r.x + r.w - MIN_SIZE);
-        r.w = r.w + (r.x - newX); r.x = newX; dragInfo.current.startX = cx;
-        dragInfo.current.rect.x = r.x; dragInfo.current.rect.w = r.w;
+    const onMove = (ev: PointerEvent) => {
+      if (!dragInfo.current) return;
+      const br2 = cropContainerRef.current!.getBoundingClientRect();
+      const ib2 = imgBoxRef.current;
+      const ncx = ((ev.clientX - br2.left) / br2.width  - ib2.left) / ib2.width;
+      const ncy = ((ev.clientY - br2.top)  / br2.height - ib2.top)  / ib2.height;
+      const dx = ncx - dragInfo.current.startX;
+      const dy = ncy - dragInfo.current.startY;
+      const r = { ...dragInfo.current.rect };
+      const h = dragInfo.current.handle;
+      if (h === "move") {
+        r.x = clamp(r.x + dx, 0, 1 - r.w);
+        r.y = clamp(r.y + dy, 0, 1 - r.h);
+        dragInfo.current.startX = ncx;
+        dragInfo.current.startY = ncy;
+        dragInfo.current.rect = { ...r };
+      } else {
+        if (h.includes("e")) { r.w = clamp(r.w + dx, MIN_SIZE, 1 - r.x); dragInfo.current.startX = ncx; }
+        if (h.includes("s")) { r.h = clamp(r.h + dy, MIN_SIZE, 1 - r.y); dragInfo.current.startY = ncy; }
+        if (h.includes("w")) {
+          const newX = clamp(r.x + dx, 0, r.x + r.w - MIN_SIZE);
+          r.w = r.w + (r.x - newX); r.x = newX; dragInfo.current.startX = ncx;
+          dragInfo.current.rect.x = r.x; dragInfo.current.rect.w = r.w;
+        }
+        if (h.includes("n")) {
+          const newY = clamp(r.y + dy, 0, r.y + r.h - MIN_SIZE);
+          r.h = r.h + (r.y - newY); r.y = newY; dragInfo.current.startY = ncy;
+          dragInfo.current.rect.y = r.y; dragInfo.current.rect.h = r.h;
+        }
       }
-      if (h.includes("n")) {
-        const newY = clamp(r.y + dy, 0, r.y + r.h - MIN_SIZE);
-        r.h = r.h + (r.y - newY); r.y = newY; dragInfo.current.startY = cy;
-        dragInfo.current.rect.y = r.y; dragInfo.current.rect.h = r.h;
-      }
-    }
-    setCropRect({ x: r.x, y: r.y, w: r.w, h: r.h });
-  }, [imgBox]);
+      setCropRect({ x: r.x, y: r.y, w: r.w, h: r.h });
+    };
+    const onUp = () => {
+      dragInfo.current = null;
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  }, [cropRect]);
 
-  const onContainerPointerUp = useCallback(() => {
-    dragInfo.current = null;
-  }, []);
+  const onContainerPointerMove = useCallback((_e: React.PointerEvent<HTMLDivElement>) => {}, []);
+  const onContainerPointerUp = useCallback(() => { dragInfo.current = null; }, []);
 
   // ── Crop and detect ────────────────────────────────────────────────────────
   const cropAndDetect = useCallback(async () => {
