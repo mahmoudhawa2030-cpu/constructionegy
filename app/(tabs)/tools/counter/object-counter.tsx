@@ -143,16 +143,26 @@ export default function ObjectCounter() {
         dragInfo.current.startY = ncy;
         dragInfo.current.rect = { ...r };
       } else {
-        if (h.includes("e")) { r.w = clamp(r.w + dx, MIN_SIZE, 1 - r.x); dragInfo.current.startX = ncx; }
-        if (h.includes("s")) { r.h = clamp(r.h + dy, MIN_SIZE, 1 - r.y); dragInfo.current.startY = ncy; }
+        if (h.includes("e")) {
+          r.w = clamp(r.w + dx, MIN_SIZE, 1 - r.x);
+          dragInfo.current.startX = ncx;
+          dragInfo.current.rect.w = r.w;
+        }
+        if (h.includes("s")) {
+          r.h = clamp(r.h + dy, MIN_SIZE, 1 - r.y);
+          dragInfo.current.startY = ncy;
+          dragInfo.current.rect.h = r.h;
+        }
         if (h.includes("w")) {
           const newX = clamp(r.x + dx, 0, r.x + r.w - MIN_SIZE);
-          r.w = r.w + (r.x - newX); r.x = newX; dragInfo.current.startX = ncx;
+          r.w = r.w + (r.x - newX); r.x = newX;
+          dragInfo.current.startX = ncx;
           dragInfo.current.rect.x = r.x; dragInfo.current.rect.w = r.w;
         }
         if (h.includes("n")) {
           const newY = clamp(r.y + dy, 0, r.y + r.h - MIN_SIZE);
-          r.h = r.h + (r.y - newY); r.y = newY; dragInfo.current.startY = ncy;
+          r.h = r.h + (r.y - newY); r.y = newY;
+          dragInfo.current.startY = ncy;
           dragInfo.current.rect.y = r.y; dragInfo.current.rect.h = r.h;
         }
       }
