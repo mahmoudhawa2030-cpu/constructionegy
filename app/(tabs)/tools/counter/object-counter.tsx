@@ -24,9 +24,12 @@ export default function ObjectCounter() {
   const [torchOn, setTorchOn] = useState(false);
   const confidence = 40;
 
-  // Crop state — box starts at 10%/10% → 90%/90% of image
+  // Crop state — box starts at 10%/10% → 90%/90% of the IMAGE area (not container)
   const cropContainerRef = useRef<HTMLDivElement>(null);
+  const cropImgRef = useRef<HTMLImageElement>(null);
   const [cropRect, setCropRect] = useState<CropRect>({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 });
+  // letterbox offsets as fraction of container (updated when image loads)
+  const [imgBox, setImgBox] = useState({ left: 0, top: 0, width: 1, height: 1 });
   const dragInfo = useRef<{ handle: string; startX: number; startY: number; rect: CropRect } | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -115,20 +118,18 @@ export default function ObjectCounter() {
     e.currentTarget.setPointerCapture(e.pointerId);
     const el = cropContainerRef.current!;
     const br = el.getBoundingClientRect();
-    dragInfo.current = {
-      handle,
-      startX: (e.clientX - br.left) / br.width,
-      startY: (e.clientY - br.top) / br.height,
-      rect: { ...cropRect },
-    };
-  }, [cropRect]);
+    // Convert to imgBox-relative coords (0-1 within the actual image)
+    const cx = ((e.clientX - br.left) / br.width  - imgBox.left) / imgBox.width;
+    const cy = ((e.clientY - br.top)  / br.height - imgBox.top)  / imgBox.height;
+    dragInfo.current = { handle, startX: cx, startY: cy, rect: { ...cropRect } };
+  }, [cropRect, imgBox]);
 
   const onContainerPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragInfo.current) return;
     const el = cropContainerRef.current!;
     const br = el.getBoundingClientRect();
-    const cx = (e.clientX - br.left) / br.width;
-    const cy = (e.clientY - br.top) / br.height;
+    const cx = ((e.clientX - br.left) / br.width  - imgBox.left) / imgBox.width;
+    const cy = ((e.clientY - br.top)  / br.height - imgBox.top)  / imgBox.height;
     const dx = cx - dragInfo.current.startX;
     const dy = cy - dragInfo.current.startY;
     const r = { ...dragInfo.current.rect };
@@ -155,7 +156,7 @@ export default function ObjectCounter() {
       }
     }
     setCropRect({ x: r.x, y: r.y, w: r.w, h: r.h });
-  }, []);
+  }, [imgBox]);
 
   const onContainerPointerUp = useCallback(() => {
     dragInfo.current = null;
@@ -174,17 +175,17 @@ export default function ObjectCounter() {
       const img = new Image();
       await new Promise<void>((res) => { img.onload = () => res(); img.src = capturedImage; });
 
-      // object-cover: image scaled so it fills container, excess cropped from edges
+      // object-contain: image letterboxed inside container
       const container = cropContainerRef.current;
       const containerW = container ? container.clientWidth : img.width;
       const containerH = container ? container.clientHeight : img.height;
-      const scale = Math.max(containerW / img.width, containerH / img.height);
+      const scale = Math.min(containerW / img.width, containerH / img.height);
       const renderedW = img.width * scale;
       const renderedH = img.height * scale;
-      const offsetX = (containerW - renderedW) / 2; // negative = image overflows left
-      const offsetY = (containerH - renderedH) / 2; // negative = image overflows top
+      const offsetX = (containerW - renderedW) / 2; // black bar left/right
+      const offsetY = (containerH - renderedH) / 2; // black bar top/bottom
 
-      // Convert cropRect (0-1 of container) to image pixel coords
+      // Convert cropRect (0-1 of container) → px relative to image
       const cropPxX = cropRect.x * containerW - offsetX;
       const cropPxY = cropRect.y * containerH - offsetY;
       const cropPxW = cropRect.w * containerW;
@@ -352,51 +353,77 @@ export default function ObjectCounter() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                ref={cropImgRef}
                 src={capturedImage}
                 alt=""
-                className="h-full w-full object-cover pointer-events-none"
+                className="h-full w-full object-contain pointer-events-none"
                 draggable={false}
+                onLoad={() => {
+                  const el = cropContainerRef.current;
+                  const im = cropImgRef.current;
+                  if (!el || !im) return;
+                  const cw = el.clientWidth, ch = el.clientHeight;
+                  const scale = Math.min(cw / im.naturalWidth, ch / im.naturalHeight);
+                  const rw = im.naturalWidth * scale, rh = im.naturalHeight * scale;
+                  setImgBox({
+                    left: (cw - rw) / 2 / cw,
+                    top: (ch - rh) / 2 / ch,
+                    width: rw / cw,
+                    height: rh / ch,
+                  });
+                }}
               />
 
-              {/* Dark mask — 4 rectangles around the selection */}
-              <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.55)",
-                clipPath: `polygon(0% 0%, 0% 100%, ${cropRect.x*100}% 100%, ${cropRect.x*100}% ${cropRect.y*100}%, ${(cropRect.x+cropRect.w)*100}% ${cropRect.y*100}%, ${(cropRect.x+cropRect.w)*100}% ${(cropRect.y+cropRect.h)*100}%, ${cropRect.x*100}% ${(cropRect.y+cropRect.h)*100}%, ${cropRect.x*100}% 100%, 100% 100%, 100% 0%)`
-              }} />
+              {/* Dark mask — only over the actual image area */}
+              {(() => {
+                // convert cropRect (relative to imgBox) to container %
+                const ax = (imgBox.left + cropRect.x * imgBox.width) * 100;
+                const ay = (imgBox.top  + cropRect.y * imgBox.height) * 100;
+                const bx = ax + cropRect.w * imgBox.width * 100;
+                const by = ay + cropRect.h * imgBox.height * 100;
+                return (
+                  <div className="absolute inset-0 pointer-events-none" style={{
+                    background: "rgba(0,0,0,0.55)",
+                    clipPath: `polygon(0% 0%,0% 100%,${ax}% 100%,${ax}% ${ay}%,${bx}% ${ay}%,${bx}% ${by}%,${ax}% ${by}%,${ax}% 100%,100% 100%,100% 0%)`,
+                  }} />
+                );
+              })()}
 
               {/* Selection box border */}
-              <div className="absolute border-2 border-white pointer-events-none" style={{
-                left: `${cropRect.x*100}%`, top: `${cropRect.y*100}%`,
-                width: `${cropRect.w*100}%`, height: `${cropRect.h*100}%`,
-              }} />
-
-              {/* Move handle — drag entire box */}
-              <div className="absolute" style={{
-                left: `${cropRect.x*100}%`, top: `${cropRect.y*100}%`,
-                width: `${cropRect.w*100}%`, height: `${cropRect.h*100}%`,
-                cursor: "move",
-              }} onPointerDown={(e) => onHandlePointerDown(e, "move")} />
-
-              {/* 8 resize handles */}
-              {(["nw","n","ne","e","se","s","sw","w"] as const).map((dir) => {
-                const isV = dir === "n" || dir === "s";
-                const isH = dir === "e" || dir === "w";
-                const left = dir.includes("w") ? cropRect.x*100 - 2
-                  : dir.includes("e") ? (cropRect.x+cropRect.w)*100 - 2
-                  : cropRect.x*100 + cropRect.w*50 - 2;
-                const top  = dir.includes("n") ? cropRect.y*100 - 2
-                  : dir.includes("s") ? (cropRect.y+cropRect.h)*100 - 2
-                  : cropRect.y*100 + cropRect.h*50 - 2;
+              {(() => {
+                const ax = (imgBox.left + cropRect.x * imgBox.width) * 100;
+                const ay = (imgBox.top  + cropRect.y * imgBox.height) * 100;
+                const bw = cropRect.w * imgBox.width * 100;
+                const bh = cropRect.h * imgBox.height * 100;
                 return (
-                  <div key={dir}
-                    className="absolute bg-white rounded-full shadow-md z-10"
-                    style={{ left: `${left}%`, top: `${top}%`, width: 20, height: 20,
-                      transform: "translate(-50%,-50%)",
-                      cursor: isV ? "ns-resize" : isH ? "ew-resize" : "nwse-resize",
-                    }}
-                    onPointerDown={(e) => onHandlePointerDown(e, dir)}
-                  />
+                  <>
+                    <div className="absolute border-2 border-white pointer-events-none" style={{
+                      left: `${ax}%`, top: `${ay}%`, width: `${bw}%`, height: `${bh}%`,
+                    }} />
+                    {/* Move handle */}
+                    <div className="absolute" style={{
+                      left: `${ax}%`, top: `${ay}%`, width: `${bw}%`, height: `${bh}%`, cursor: "move",
+                    }} onPointerDown={(e) => onHandlePointerDown(e, "move")} />
+                    {/* 8 resize handles */}
+                    {(["nw","n","ne","e","se","s","sw","w"] as const).map((dir) => {
+                      const isV = dir === "n" || dir === "s";
+                      const isH = dir === "e" || dir === "w";
+                      const hLeft = dir.includes("w") ? ax : dir.includes("e") ? ax + bw : ax + bw / 2;
+                      const hTop  = dir.includes("n") ? ay : dir.includes("s") ? ay + bh : ay + bh / 2;
+                      return (
+                        <div key={dir}
+                          className="absolute bg-white rounded-full shadow-md z-10"
+                          style={{ left: `${hLeft}%`, top: `${hTop}%`, width: 22, height: 22,
+                            transform: "translate(-50%,-50%)",
+                            cursor: isV ? "ns-resize" : isH ? "ew-resize" : "nwse-resize",
+                          }}
+                          onPointerDown={(e) => onHandlePointerDown(e, dir)}
+                        />
+                      );
+                    })}
+                  </>
                 );
-              })}
+              })()}
               {/* Count button — absolute, bottom-center, above tab bar */}
               <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/70 to-transparent pb-4 pt-6 pointer-events-none">
                 <p className="text-xs text-white/80 pointer-events-none">{t("cropHint")}</p>
