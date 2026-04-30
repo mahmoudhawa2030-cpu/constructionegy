@@ -173,18 +173,39 @@ export default function ObjectCounter() {
     if (cropRect && cropRect.w > 0.01 && cropRect.h > 0.01) {
       const img = new Image();
       await new Promise<void>((res) => { img.onload = () => res(); img.src = capturedImage; });
-      const cropCanvas = document.createElement("canvas");
-      const cw = Math.round(cropRect.w * img.width);
-      const ch = Math.round(cropRect.h * img.height);
-      cropCanvas.width = cw;
-      cropCanvas.height = ch;
-      cropCanvas.getContext("2d")!.drawImage(
-        img,
-        Math.round(cropRect.x * img.width),
-        Math.round(cropRect.y * img.height),
-        cw, ch, 0, 0, cw, ch,
-      );
-      imageToSend = cropCanvas.toDataURL("image/jpeg", 0.92);
+
+      // object-cover: image scaled so it fills container, excess cropped from edges
+      const container = cropContainerRef.current;
+      const containerW = container ? container.clientWidth : img.width;
+      const containerH = container ? container.clientHeight : img.height;
+      const scale = Math.max(containerW / img.width, containerH / img.height);
+      const renderedW = img.width * scale;
+      const renderedH = img.height * scale;
+      const offsetX = (containerW - renderedW) / 2; // negative = image overflows left
+      const offsetY = (containerH - renderedH) / 2; // negative = image overflows top
+
+      // Convert cropRect (0-1 of container) to image pixel coords
+      const cropPxX = cropRect.x * containerW - offsetX;
+      const cropPxY = cropRect.y * containerH - offsetY;
+      const cropPxW = cropRect.w * containerW;
+      const cropPxH = cropRect.h * containerH;
+
+      const imgX = Math.max(0, cropPxX / scale);
+      const imgY = Math.max(0, cropPxY / scale);
+      const imgW = Math.min(img.width - imgX, cropPxW / scale);
+      const imgH = Math.min(img.height - imgY, cropPxH / scale);
+
+      if (imgW > 10 && imgH > 10) {
+        const cropCanvas = document.createElement("canvas");
+        cropCanvas.width = Math.round(imgW);
+        cropCanvas.height = Math.round(imgH);
+        cropCanvas.getContext("2d")!.drawImage(
+          img,
+          Math.round(imgX), Math.round(imgY), Math.round(imgW), Math.round(imgH),
+          0, 0, Math.round(imgW), Math.round(imgH),
+        );
+        imageToSend = cropCanvas.toDataURL("image/jpeg", 0.92);
+      }
     }
 
     setCroppedImage(imageToSend);
@@ -333,7 +354,7 @@ export default function ObjectCounter() {
               <img
                 src={capturedImage}
                 alt=""
-                className="h-full w-full object-contain pointer-events-none"
+                className="h-full w-full object-cover pointer-events-none"
                 draggable={false}
               />
 
