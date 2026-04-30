@@ -404,7 +404,7 @@ export default function ObjectCounter() {
                     <div className="absolute" style={{
                       left: `${ax}%`, top: `${ay}%`, width: `${bw}%`, height: `${bh}%`, cursor: "move",
                     }} onPointerDown={(e) => onHandlePointerDown(e, "move")} />
-                    {/* 8 resize handles */}
+                    {/* 8 resize handles — 48px touch target, 14px visual dot */}
                     {(["nw","n","ne","e","se","s","sw","w"] as const).map((dir) => {
                       const isV = dir === "n" || dir === "s";
                       const isH = dir === "e" || dir === "w";
@@ -412,13 +412,15 @@ export default function ObjectCounter() {
                       const hTop  = dir.includes("n") ? ay : dir.includes("s") ? ay + bh : ay + bh / 2;
                       return (
                         <div key={dir}
-                          className="absolute bg-white rounded-full shadow-md z-10"
-                          style={{ left: `${hLeft}%`, top: `${hTop}%`, width: 22, height: 22,
+                          className="absolute z-20 flex items-center justify-center"
+                          style={{ left: `${hLeft}%`, top: `${hTop}%`, width: 48, height: 48,
                             transform: "translate(-50%,-50%)",
                             cursor: isV ? "ns-resize" : isH ? "ew-resize" : "nwse-resize",
                           }}
                           onPointerDown={(e) => onHandlePointerDown(e, dir)}
-                        />
+                        >
+                          <div className="w-3.5 h-3.5 rounded-full bg-white shadow-[0_0_0_2px_rgba(0,0,0,0.4)]" />
+                        </div>
                       );
                     })}
                   </>
