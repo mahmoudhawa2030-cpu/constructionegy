@@ -315,11 +315,21 @@ export default function ObjectCounter() {
           onClick={() => { setMode(null); setCapturedImage(null); setCroppedImage(null); setCropRect({ x: 0.1, y: 0.1, w: 0.8, h: 0.8 }); setPredictions([]); setErrorMsg(null); setStage("camera"); stopCamera(); }}
           className="text-sm font-medium text-[var(--bina-primary)]"
         >← {t("selectMode")}</button>
-        {stage !== "camera" && (
-          <button onClick={retake} className="flex items-center gap-1 text-sm font-medium text-[var(--bina-primary)]">
-            <RotateCcw className="h-4 w-4" />{t("retake")}
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {stage !== "camera" && (
+            <button onClick={retake} className="flex items-center gap-1 text-sm font-medium text-[var(--bina-primary)]">
+              <RotateCcw className="h-4 w-4" />{t("retake")}
+            </button>
+          )}
+          {stage === "cropping" && (
+            <button
+              onClick={cropAndDetect}
+              className="flex items-center gap-1.5 rounded-xl bg-[var(--bina-primary)] px-4 py-2 text-sm font-bold text-white active:opacity-80"
+            >
+              <Check className="h-4 w-4" />{t("count")}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-1 flex-col">
@@ -444,16 +454,9 @@ export default function ObjectCounter() {
                   </>
                 );
               })()}
-              {/* Count button — absolute, bottom-center, above tab bar */}
-              <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center gap-1 bg-gradient-to-t from-black/70 to-transparent pb-4 pt-6 pointer-events-none">
-                <p className="text-xs text-white/80 pointer-events-none">{t("cropHint")}</p>
-                <button
-                  onClick={cropAndDetect}
-                  className="pointer-events-auto flex items-center gap-2 rounded-2xl bg-[var(--bina-primary)] px-8 py-3 text-base font-bold text-white shadow-lg active:opacity-80"
-                >
-                  <Check className="h-5 w-5" />
-                  {t("count")}
-                </button>
+              {/* Crop hint */}
+              <div className="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+                <p className="rounded-full bg-black/50 px-3 py-1 text-xs text-white/90">{t("cropHint")}</p>
               </div>
             </div>
           </div>
