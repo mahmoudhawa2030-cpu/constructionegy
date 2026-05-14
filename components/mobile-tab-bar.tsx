@@ -8,6 +8,60 @@ type Props = {
   homeHref?: string;
 };
 
+type IconKey = "home" | "explore" | "market" | "orders" | "profile";
+
+function NavIcon({ name, active }: { name: IconKey; active: boolean }) {
+  const stroke = active ? "var(--bina-primary)" : "#C8C8C8";
+  const common = {
+    width: 22,
+    height: 22,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke,
+    strokeWidth: 1.7,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+  switch (name) {
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          <polyline points="9 22 9 12 15 12 15 22" />
+        </svg>
+      );
+    case "explore":
+      return (
+        <svg {...common}>
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      );
+    case "market":
+      return (
+        <svg {...common}>
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+          <path d="M9 22V12h6v10" />
+        </svg>
+      );
+    case "orders":
+      return (
+        <svg {...common}>
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 01-8 0" />
+        </svg>
+      );
+    case "profile":
+      return (
+        <svg {...common}>
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      );
+  }
+}
+
 export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -15,50 +69,6 @@ export function MobileTabBar({ homeHref = "/" }: Props) {
     if (href === homeHref) return pathname === homeHref;
     return pathname === href || pathname.startsWith(`${href}/`);
   }
-
-  type IconKey = "home" | "explore" | "market" | "orders" | "profile";
-  const NavIcon = ({ name, active }: { name: IconKey; active: boolean }) => {
-    const stroke = active ? "var(--bina-primary)" : "#C8C8C8";
-    const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke, strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-    switch (name) {
-      case "home":
-        return (
-          <svg {...common}>
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            <polyline points="9 22 9 12 15 12 15 22" />
-          </svg>
-        );
-      case "explore":
-        return (
-          <svg {...common}>
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        );
-      case "market":
-        return (
-          <svg {...common}>
-            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-            <path d="M9 22V12h6v10" />
-          </svg>
-        );
-      case "orders":
-        return (
-          <svg {...common}>
-            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <path d="M16 10a4 4 0 01-8 0" />
-          </svg>
-        );
-      case "profile":
-        return (
-          <svg {...common}>
-            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-            <circle cx="12" cy="7" r="4" />
-          </svg>
-        );
-    }
-  };
 
   const itemCls = (href: string) =>
     `flex flex-col items-center gap-0.5 min-w-0 flex-1 cursor-pointer select-none py-1 ${
