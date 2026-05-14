@@ -39,7 +39,7 @@ function HeartIcon({ filled, className }: { filled: boolean; className?: string 
 }
 
 const cardControlClass =
-  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-zinc-200/90 bg-white/95 text-red-600 shadow-sm backdrop-blur-sm transition-opacity hover:opacity-90 disabled:opacity-50 dark:border-zinc-600/90 dark:bg-zinc-900/95 dark:text-red-400";
+  "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white text-[var(--bina-primary)] shadow-[0_1px_4px_rgba(0,0,0,0.1)] transition-opacity hover:opacity-90 disabled:opacity-50";
 
 export function ListingFavoriteHeart({
   listingId,
@@ -81,7 +81,7 @@ export function ListingFavoriteHeart({
           href={`/login?next=${encodeURIComponent(loginNext)}`}
           title="تسجيل الدخول لإضافة للمفضلة"
         >
-          <HeartIcon className="h-5 w-5" filled={false} />
+          <HeartIcon className="h-3.5 w-3.5" filled={false} />
         </Link>
       );
     }
@@ -94,7 +94,7 @@ export function ListingFavoriteHeart({
         type="button"
         onClick={runToggle}
       >
-        <HeartIcon className="h-5 w-5" filled={favorited} />
+        <HeartIcon className="h-3.5 w-3.5" filled={favorited} />
       </button>
     );
   }

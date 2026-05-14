@@ -36,12 +36,12 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
     <div className="flex h-full flex-col">
       {!isMobileFeedHome && !isScannerPage ? (
         <header
-          className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-steel2)] px-3 py-2 backdrop-blur-md md:hidden"
+          className="sticky top-0 z-40 flex w-full items-center justify-between gap-2 border-b border-[var(--bina-border)] bg-[var(--bina-primary)] px-3 py-2 md:hidden"
           style={{ paddingTop: "max(0.35rem, env(safe-area-inset-top))" }}
         >
           <button
             aria-label={t("openMenuAria")}
-            className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-[var(--bina-text)] hover:bg-[var(--bina-steel3)]"
+            className="inline-flex shrink-0 items-center justify-center rounded-lg p-2 text-white hover:bg-white/10"
             onClick={openMenu}
             type="button"
           >
@@ -49,7 +49,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
               <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} />
             </svg>
           </button>
-          <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-[var(--bina-text)]">
+          <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white">
             {tHome("title")}
           </span>
           <span aria-hidden className="inline-block h-10 w-10 shrink-0" />

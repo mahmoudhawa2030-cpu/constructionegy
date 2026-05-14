@@ -126,7 +126,7 @@ export default async function GalleryPage({ searchParams }: PageProps) {
       ) : null}
 
       {listings && listings.length > 0 ? (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
+        <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
           {listings.map((row) => (
             <li key={row.id}>
               <ListingCard
