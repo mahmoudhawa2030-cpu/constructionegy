@@ -1,0 +1,20 @@
+{
+  "dwgViewer": {
+    "title": "DWG Viewer",
+    "dragDrop": "Drop your DWG file here",
+    "orBrowse": "or click to browse",
+    "uploadFile": "Upload File",
+    "maxSize": "Maximum file size: 50MB",
+    "convert": "Convert to PDF",
+    "converting": "Converting...",
+    "conversionTime": "Conversion takes 10-30 seconds",
+    "convertedToPDF": "Converted to PDF successfully",
+    "download": "Download PDF",
+    "newFile": "New file",
+    "invalidFileType": "Please select a valid .dwg file",
+    "fileTooLarge": "File is too large. Maximum size is 50MB.",
+    "conversionFailed": "Failed to convert file. Please try again.",
+    "error": "Error",
+    "pdfViewer": "PDF Viewer"
+  }
+}

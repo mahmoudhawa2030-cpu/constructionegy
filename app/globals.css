@@ -3,39 +3,65 @@
 /* Class-based dark mode (next-themes sets .dark on <html>) */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* ── BINA construction marketplace theme ── */
+/* ── TradeHub B2B wholesale theme (red + gold) ── */
 :root {
-  --bina-or: #e87820;
-  --bina-or-lt: #ffa040;
-  --bina-or-dk: #b85e10;
-  --bina-steel: #1a1e24;
-  --bina-steel2: #242930;
-  --bina-steel3: #2e343c;
-  --bina-steel4: #3a424e;
-  --bina-gold: #d4a027;
-  --bina-green: #2ecc71;
-  --bina-red: #e74c3c;
-  --bina-blue: #3a8fe8;
-  --bina-r: 10px;
+  /* Primary brand palette */
+  --bina-primary: #B71C1C;        /* main red */
+  --bina-primary-lt: #C62828;     /* lighter red */
+  --bina-primary-dk: #A01818;     /* deeper red for stats strip */
+  --bina-on-primary: #ffffff;
+  --bina-accent: #FFCA28;         /* gold/yellow */
+  --bina-accent-dk: #FF8F00;
+  --bina-on-accent: #7B1A1A;      /* deep red text on gold */
 
-  --bina-border: rgba(26, 30, 36, 0.12);
-  --bina-text: #1a1e24;
-  --bina-muted: #6b7280;
-  --bina-page: #f5f2ee;
+  /* Backward-compat aliases (existing code uses --bina-or, --bina-gold) */
+  --bina-or: var(--bina-primary);
+  --bina-or-lt: var(--bina-primary-lt);
+  --bina-or-dk: var(--bina-primary-dk);
+  --bina-gold: var(--bina-accent);
+
+  /* Surfaces */
+  --bina-page: #f2f2f7;           /* light grey body */
   --bina-card: #ffffff;
-  --bina-topbar: #faf8f5;
+  --bina-card-soft: #f9f9f9;
+  --bina-topbar: var(--bina-primary);  /* red app header */
+
+  /* Steel scale repurposed for light surfaces (used widely as bg / chips) */
+  --bina-steel: #1a1a1a;
+  --bina-steel2: #ffffff;         /* white card bg — feeds chrome */
+  --bina-steel3: #f5f5f5;         /* hover / chip bg */
+  --bina-steel4: #ebebeb;         /* divider / border */
+
+  /* Text */
+  --bina-text: #1a1a1a;
+  --bina-muted: #888888;
+
+  /* Semantic */
+  --bina-green: #1B5E20;
+  --bina-red: #B71C1C;
+  --bina-blue: #1565C0;
+
+  /* Borders */
+  --bina-border: rgba(0, 0, 0, 0.07);
+
+  --bina-r: 12px;
 
   --background: var(--bina-page);
   --foreground: var(--bina-text);
 }
 
 .dark {
-  --bina-border: rgba(255, 255, 255, 0.08);
+  /* Dark mode: keep red brand, darker surfaces */
+  --bina-page: #1a1a1a;
+  --bina-card: #242424;
+  --bina-card-soft: #2a2a2a;
+  --bina-steel: #1a1a1a;
+  --bina-steel2: #242424;
+  --bina-steel3: #2e2e2e;
+  --bina-steel4: #3a3a3a;
   --bina-text: #f0ede8;
-  --bina-muted: #8a9099;
-  --bina-page: var(--bina-steel);
-  --bina-card: var(--bina-steel2);
-  --bina-topbar: var(--bina-steel2);
+  --bina-muted: #9a9a9a;
+  --bina-border: rgba(255, 255, 255, 0.08);
 
   --background: var(--bina-page);
   --foreground: var(--bina-text);
@@ -65,6 +91,14 @@
   --color-bina-green: var(--bina-green);
   --color-bina-red: var(--bina-red);
   --color-bina-blue: var(--bina-blue);
+  --color-bina-primary: var(--bina-primary);
+  --color-bina-primary-lt: var(--bina-primary-lt);
+  --color-bina-primary-dk: var(--bina-primary-dk);
+  --color-bina-accent: var(--bina-accent);
+  --color-bina-accent-dk: var(--bina-accent-dk);
+  --color-bina-on-primary: var(--bina-on-primary);
+  --color-bina-on-accent: var(--bina-on-accent);
+  --color-bina-card-soft: var(--bina-card-soft);
   --radius-bina: var(--bina-r);
 }
 

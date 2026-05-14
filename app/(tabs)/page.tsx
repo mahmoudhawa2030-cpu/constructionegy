@@ -54,7 +54,7 @@ export default async function HomePage() {
 
   return (
     <FeedSocialResyncProvider>
-      <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-steel)]">
+      <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-page)]">
         <FeedTopbar />
         <PullToRefreshScroll namespace="feed" platformScope="mobileTouch">
           <FeedTabStrip

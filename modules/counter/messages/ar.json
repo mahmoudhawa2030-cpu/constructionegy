@@ -1,0 +1,17 @@
+{
+  "counter": {
+    "title": "عداد الأشياء",
+    "retake": "إعادة التصوير",
+    "upload": "رفع من المعرض",
+    "capture": "التقاط صورة",
+    "flashlight": "فلاش",
+    "detecting": "جاري الكشف...",
+    "count": "عد",
+    "totalObjects": "الإجمالي",
+    "selectMode": "ماذا تحسب؟",
+    "modePipes": "مواسير",
+    "modePipesDesc": "مواسير الفولاذ تُرى من النهاية",
+    "noPipesFound": "لم يتم العثور على مواسير",
+    "cropHint": "اسحب المقابض للتعديل"
+  }
+}

@@ -16,80 +16,99 @@ export function MobileTabBar({ homeHref = "/" }: Props) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  const cls = (href: string) =>
-    `flex flex-col items-center justify-center gap-0.5 min-w-0 flex-1 min-h-[3rem] cursor-pointer select-none transition-colors ${
-      isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"
+  type IconKey = "home" | "explore" | "market" | "orders" | "profile";
+  const NavIcon = ({ name, active }: { name: IconKey; active: boolean }) => {
+    const stroke = active ? "var(--bina-primary)" : "#C8C8C8";
+    const common = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke, strokeWidth: 1.7, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+    switch (name) {
+      case "home":
+        return (
+          <svg {...common}>
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+        );
+      case "explore":
+        return (
+          <svg {...common}>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        );
+      case "market":
+        return (
+          <svg {...common}>
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+            <path d="M9 22V12h6v10" />
+          </svg>
+        );
+      case "orders":
+        return (
+          <svg {...common}>
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 01-8 0" />
+          </svg>
+        );
+      case "profile":
+        return (
+          <svg {...common}>
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+        );
+    }
+  };
+
+  const itemCls = (href: string) =>
+    `flex flex-col items-center gap-0.5 min-w-0 flex-1 cursor-pointer select-none py-1 ${
+      isActive(href) ? "text-[var(--bina-primary)]" : "text-[#C8C8C8]"
     }`;
-
-  const icon = (emoji: string, href: string) => (
-    <span
-      className={`flex h-[22px] w-[22px] items-center justify-center text-[16px] leading-none transition-colors ${isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"}`}
-    >
-      {emoji}
-    </span>
-  );
-
-  const label = (text: string, href: string) => (
-    <span
-      className={`font-bina-display text-[8px] font-semibold uppercase tracking-[0.06em] leading-none ${isActive(href) ? "text-[var(--bina-or)]" : "text-[var(--bina-muted)]"}`}
-    >
-      {text}
-    </span>
-  );
 
   return (
     <nav
       aria-label={t("mainNavAria")}
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--bina-border)] bg-[var(--bina-steel2)] shadow-[0_-8px_32px_rgba(0,0,0,0.45)]"
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      className="fixed bottom-0 left-0 right-0 z-50 flex items-end border-t border-[var(--bina-border)] bg-white px-1.5"
+      style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))", paddingTop: "0.5rem" }}
     >
-      <ul className="flex items-center justify-around px-1 pt-2">
+      {/* HOME */}
+      <Link href={homeHref} className={itemCls(homeHref)} aria-label={t("feed")} prefetch>
+        <NavIcon name="home" active={isActive(homeHref)} />
+        <span className="text-[10px] font-medium">{t("feed")}</span>
+      </Link>
 
-        {/* FEED */}
-        <li className={cls(homeHref)}>
-          <Link href={homeHref} className={cls(homeHref)} aria-label={t("feed")} prefetch>
-            {icon("🏠", homeHref)}
-            {label(t("feed"), homeHref)}
-          </Link>
-        </li>
+      {/* MARKET / EXPLORE */}
+      <Link href="/gallery" className={itemCls("/gallery")} aria-label={t("market")} prefetch>
+        <NavIcon name="explore" active={isActive("/gallery")} />
+        <span className="text-[10px] font-medium">{t("market")}</span>
+      </Link>
 
-        {/* MARKET */}
-        <li className={cls("/gallery")}>
-          <Link href="/gallery" className={cls("/gallery")} aria-label={t("market")} prefetch>
-            {icon("🏪", "/gallery")}
-            {label(t("market"), "/gallery")}
-          </Link>
-        </li>
+      {/* CENTER FAB — compose */}
+      <div className="flex min-w-0 flex-1 flex-col items-center justify-end">
+        <Link
+          href="/posts/new"
+          aria-label={t("composePostAria")}
+          prefetch
+          className="mb-2.5 flex h-[52px] w-[52px] items-center justify-center rounded-2xl bg-[var(--bina-primary)] text-white shadow-[0_4px_12px_rgba(183,28,28,0.4)] transition-transform active:scale-95"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </Link>
+      </div>
 
-        {/* CENTER + FAB — industry feed: new post (listings from Market / gallery flows) */}
-        <li className="flex min-w-0 flex-1 flex-col items-center justify-center">
-          <Link
-            href="/posts/new"
-            aria-label={t("composePostAria")}
-            prefetch
-            className="relative -mt-4 flex h-[46px] w-[46px] items-center justify-center rounded-full bg-[var(--bina-or)] text-white shadow-[0_0_0_4px_var(--bina-steel2),0_4px_14px_rgba(230,120,40,0.45)] transition-transform active:scale-95"
-          >
-            <span className="text-[26px] font-light leading-none">+</span>
-          </Link>
-        </li>
+      {/* NEARBY → reusing map as "orders-style" slot but keeping current destination */}
+      <Link href="/map" className={`relative ${itemCls("/map")}`} aria-label={t("nearby")} prefetch>
+        <NavIcon name="orders" active={isActive("/map")} />
+        <span className="text-[10px] font-medium">{t("nearby")}</span>
+      </Link>
 
-        {/* NEARBY */}
-        <li className={cls("/map")}>
-          <Link href="/map" className={cls("/map")} aria-label={t("nearby")} prefetch>
-            {icon("📍", "/map")}
-            {label(t("nearby"), "/map")}
-          </Link>
-        </li>
-
-        {/* PROFILE */}
-        <li className={cls("/profile")}>
-          <Link href="/profile" className={cls("/profile")} aria-label={t("profile")} prefetch>
-            {icon("👤", "/profile")}
-            {label(t("profile"), "/profile")}
-          </Link>
-        </li>
-
-      </ul>
+      {/* PROFILE */}
+      <Link href="/profile" className={itemCls("/profile")} aria-label={t("profile")} prefetch>
+        <NavIcon name="profile" active={isActive("/profile")} />
+        <span className="text-[10px] font-medium">{t("profile")}</span>
+      </Link>
     </nav>
   );
 }

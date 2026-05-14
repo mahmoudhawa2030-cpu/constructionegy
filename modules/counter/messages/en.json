@@ -1,0 +1,17 @@
+{
+  "counter": {
+    "title": "Things Counter",
+    "retake": "Retake",
+    "upload": "Upload from gallery",
+    "capture": "Take photo",
+    "flashlight": "Flashlight",
+    "detecting": "Detecting...",
+    "count": "Count",
+    "totalObjects": "Total Count",
+    "selectMode": "What are you counting?",
+    "modePipes": "Pipes",
+    "modePipesDesc": "Steel pipes viewed from the end",
+    "noPipesFound": "No pipes detected",
+    "cropHint": "Drag handles to adjust"
+  }
+}
