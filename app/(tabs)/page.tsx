@@ -34,16 +34,19 @@ export default async function HomePage() {
     <div className="flex min-h-0 flex-1 flex-col bg-[var(--bina-page)]">
       <FeedTopbar />
       <PullToRefreshScroll namespace="feed" platformScope="mobileTouch">
-        <HomeStorefront
-          hasUser={Boolean(user)}
-          displayName={displayName}
-          categories={storefront.categories}
-          flashDeals={storefront.flashDeals}
-          trending={storefront.trending}
-          suppliers={storefront.suppliers}
-          recentOrders={storefront.recentOrders}
-          latestRfqHref={latestRfqHref}
-        />
+        {/* Desktop container - constrained width, centered */}
+        <div className="mx-auto w-full max-w-7xl px-0 sm:px-4 lg:px-6">
+          <HomeStorefront
+            hasUser={Boolean(user)}
+            displayName={displayName}
+            categories={storefront.categories}
+            flashDeals={storefront.flashDeals}
+            trending={storefront.trending}
+            suppliers={storefront.suppliers}
+            recentOrders={storefront.recentOrders}
+            latestRfqHref={latestRfqHref}
+          />
+        </div>
       </PullToRefreshScroll>
     </div>
   );

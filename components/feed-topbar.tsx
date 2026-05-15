@@ -54,21 +54,23 @@ export function FeedTopbar() {
       className="sticky top-0 z-30 bg-[var(--bina-primary)]"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* Top row: location + icons */}
-      <div className="flex items-center justify-between px-4 pt-2">
-        <button
-          type="button"
-          onClick={openMenu}
-          className="flex items-center gap-1 text-white active:opacity-70"
-        >
-          <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span className="text-[12px]">
-            Ship to&nbsp;<span className="font-medium text-[var(--bina-accent)]">Cairo, EG ▾</span>
-          </span>
-        </button>
+      {/* Desktop container wrapper */}
+      <div className="mx-auto max-w-7xl sm:px-4 lg:px-6">
+        {/* Top row: location + icons */}
+        <div className="flex items-center justify-between px-4 pt-2 sm:px-0 sm:pt-1.5">
+          <button
+            type="button"
+            onClick={openMenu}
+            className="flex items-center gap-1 text-white active:opacity-70"
+          >
+            <svg aria-hidden width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="text-[12px]">
+              Ship to&nbsp;<span className="font-medium text-[var(--bina-accent)]">Cairo, EG ▾</span>
+            </span>
+          </button>
 
         <div className="flex items-center gap-3">
           {/* Notifications (hidden when social disabled) */}
@@ -113,12 +115,12 @@ export function FeedTopbar() {
       </div>
 
       {/* Brand row */}
-      <div className="flex items-center justify-between px-4 pt-1.5 pb-2.5">
+      <div className="flex items-center justify-between px-4 pt-1.5 pb-2.5 sm:px-0 sm:py-2">
         <div>
-          <div className="font-bina-display text-[22px] font-bold leading-none tracking-tight text-white">
+          <div className="font-bina-display text-[22px] font-bold leading-none tracking-tight text-white sm:text-[20px]">
             BINA<span className="text-[var(--bina-accent)]">Hub</span>
           </div>
-          <div className="mt-0.5 text-[11px] text-white/65">B2B Wholesale Platform · 50,000+ Products</div>
+          <div className="mt-0.5 text-[11px] text-white/65 sm:text-[10px]">B2B Wholesale Platform · 50,000+ Products</div>
         </div>
         <button
           type="button"
@@ -134,7 +136,7 @@ export function FeedTopbar() {
       </div>
 
       {/* Search row */}
-      <div className="flex items-center gap-2 px-3 pb-2.5">
+      <div className="flex items-center gap-2 px-3 pb-2.5 sm:px-0 sm:pb-2">
         <Link
           href="/gallery"
           className="flex flex-1 items-center gap-2 rounded-[10px] bg-white px-3 py-2.5"
@@ -189,7 +191,7 @@ export function FeedTopbar() {
       </div>
 
       {/* Trending chips */}
-      <div className="flex items-center gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex items-center gap-2 overflow-x-auto px-4 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:px-0 sm:pb-2">
         <div className="flex shrink-0 items-center gap-1 rounded-full bg-[#FFCA28]/20 px-2.5 py-1 text-[11px] text-[var(--bina-accent)]">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="rgba(255,202,40,0.8)">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
@@ -205,6 +207,7 @@ export function FeedTopbar() {
           </span>
         ))}
       </div>
+    </div>
     </div>
   );
 }

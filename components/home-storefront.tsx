@@ -123,17 +123,17 @@ export function HomeStorefront({
 
       {/* ── STORIES (categories ring) ─────────────────────────────────────── */}
       {categories.length > 0 ? (
-        <div className="flex gap-3 overflow-x-auto bg-white px-3.5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-3 overflow-x-auto bg-white px-3.5 py-3 [scrollbar-width:none] sm:justify-center sm:overflow-visible [&::-webkit-scrollbar]:hidden">
           {categories.slice(0, 8).map((cat, i) => {
             const c = colorFor(i);
             return (
               <Link
                 key={cat.slug}
                 href={`/gallery?category=${encodeURIComponent(cat.slug)}`}
-                className="flex shrink-0 flex-col items-center gap-1.5"
+                className="flex shrink-0 flex-col items-center gap-1.5 sm:shrink"
               >
                 <div
-                  className="h-14 w-14 rounded-full p-[2px]"
+                  className="h-14 w-14 rounded-full p-[2px] sm:h-16 sm:w-16"
                   style={{
                     background: i < 3
                       ? "conic-gradient(#C62828 0%,#FFCA28 50%,#C62828 100%)"
@@ -141,10 +141,10 @@ export function HomeStorefront({
                   }}
                 >
                   <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-white" style={{ background: c.bg }}>
-                    <span className="text-[20px]">{cat.icon_emoji ?? "📦"}</span>
+                    <span className="text-[20px] sm:text-[22px]">{cat.icon_emoji ?? "📦"}</span>
                   </div>
                 </div>
-                <span className="line-clamp-1 max-w-[56px] text-center text-[10px] text-[#444]">
+                <span className="line-clamp-1 max-w-[56px] text-center text-[10px] text-[#444] sm:max-w-[64px]">
                   {cat.label_ar}
                 </span>
               </Link>
@@ -261,14 +261,14 @@ export function HomeStorefront({
               <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tS)}</span>
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto px-3.5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex gap-2 overflow-x-auto px-3.5 pb-3 [scrollbar-width:none] sm:grid sm:grid-cols-4 sm:overflow-visible md:grid-cols-5 lg:grid-cols-6 [&::-webkit-scrollbar]:hidden">
             {flashDeals.map((listing) => (
               <Link
                 key={listing.id}
                 href={`/listings/${listing.id}`}
-                className="flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-[#ebebeb] bg-[#f9f9f9]"
+                className="flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-[#ebebeb] bg-[#f9f9f9] sm:w-auto"
               >
-                <div className="relative flex h-20 items-center justify-center bg-[#FFF3E0]">
+                <div className="relative flex h-20 items-center justify-center bg-[#FFF3E0] sm:h-24">
                   <span className="absolute left-1.5 top-1.5 rounded bg-[var(--bina-primary)] px-1.5 py-0.5 text-[10px] font-bold text-white">
                     -{discountFor(listing.id)}%
                   </span>
@@ -305,7 +305,7 @@ export function HomeStorefront({
               {t("allCount", { count: categories.length })} ›
             </Link>
           </div>
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
             {categories.slice(0, 10).map((cat, i) => {
               const c = colorFor(i);
               return (
@@ -315,10 +315,10 @@ export function HomeStorefront({
                   className="flex flex-col items-center gap-1.5 py-1"
                 >
                   <div
-                    className="flex h-[50px] w-[50px] items-center justify-center rounded-xl"
+                    className="flex h-[50px] w-[50px] items-center justify-center rounded-xl sm:h-[56px] sm:w-[56px]"
                     style={{ background: c.bg }}
                   >
-                    <span className="text-[22px]">{cat.icon_emoji ?? "📦"}</span>
+                    <span className="text-[22px] sm:text-[24px]">{cat.icon_emoji ?? "📦"}</span>
                   </div>
                   <span className="line-clamp-2 text-center text-[10px] leading-tight text-[#555]">
                     {cat.label_ar}
@@ -339,7 +339,7 @@ export function HomeStorefront({
               {t("viewAll")} ›
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {trending.map((listing, i) => {
               const c = colorFor(i);
               const badges = ["Hot", "New", "-25%", "Bulk"];
