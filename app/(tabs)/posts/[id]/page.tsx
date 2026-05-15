@@ -14,12 +14,18 @@ import { normalizeFeedPostImages } from "@/lib/feed/normalize-feed-post-images";
 import { fetchFeedPostComments } from "@/lib/feed/fetch-post-comments";
 import { createClient } from "@/lib/supabase/server";
 import { getLocale } from "next-intl/server";
+import { isEnabled } from "@/lib/config/features";
 
 export const dynamic = "force-dynamic";
 
 type PageProps = { params: Promise<{ id: string }> };
 
 export default async function FeedPostDetailPage({ params }: PageProps) {
+  // Redirect if social features are disabled
+  if (!isEnabled("social")) {
+    redirect("/");
+  }
+
   const { id } = await params;
   const supabase = await createClient();
   const t = await getTranslations("feed");
@@ -127,29 +133,33 @@ export default async function FeedPostDetailPage({ params }: PageProps) {
 
       <div className="whitespace-pre-wrap text-[13px] leading-relaxed text-[var(--bina-text)]">{post.body}</div>
 
-      <FeedPostSocialBar
-        embed
-        postId={post.id}
-        title={post.title}
-        initialLikeCount={socialItem.likeCount}
-        initialCommentCount={socialItem.commentCount}
-        initialLiked={socialItem.likedByViewer}
-        initialSaved={socialItem.savedByViewer}
-        viewerId={user?.id ?? null}
-        variant={isVeteransCorner ? "veterans" : "default"}
-      />
+      {isEnabled("social") ? (
+        <>
+          <FeedPostSocialBar
+            embed
+            postId={post.id}
+            title={post.title}
+            initialLikeCount={socialItem.likeCount}
+            initialCommentCount={socialItem.commentCount}
+            initialLiked={socialItem.likedByViewer}
+            initialSaved={socialItem.savedByViewer}
+            viewerId={user?.id ?? null}
+            variant={isVeteransCorner ? "veterans" : "default"}
+          />
 
-      <CommentsSection
-        initialComments={comments}
-        postId={post.id}
-        viewerId={user?.id ?? null}
-        viewerName={viewerName}
-        commentsHeading={t("social.commentsHeading")}
-        noCommentsLabel={t("social.noComments")}
-        locale={locale}
-        replyButtonLabel={t("social.replyButton")}
-        borderClass={isVeteransCorner ? "border-[#604010]" : "border-[var(--bina-border)]"}
-      />
+          <CommentsSection
+            initialComments={comments}
+            postId={post.id}
+            viewerId={user?.id ?? null}
+            viewerName={viewerName}
+            commentsHeading={t("social.commentsHeading")}
+            noCommentsLabel={t("social.noComments")}
+            locale={locale}
+            replyButtonLabel={t("social.replyButton")}
+            borderClass={isVeteransCorner ? "border-[#604010]" : "border-[var(--bina-border)]"}
+          />
+        </>
+      ) : null}
     </>
   );
 

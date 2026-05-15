@@ -4,10 +4,16 @@ import { redirect } from "next/navigation";
 
 import { FeedPostCreateForm } from "@/components/feed-post-create-form";
 import { createClient } from "@/lib/supabase/server";
+import { isEnabled } from "@/lib/config/features";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewFeedPostPage() {
+  // Redirect if social features are disabled
+  if (!isEnabled("social")) {
+    redirect("/");
+  }
+
   const supabase = await createClient();
   const {
     data: { user },

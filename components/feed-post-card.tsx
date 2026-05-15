@@ -9,6 +9,7 @@ import { ExpertBadge } from "@/components/expert-badge";
 import { FeedPostOwnerOverflowMenu } from "@/components/feed-post-owner-overflow-menu";
 import { FeedPostSocialBar } from "@/components/feed-post-social-bar";
 import type { FeedPostItem } from "@/lib/feed/fetch-feed-posts";
+import { isEnabled } from "@/lib/config/features";
 
 function relativeAge(iso: string, locale: string) {
   const diff = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
@@ -198,17 +199,19 @@ export function FeedPostCard({ item, viewerId, priority, refreshKey = 0 }: Props
         </div>
       </div>
 
-      <FeedPostSocialBar
-        postId={item.id}
-        title={item.title}
-        initialLikeCount={item.likeCount}
-        initialCommentCount={item.commentCount}
-        initialLiked={item.likedByViewer}
-        initialSaved={item.savedByViewer}
-        viewerId={viewerId}
-        layout="linkedin"
-        refreshKey={refreshKey}
-      />
+      {isEnabled("social") ? (
+        <FeedPostSocialBar
+          postId={item.id}
+          title={item.title}
+          initialLikeCount={item.likeCount}
+          initialCommentCount={item.commentCount}
+          initialLiked={item.likedByViewer}
+          initialSaved={item.savedByViewer}
+          viewerId={viewerId}
+          layout="linkedin"
+          refreshKey={refreshKey}
+        />
+      ) : null}
     </article>
   );
 }

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useMobileChromeMenu } from "@/components/mobile-chrome-menu-context";
 import { useMessageNotifications } from "@/components/message-notifications-provider";
 import { useCommentNotifications } from "@/components/comment-notifications-provider";
+import { isEnabled } from "@/lib/config/features";
 
 const TOOLS = [
   { key: "scanner", icon: "📄", href: "/tools/scanner" },
@@ -22,6 +23,7 @@ export function FeedTopbar() {
   const { openMenu } = useMobileChromeMenu();
   const { unreadTotal } = useMessageNotifications();
   const { unreadCount } = useCommentNotifications();
+  const socialEnabled = isEnabled("social");
   const router = useRouter();
 
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -69,22 +71,24 @@ export function FeedTopbar() {
         </button>
 
         <div className="flex items-center gap-3">
-          {/* Notifications */}
-          <Link
-            href="/notifications"
-            aria-label={unreadCount > 0 ? t("notificationsAriaWithUnread", { count: unreadCount }) : t("notificationsAria")}
-            className="relative active:opacity-70"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 01-3.46 0" />
-            </svg>
-            {unreadCount > 0 ? (
-              <span className="absolute -top-1 -right-1.5 min-w-[16px] rounded-full bg-[var(--bina-accent)] px-1 text-center text-[9px] font-bold leading-[14px] text-[var(--bina-on-accent)]">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            ) : null}
-          </Link>
+          {/* Notifications (hidden when social disabled) */}
+          {socialEnabled ? (
+            <Link
+              href="/notifications"
+              aria-label={unreadCount > 0 ? t("notificationsAriaWithUnread", { count: unreadCount }) : t("notificationsAria")}
+              className="relative active:opacity-70"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 01-3.46 0" />
+              </svg>
+              {unreadCount > 0 ? (
+                <span className="absolute -top-1 -right-1.5 min-w-[16px] rounded-full bg-[var(--bina-accent)] px-1 text-center text-[9px] font-bold leading-[14px] text-[var(--bina-on-accent)]">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
 
           {/* Messages */}
           <Link href="/messages" aria-label={t("messages")} className="relative active:opacity-70">

@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
 import { toggleFeedPostLike, toggleFeedPostSave } from "@/lib/feed/feed-post-social-actions";
+import { isEnabled } from "@/lib/config/features";
 
 export type FeedPostSocialBarProps = {
   postId: string;
@@ -36,6 +37,11 @@ export function FeedPostSocialBar({
   embed = false,
   refreshKey = 0,
 }: FeedPostSocialBarProps) {
+  // Return null if social features are disabled
+  if (!isEnabled("social")) {
+    return null;
+  }
+
   const t = useTranslations("feed");
   const router = useRouter();
   const locale = useLocale();
