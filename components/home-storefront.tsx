@@ -153,45 +153,52 @@ export function HomeStorefront({
         </div>
       ) : null}
 
-      {/* ── HERO BANNER + STATS ───────────────────────────────────────────── */}
-      <div className="bg-[var(--bina-primary)]">
-        <div className="mx-3 mt-1.5 mb-1.5 overflow-hidden rounded-2xl bg-[var(--bina-primary-lt)] p-4">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bina-accent)]">
-            {t("heroKicker")}
-          </div>
-          <h2 className="mt-1.5 text-[20px] font-bold leading-tight tracking-tight text-white">
-            {t("heroTitle")}
-          </h2>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-white/75">
-            {t("heroSubtitle")}
+      {/* ── HERO SECTION ─────────────────────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-[var(--bina-primary)] to-[#a81f1f] py-8 sm:py-12 md:py-16">
+        <div className="px-4 text-center sm:px-6 lg:px-8">
+          <h1 className="text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-5xl">
+            Global B2B Wholesale Marketplace
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-sm text-white/80 sm:text-base md:text-lg">
+            Connect with 50,000+ verified suppliers. Source products at factory prices with trade assurance protection.
           </p>
-          <div className="mt-3.5 flex gap-2">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <Link
               href="/gallery"
-              className="rounded-lg bg-[var(--bina-accent)] px-4 py-2 text-[12px] font-bold text-[var(--bina-on-accent)] active:opacity-80"
+              className="rounded-lg bg-[var(--bina-accent)] px-6 py-3 text-sm font-bold text-[var(--bina-on-accent)] hover:bg-[#ffc947] sm:text-base"
             >
-              {t("browseDeals")}
+              Browse Suppliers
             </Link>
             <Link
               href="/rfq/new"
-              className="rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-[12px] font-semibold text-white active:opacity-80"
+              className="rounded-lg border-2 border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white hover:bg-white/20 sm:text-base"
             >
-              {t("postRfq")}
+              Post RFQ
             </Link>
           </div>
-        </div>
-        <div className="grid grid-cols-3 border-t border-white/15 bg-[var(--bina-primary-dk)]">
-          <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">50K+</div>
-            <div className="text-[10px] text-white/65">{t("statProducts")}</div>
-          </div>
-          <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">3,200</div>
-            <div className="text-[10px] text-white/65">{t("statSuppliers")}</div>
-          </div>
-          <div className="py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">98%</div>
-            <div className="text-[10px] text-white/65">{t("statOnTime")}</div>
+
+          {/* Trust badges */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-white/70">
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span>Trade Assurance</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span>Fast Shipping</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              <span>Verified Suppliers</span>
+            </div>
           </div>
         </div>
       </div>
@@ -237,6 +244,67 @@ export function HomeStorefront({
           </Link>
         </div>
       ) : null}
+
+      {/* ── FEATURE CARDS (Flash Deals, RFQ, New Buyer) ───────────────────── */}
+      <div className="grid gap-4 px-4 py-6 sm:grid-cols-3 sm:px-6 lg:px-8">
+        {/* Flash Deals Card */}
+        <Link href="/gallery" className="group overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--bina-primary)]">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFCA28">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[var(--bina-text)]">Flash Deals</h3>
+              <p className="text-sm text-gray-500">Limited time offers</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-[var(--bina-primary)] font-medium group-hover:underline">
+            View all deals →
+          </div>
+        </Link>
+
+        {/* RFQ Card */}
+        <Link href="/rfq/new" className="group overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[var(--bina-text)]">Request for Quotation</h3>
+              <p className="text-sm text-gray-500">Get quotes from multiple suppliers</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-[var(--bina-primary)] font-medium group-hover:underline">
+            Submit RFQ →
+          </div>
+        </Link>
+
+        {/* New Buyer Offer Card */}
+        <Link href="/subscription-required" className="group overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-600">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="7" />
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[var(--bina-text)]">New Buyer Offer</h3>
+              <p className="text-sm text-gray-500">$50 off first order over $500</p>
+            </div>
+          </div>
+          <div className="mt-4 text-sm text-[var(--bina-primary)] font-medium group-hover:underline">
+            Learn more →
+          </div>
+        </Link>
+      </div>
 
       {/* ── FLASH DEALS ───────────────────────────────────────────────────── */}
       {flashDeals.length > 0 ? (
@@ -332,16 +400,18 @@ export function HomeStorefront({
 
       {/* ── TRENDING PRODUCTS GRID ───────────────────────────────────────── */}
       {trending.length > 0 ? (
-        <div className="bg-white px-3 py-3">
-          <div className="mb-3 flex items-center justify-between px-0.5">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("trendingNow")}</h3>
-            <Link href="/gallery" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("viewAll")} ›
+        <div className="bg-white px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--bina-text)] sm:text-2xl">Trending Products</h2>
+              <p className="mt-1 text-sm text-gray-500">Most popular wholesale items this week</p>
+            </div>
+            <Link href="/gallery" className="text-sm font-medium text-[var(--bina-primary)] hover:underline">
+              View all products →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4">
             {trending.map((listing, i) => {
-              const c = colorFor(i);
               const badges = ["Hot", "New", "-25%", "Bulk"];
               const badgeClr = ["#FFEBEE,#B71C1C", "#E8F5E9,#1B5E20", "#FFF8E1,#E65100", "#EDE7F6,#4527A0"];
               const [bg, txt] = badgeClr[i % 4].split(",");
@@ -349,37 +419,37 @@ export function HomeStorefront({
                 <Link
                   key={listing.id}
                   href={`/listings/${listing.id}`}
-                  className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white"
+                  className="group overflow-hidden rounded-xl border border-gray-200 bg-white transition-shadow hover:shadow-md"
                 >
-                  <div className="relative flex h-[110px] items-center justify-center" style={{ background: c.bg }}>
-                    <span className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] font-bold" style={{ background: bg, color: txt }}>
+                  <div className="relative aspect-square bg-gray-100">
+                    <span className="absolute left-2 top-2 rounded px-2 py-0.5 text-[10px] font-bold" style={{ background: bg, color: txt }}>
                       {badges[i % 4]}
                     </span>
-                    <button className="absolute right-1.5 top-1.5 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.1)]">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B71C1C" strokeWidth="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                      </svg>
-                    </button>
                     {listing.images[0] ? (
                       <Image src={listing.images[0]} alt={listing.title} fill className="object-cover" />
                     ) : (
-                      <span className="text-[40px]">📦</span>
+                      <div className="flex h-full items-center justify-center">
+                        <span className="text-4xl">📦</span>
+                      </div>
                     )}
                   </div>
-                  <div className="p-2">
-                    <div className="line-clamp-2 min-h-[34px] text-[12px] font-medium text-[var(--bina-text)]">{listing.title}</div>
-                    <div className="mt-1 text-[15px] font-bold text-[var(--bina-primary)]">
+                  <div className="p-3">
+                    <h3 className="line-clamp-2 text-sm font-medium text-gray-900 group-hover:text-[var(--bina-primary)]">{listing.title}</h3>
+                    <div className="mt-2 text-base font-bold text-[var(--bina-primary)]">
                       {formatPrice(listing.price, listing.price_unit)}
                     </div>
-                    {listing.location ? (
-                      <div className="mt-0.5 text-[11px] text-[#888]">{listing.location}</div>
-                    ) : null}
-                    <div className="mt-1.5 flex items-center justify-between border-t border-[#f5f5f5] pt-1.5">
-                      <span className="truncate text-[10px] text-[#888]">{timeAgo(listing.created_at)}</span>
-                      <span className="ml-1 rounded bg-[#E8F5E9] px-1.5 py-0.5 text-[9px] font-semibold text-[#1B5E20]">
-                        ✓ {t("verified")}
-                      </span>
+                    <div className="mt-1 text-xs text-gray-500">
+                      MOQ: 100 units
                     </div>
+                    {listing.location ? (
+                      <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                        {listing.location}
+                      </div>
+                    ) : null}
                   </div>
                 </Link>
               );
@@ -414,46 +484,50 @@ export function HomeStorefront({
         </div>
       </div>
 
-      {/* ── TOP SUPPLIERS ────────────────────────────────────────────────── */}
+      {/* ── VERIFIED SUPPLIERS ───────────────────────────────────────────── */}
       {suppliers.length > 0 ? (
-        <div className="bg-white px-3 py-3">
-          <div className="mb-3 flex items-center justify-between px-0.5">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("topSuppliers")}</h3>
-            <Link href="/users" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("directory")} ›
+        <div className="bg-gray-50 px-4 py-6 sm:px-6 lg:px-8">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--bina-text)] sm:text-2xl">Verified Suppliers</h2>
+              <p className="mt-1 text-sm text-gray-500">Trusted manufacturers with trade assurance</p>
+            </div>
+            <Link href="/users" className="text-sm font-medium text-[var(--bina-primary)] hover:underline">
+              View all suppliers →
             </Link>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
             {suppliers.map((s, i) => {
               const c = colorFor(i);
               const initials = s.display_name.slice(0, 2).toUpperCase();
+              const years = [12, 8, 5, 15, 3, 10][i % 6];
               return (
                 <Link
                   key={s.id}
                   href={`/users/${s.id}`}
-                  className="w-[148px] shrink-0 rounded-2xl border border-[#ebebeb] bg-white p-3"
+                  className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 transition-shadow hover:shadow-md"
                 >
                   <div
-                    className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-[13px] font-bold"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-sm font-bold"
                     style={{ background: c.bg, color: c.stroke }}
                   >
                     {s.avatar_url ? (
-                      <Image src={s.avatar_url} alt={s.display_name} width={40} height={40} className="rounded-xl object-cover" />
+                      <Image src={s.avatar_url} alt={s.display_name} width={48} height={48} className="rounded-lg object-cover" />
                     ) : (
                       initials
                     )}
                   </div>
-                  <div className="line-clamp-1 text-[13px] font-semibold text-[var(--bina-text)]">{s.display_name}</div>
-                  <div className="mt-0.5 text-[11px] text-[#999]">
-                    {s.listing_count} {t("products")}
-                  </div>
-                  {s.verified ? (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      <span className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#555]">✓ {t("verified")}</span>
-                    </div>
-                  ) : null}
-                  <div className="mt-2 rounded-md border border-[#FFCDD2] bg-[#FFF5F5] py-1.5 text-center text-[11px] font-semibold text-[var(--bina-primary)]">
-                    + {t("follow")}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-gray-900">{s.display_name}</div>
+                    <div className="text-xs text-gray-500">{years} years | {s.listing_count} products</div>
+                    {s.verified ? (
+                      <span className="mt-1 inline-flex items-center gap-0.5 text-xs text-green-600">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Verified
+                      </span>
+                    ) : null}
                   </div>
                 </Link>
               );
