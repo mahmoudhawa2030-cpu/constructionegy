@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { ExpertBadge } from "@/components/expert-badge";
 import { CommentsSection } from "@/components/comments-section";
