@@ -3,8 +3,8 @@
 import { useActionState, useId } from "react";
 import { useTranslations } from "next-intl";
 
-import type { ExpertVerificationApplyState } from "@/app/(tabs)/profile/expert-verification-actions";
-import { submitExpertVerificationApplicationAction } from "@/app/(tabs)/profile/expert-verification-actions";
+import type { ExpertVerificationApplyState } from "@/app/(mobile)/profile/expert-verification-actions";
+import { submitExpertVerificationApplicationAction } from "@/app/(mobile)/profile/expert-verification-actions";
 
 type Props = {
   status: string;

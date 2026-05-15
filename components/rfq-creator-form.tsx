@@ -3,12 +3,12 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { RfqDraftUiActionState } from "@/app/(tabs)/rfq/actions";
+import type { RfqDraftUiActionState } from "@/app/(mobile)/rfq/actions";
 import {
   reopenRfqAction,
   saveRfqDraftDetailsAction,
   submitRfqDraftForBidsAction,
-} from "@/app/(tabs)/rfq/actions";
+} from "@/app/(mobile)/rfq/actions";
 import { isoToDatetimeLocalValue } from "@/lib/rfq/closing-date";
 
 type Props = {

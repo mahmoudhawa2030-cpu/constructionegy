@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useId, useRef, useState } from "react";
 
-import type { ProfileLegalNameActionState } from "@/app/(tabs)/profile/actions";
-import { saveProfileLegalCompanyNameAction } from "@/app/(tabs)/profile/actions";
+import type { ProfileLegalNameActionState } from "@/app/(mobile)/profile/actions";
+import { saveProfileLegalCompanyNameAction } from "@/app/(mobile)/profile/actions";
 import { VerifiedBadge } from "@/components/verified-badge";
 import type { BusinessVerificationDocType } from "@/lib/business-verification/constants";
 import { BUSINESS_VERIFICATION_DOC_TYPES } from "@/lib/business-verification/constants";

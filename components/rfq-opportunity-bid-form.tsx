@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { RfqBidActionState } from "@/app/(tabs)/rfq/actions";
-import { createRfqBidDraftAction } from "@/app/(tabs)/rfq/actions";
+import type { RfqBidActionState } from "@/app/(mobile)/rfq/actions";
+import { createRfqBidDraftAction } from "@/app/(mobile)/rfq/actions";
 
 type Props = {
   draftId: string;

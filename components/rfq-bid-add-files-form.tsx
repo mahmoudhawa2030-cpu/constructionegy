@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 
-import type { RfqBidActionState } from "@/app/(tabs)/rfq/actions";
-import { addRfqBidDraftAttachmentsAction } from "@/app/(tabs)/rfq/actions";
+import type { RfqBidActionState } from "@/app/(mobile)/rfq/actions";
+import { addRfqBidDraftAttachmentsAction } from "@/app/(mobile)/rfq/actions";
 
 type Props = {
   bidId: string;
