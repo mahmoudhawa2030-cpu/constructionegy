@@ -89,7 +89,68 @@
     "openMenuAria": "فتح القائمة",
     "notificationsAria": "الإشعارات",
     "notificationsAriaWithUnread": "الإشعارات · {count} غير مقروء",
-    "tools": "الأدوات"
+    "tools": "الأدوات",
+    "rfq": "طلب عرض",
+    "signIn": "تسجيل الدخول",
+    "joinFree": "انضم مجاناً",
+    "myAccount": "حسابي",
+    "myListings": "إعلاناتي",
+    "bookings": "الحجوزات",
+    "signOut": "تسجيل الخروج",
+    "helpCenter": "مركز المساعدة",
+    "contactUs": "اتصل بنا"
+  },
+  "footer": {
+    "about": "عن الشركة",
+    "aboutUs": "من نحن",
+    "careers": "الوظائف",
+    "press": "الصحافة",
+    "business": "الأعمال",
+    "sellOnBina": "البيع على BINA",
+    "supplierMembership": "عضوية الموردين",
+    "advertise": "الإعلان",
+    "support": "الدعم",
+    "contact": "اتصل بنا",
+    "reportIssue": "الإبلاغ عن مشكلة",
+    "legal": "قانوني",
+    "terms": "شروط الاستخدام",
+    "privacy": "سياسة الخصوصية",
+    "cookies": "ملفات تعريف الارتباط",
+    "allRightsReserved": "جميع الحقوق محفوظة"
+  },
+  "common": {
+    "searchPlaceholder": "ابحث عن المنتجات، الموردين، الفئات...",
+    "search": "بحث",
+    "viewAll": "عرض الكل"
+  },
+  "home": {
+    "heroTitle": "تواصل مع موردي البناء المعتمدين",
+    "heroSubtitle": "مصدر مواد صناعية بأسعار الجملة. 50,000+ منتج من 3,200+ مورد معتمد.",
+    "browseProducts": "تصفح المنتجات",
+    "postRfq": "نشر طلب عرض",
+    "browseCategories": "تصفح الفئات",
+    "featuredListings": "إعلانات مميزة",
+    "verifiedSuppliers": "موردون معتمدون"
+  },
+  "categories": {
+    "noCategories": "لا توجد فئات متاحة"
+  },
+  "listings": {
+    "contactForPrice": "اتصل للسعر",
+    "noListings": "لا توجد إعلانات متاحة"
+  },
+  "suppliers": {
+    "unnamedSupplier": "مورد غير مسماة",
+    "verified": "معتمد",
+    "noSuppliers": "لا يوجد موردون متاحون"
+  },
+  "rfq": {
+    "rfqSectionTitle": "طلب عرض أسعار",
+    "rfqSectionSubtitle": "احصل على عروض أسعار تنافسية من موردين متعددين لاحتياجاتك في البناء",
+    "rfqBenefit1": "عروض متعددة",
+    "rfqBenefit2": "موردين معتمدين فقط",
+    "rfqBenefit3": "رد خلال 24 ساعة",
+    "postRfqNow": "نشر طلب عرض الآن"
   },
   "scanner": {
     "title": "ماسح المستندات",

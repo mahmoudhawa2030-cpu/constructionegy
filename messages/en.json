@@ -89,7 +89,68 @@
     "openMenuAria": "Open menu",
     "notificationsAria": "Notifications",
     "notificationsAriaWithUnread": "Notifications · {count} unread",
-    "tools": "Tools"
+    "tools": "Tools",
+    "rfq": "RFQ",
+    "signIn": "Sign In",
+    "joinFree": "Join Free",
+    "myAccount": "My Account",
+    "myListings": "My Listings",
+    "bookings": "Bookings",
+    "signOut": "Sign Out",
+    "helpCenter": "Help Center",
+    "contactUs": "Contact Us"
+  },
+  "footer": {
+    "about": "About",
+    "aboutUs": "About Us",
+    "careers": "Careers",
+    "press": "Press",
+    "business": "Business",
+    "sellOnBina": "Sell on BINA",
+    "supplierMembership": "Supplier Membership",
+    "advertise": "Advertise",
+    "support": "Support",
+    "contact": "Contact Us",
+    "reportIssue": "Report Issue",
+    "legal": "Legal",
+    "terms": "Terms of Use",
+    "privacy": "Privacy Policy",
+    "cookies": "Cookies",
+    "allRightsReserved": "All rights reserved"
+  },
+  "common": {
+    "searchPlaceholder": "Search products, suppliers, categories...",
+    "search": "Search",
+    "viewAll": "View all"
+  },
+  "home": {
+    "heroTitle": "Connect with Verified Construction Suppliers",
+    "heroSubtitle": "Source industrial-grade materials at wholesale prices. 50,000+ products from 3,200+ verified suppliers.",
+    "browseProducts": "Browse Products",
+    "postRfq": "Post RFQ",
+    "browseCategories": "Browse Categories",
+    "featuredListings": "Featured Listings",
+    "verifiedSuppliers": "Verified Suppliers"
+  },
+  "categories": {
+    "noCategories": "No categories available"
+  },
+  "listings": {
+    "contactForPrice": "Contact for price",
+    "noListings": "No listings available"
+  },
+  "suppliers": {
+    "unnamedSupplier": "Unnamed Supplier",
+    "verified": "Verified",
+    "noSuppliers": "No suppliers available"
+  },
+  "rfq": {
+    "rfqSectionTitle": "Request for Quotation",
+    "rfqSectionSubtitle": "Get competitive quotes from multiple suppliers for your construction needs",
+    "rfqBenefit1": "Multiple quotes",
+    "rfqBenefit2": "Verified suppliers only",
+    "rfqBenefit3": "24h response time",
+    "postRfqNow": "Post RFQ Now"
   },
   "scanner": {
     "title": "Document Scanner",
