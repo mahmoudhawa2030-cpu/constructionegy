@@ -35,11 +35,23 @@ export async function proxy(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") || "";
   const mobile = isMobileDevice(userAgent) || isNativeApp(userAgent);
 
-  // Clone response to modify it
-  response = NextResponse.next({
-    request,
-    headers: response.headers,
-  });
+  // Get current path
+  const pathname = request.nextUrl.pathname;
+
+  // Redirect logic: desktop users at root go to /web
+  // Mobile users stay at root (or any path they requested)
+  // Also don't redirect if already on /web or /web/*
+  if (!mobile && pathname === "/") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/web";
+    response = NextResponse.redirect(url);
+  } else {
+    // Clone response to modify it for non-redirect cases
+    response = NextResponse.next({
+      request,
+      headers: response.headers,
+    });
+  }
 
   // Set cookie to remember device preference
   response.cookies.set("device-type", mobile ? "mobile" : "desktop", {
