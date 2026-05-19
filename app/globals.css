@@ -109,6 +109,15 @@ body {
   padding-right: env(safe-area-inset-right);
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes bina-pulse-ring {
   0%,
   100% {

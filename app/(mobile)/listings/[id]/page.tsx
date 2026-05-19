@@ -53,7 +53,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
     .eq("status", "active")
     .neq("id", listing.id)
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(10);
 
   let similarFavoritedIds = new Set<string>();
   if (user && similarListings && similarListings.length > 0) {
@@ -100,32 +100,13 @@ export default async function ListingDetailPage({ params }: PageProps) {
     envBase && envBase.length > 0 ? envBase : host ? `${proto}://${host}` : "";
   const shareUrl = shareOrigin ? `${shareOrigin}/listings/${listing.id}` : "";
 
-  const sellerAside = (
-    <aside className={`flex flex-col gap-4 ${hasImages ? "order-2 lg:order-1" : ""}`}>
-      <ListingSellerCard
-        avatarUrl={sellerProfile?.avatar_url ?? null}
-        createdAt={sellerProfile?.created_at ?? null}
-        fullName={sellerProfile?.full_name ?? null}
-        isOwner={isOwner}
-        lastSeenAt={sellerProfile?.last_seen_at ?? null}
-        userId={listing.user_id}
-      />
-      <ListingContact
-        isLoggedIn={Boolean(user)}
-        isOwner={Boolean(user?.id === listing.user_id)}
-        listingId={listing.id}
-      />
-    </aside>
-  );
-
   return (
-    <div
-      className={`mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 py-7 sm:px-4 sm:py-10 max-sm:px-0 ${hasImages ? "max-sm:pt-0" : "max-sm:pt-[env(safe-area-inset-top)]"}`}
-    >
+    <div className="mx-auto w-full max-w-[1280px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
+      {/* Mobile sticky bar (above the fold on phones) */}
       {hasImages ? (
-        <div className="w-full max-sm:order-1 sm:hidden">
+        <div className="sm:hidden -mx-3 mb-3">
           <ListingGalleryStickyBar
             initialFavorited={isFavorited}
             isLoggedIn={Boolean(user)}
@@ -134,145 +115,196 @@ export default async function ListingDetailPage({ params }: PageProps) {
             shareUrl={shareUrl}
             title={listing.title}
           />
-          <ListingImageGallery images={listing.images!} title={listing.title} />
         </div>
       ) : null}
 
-      <div className="flex max-sm:order-2 max-sm:flex-col max-sm:gap-6 max-sm:px-4 max-sm:pb-7 sm:contents sm:gap-0 sm:px-0 sm:pb-0">
-        <div className="flex flex-col gap-3">
-          <div className="hidden sm:block">
-            <Breadcrumb
-              items={[
-                { label: "المعرض", href: "/gallery" },
-                {
-                  label: categoryLabel,
-                  href: `/gallery?category=${encodeURIComponent(listing.category)}`,
-                },
-                { label: listing.title },
-              ]}
-            />
-          </div>
-          {user?.id === listing.user_id ? (
-            <Link
-              className="w-fit text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
-              href={`/listings/${listing.id}/edit`}
-            >
-              تعديل الإعلان
-            </Link>
-          ) : null}
+      <div className="hidden sm:block mb-4">
+        <Breadcrumb
+          items={[
+            { label: "المعرض", href: "/gallery" },
+            {
+              label: categoryLabel,
+              href: `/gallery?category=${encodeURIComponent(listing.category)}`,
+            },
+            { label: listing.title },
+          ]}
+        />
+      </div>
+
+      {listing.status === "pending" ? (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+          هذا الإعلان <strong>قيد المراجعة</strong>. لن يظهر في المعرض العام حتى تعتمد الإدارة
+          حالته إلى «منشور».
         </div>
+      ) : null}
 
-        {listing.status === "pending" ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-            هذا الإعلان <strong>قيد المراجعة</strong>. لن يظهر في المعرض العام حتى تعتمد الإدارة
-            حالته إلى «منشور».
-          </div>
-        ) : null}
-
-        {listing.status === "paused" ? (
-          <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
-            هذا الإعلان <strong>متوقف مؤقتاً</strong> ولا يظهر في المعرض. لإعادة الظهور استخدم «إعادة النشر» في
-            صفحة{" "}
-            <Link
-              className="font-semibold underline"
-              href={isOwner ? "/users/myads" : `/users/${listing.user_id}/ads`}
-            >
-              جميع إعلاناتك
-            </Link>
-            .
-          </div>
-        ) : null}
-
-        <div className="flex flex-col gap-2.5">
-          <div
-            className={`flex flex-wrap items-start justify-between gap-3${hasImages ? " max-sm:hidden" : ""}`}
+      {listing.status === "paused" ? (
+        <div className="mb-3 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/30 dark:text-sky-100">
+          هذا الإعلان <strong>متوقف مؤقتاً</strong> ولا يظهر في المعرض. لإعادة الظهور استخدم «إعادة النشر» في
+          صفحة{" "}
+          <Link
+            className="font-semibold underline"
+            href={isOwner ? "/users/myads" : `/users/${listing.user_id}/ads`}
           >
-            <h1 className="min-w-0 flex-1 text-2xl font-semibold leading-snug text-zinc-900 sm:text-[1.75rem] dark:text-zinc-50">
-              {listing.title}
-            </h1>
-            <div className="flex shrink-0 flex-row items-center gap-2" dir="ltr">
-              <ListingFavoriteHeart
-                initialFavorited={isFavorited}
-                isLoggedIn={Boolean(user)}
-                listingId={listing.id}
-              />
-              <ListingShareButton title={listing.title} url={shareUrl} />
-            </div>
-          </div>
-          <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
-            {categoryLabel} · {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
-            {listing.status === "pending" ? " · قيد المراجعة" : null}
-            {isOwner ? (
-              <>
-                {" · "}
-                <span className="tabular-nums">{viewsFmt} مشاهدة</span>
-              </>
-            ) : null}
-          </p>
-          <p
-            className={`text-3xl font-bold tabular-nums text-zinc-900 dark:text-zinc-50${hasImages ? " max-sm:hidden" : ""}`}
-          >
-            {priceFmt} {listing.price_unit}
-          </p>
-          {listing.location ? (
-            <p className="text-sm text-zinc-600 sm:text-base dark:text-zinc-400">
-              📍 {listing.location}
-            </p>
-          ) : null}
+            جميع إعلاناتك
+          </Link>
+          .
         </div>
+      ) : null}
 
-        {hasImages ? (
-          <>
-            <div className="hidden grid-cols-1 gap-6 sm:grid lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:items-start lg:gap-8">
-              {sellerAside}
-              <div className="order-1 min-w-0 lg:order-2">
-                <ListingImageGallery images={listing.images!} title={listing.title} />
+      {/* Main card: gallery (left) + product info (right) */}
+      <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="grid grid-cols-1 lg:grid-cols-[560px_1fr]">
+          {/* Left: gallery */}
+          <div className="border-b border-zinc-100 p-4 sm:p-5 lg:border-b-0 lg:border-r dark:border-zinc-800">
+            {hasImages ? (
+              <ListingImageGallery images={listing.images!} title={listing.title} />
+            ) : (
+              <div className="flex h-[20rem] items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                لا توجد صور
+              </div>
+            )}
+          </div>
+
+          {/* Right: product info */}
+          <div className="flex flex-col gap-4 p-5 sm:p-6 lg:p-7">
+            <div>
+              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-bina-or">
+                {categoryLabel}
+              </p>
+              <div className="flex items-start justify-between gap-3">
+                <h1 className="min-w-0 flex-1 text-xl font-bold leading-snug text-zinc-900 sm:text-2xl md:text-[1.65rem] dark:text-zinc-50">
+                  {listing.title}
+                </h1>
+                <div className="flex shrink-0 items-center gap-2" dir="ltr">
+                  <ListingFavoriteHeart
+                    initialFavorited={isFavorited}
+                    isLoggedIn={Boolean(user)}
+                    listingId={listing.id}
+                  />
+                  <ListingShareButton title={listing.title} url={shareUrl} />
+                </div>
               </div>
             </div>
-            <div className="sm:hidden">{sellerAside}</div>
-          </>
-        ) : (
-          sellerAside
-        )}
 
-        <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5">
-          <h2 className="mb-2 text-base font-semibold text-zinc-900 dark:text-zinc-50">الوصف</h2>
-          <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-700 dark:text-zinc-300">
+            {/* Info table */}
+            <div className="overflow-hidden rounded-xl border border-zinc-100 text-sm dark:border-zinc-800">
+              <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
+                <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                  السعر
+                </span>
+                <div className="px-4 py-3">
+                  <span className="text-2xl font-bold text-bina-or tabular-nums">
+                    {priceFmt}
+                  </span>{" "}
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400">
+                    {listing.price_unit}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
+                <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                  النوع
+                </span>
+                <span className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">
+                  {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
+                </span>
+              </div>
+              {listing.location ? (
+                <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
+                  <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                    الموقع
+                  </span>
+                  <span className="px-4 py-3 text-zinc-800 dark:text-zinc-200">
+                    📍 {listing.location}
+                  </span>
+                </div>
+              ) : null}
+              {isOwner ? (
+                <div className="flex items-center">
+                  <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
+                    المشاهدات
+                  </span>
+                  <span className="px-4 py-3 tabular-nums text-zinc-800 dark:text-zinc-200">
+                    {viewsFmt}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Seller card */}
+            <ListingSellerCard
+              avatarUrl={sellerProfile?.avatar_url ?? null}
+              createdAt={sellerProfile?.created_at ?? null}
+              fullName={sellerProfile?.full_name ?? null}
+              isOwner={isOwner}
+              lastSeenAt={sellerProfile?.last_seen_at ?? null}
+              userId={listing.user_id}
+            />
+
+            {/* Contact CTA */}
+            <div className="mt-auto pt-2">
+              <ListingContact
+                isLoggedIn={Boolean(user)}
+                isOwner={isOwner}
+                listingId={listing.id}
+              />
+              {isOwner ? (
+                <Link
+                  className="mt-3 inline-block text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
+                  href={`/listings/${listing.id}/edit`}
+                >
+                  تعديل الإعلان
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Related products */}
+      {similarListings && similarListings.length > 0 ? (
+        <section className="mt-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+              إعلانات مشابهة
+            </h2>
+            <Link
+              className="text-sm font-medium text-bina-or hover:underline"
+              href={`/gallery?category=${encodeURIComponent(listing.category)}`}
+            >
+              عرض الكل ←
+            </Link>
+          </div>
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {similarListings.map((row) => (
+              <li key={row.id}>
+                <ListingCard
+                  categoryLabelMap={categoryLabelMap}
+                  favorite={{
+                    initialFavorited: similarFavoritedIds.has(row.id),
+                    isLoggedIn: Boolean(user),
+                    loginReturnTo: `/listings/${listing.id}`,
+                  }}
+                  listing={row}
+                  viewerUserId={user?.id ?? null}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {/* Description card */}
+      <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="border-b border-zinc-100 px-5 py-4 sm:px-6 dark:border-zinc-800">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">الوصف</h2>
+        </div>
+        <div className="px-5 py-5 sm:px-6 sm:py-6">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
             {listing.description || "لا يوجد وصف."}
           </p>
         </div>
-
-        {similarListings && similarListings.length > 0 ? (
-          <section className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                إعلانات مشابهة
-              </h2>
-              <Link
-                className="text-sm font-medium text-bina-or underline underline-offset-2"
-                href={`/gallery?category=${encodeURIComponent(listing.category)}`}
-              >
-                عرض الكل
-              </Link>
-            </div>
-            <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
-              {similarListings.map((row) => (
-                <li key={row.id}>
-                  <ListingCard
-                    categoryLabelMap={categoryLabelMap}
-                    favorite={{
-                      initialFavorited: similarFavoritedIds.has(row.id),
-                      isLoggedIn: Boolean(user),
-                      loginReturnTo: `/listings/${listing.id}`,
-                    }}
-                    listing={row}
-                    viewerUserId={user?.id ?? null}
-                  />
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
       </div>
     </div>
   );
