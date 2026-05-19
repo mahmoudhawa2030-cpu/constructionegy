@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { Breadcrumb } from "@/components/breadcrumb";
+import { ListingCard } from "@/components/listing-card";
 import { ListingContact } from "@/components/listing-contact";
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { ListingGalleryStickyBar } from "@/components/listing-gallery-sticky-bar";
@@ -44,6 +45,28 @@ export default async function ListingDetailPage({ params }: PageProps) {
     .select("full_name, avatar_url, created_at, last_seen_at")
     .eq("id", listing.user_id)
     .maybeSingle();
+
+  const { data: similarListings } = await supabase
+    .from("listings")
+    .select("*")
+    .eq("category", listing.category)
+    .eq("status", "active")
+    .neq("id", listing.id)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  let similarFavoritedIds = new Set<string>();
+  if (user && similarListings && similarListings.length > 0) {
+    const ids = similarListings.map((l) => l.id);
+    const { data: favRows } = await supabase
+      .from("listing_favorites")
+      .select("listing_id")
+      .eq("user_id", user.id)
+      .in("listing_id", ids);
+    if (favRows) {
+      similarFavoritedIds = new Set(favRows.map((r) => r.listing_id));
+    }
+  }
 
   const priceFmt = new Intl.NumberFormat("ar-EG", {
     maximumFractionDigits: 0,
@@ -218,6 +241,38 @@ export default async function ListingDetailPage({ params }: PageProps) {
             {listing.description || "لا يوجد وصف."}
           </p>
         </div>
+
+        {similarListings && similarListings.length > 0 ? (
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+                إعلانات مشابهة
+              </h2>
+              <Link
+                className="text-sm font-medium text-bina-or underline underline-offset-2"
+                href={`/gallery?category=${encodeURIComponent(listing.category)}`}
+              >
+                عرض الكل
+              </Link>
+            </div>
+            <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 lg:gap-4 xl:grid-cols-4">
+              {similarListings.map((row) => (
+                <li key={row.id}>
+                  <ListingCard
+                    categoryLabelMap={categoryLabelMap}
+                    favorite={{
+                      initialFavorited: similarFavoritedIds.has(row.id),
+                      isLoggedIn: Boolean(user),
+                      loginReturnTo: `/listings/${listing.id}`,
+                    }}
+                    listing={row}
+                    viewerUserId={user?.id ?? null}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
       </div>
     </div>
   );
