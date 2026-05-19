@@ -28,41 +28,40 @@ function isNativeApp(userAgent: string): boolean {
 }
 
 export async function proxy(request: NextRequest) {
-  // First, handle Supabase session
-  let response = await updateSession(request);
+  // First, handle Supabase session (this response carries refreshed auth cookies)
+  const supabaseResponse = await updateSession(request);
 
   // Then add device detection
   const userAgent = request.headers.get("user-agent") || "";
   const mobile = isMobileDevice(userAgent) || isNativeApp(userAgent);
-
-  // Get current path
   const pathname = request.nextUrl.pathname;
 
   // Redirect logic: desktop users at root go to /web
-  // Mobile users stay at root (or any path they requested)
-  // Also don't redirect if already on /web or /web/*
+  // Mobile users stay at root. Preserve Supabase cookies on the redirect.
   if (!mobile && pathname === "/") {
     const url = request.nextUrl.clone();
     url.pathname = "/web";
-    response = NextResponse.redirect(url);
-  } else {
-    // Clone response to modify it for non-redirect cases
-    response = NextResponse.next({
-      request,
-      headers: response.headers,
+    const redirectResponse = NextResponse.redirect(url);
+    // Forward all Supabase auth cookies onto the redirect response
+    for (const cookie of supabaseResponse.cookies.getAll()) {
+      redirectResponse.cookies.set(cookie);
+    }
+    redirectResponse.cookies.set("device-type", "desktop", {
+      maxAge: 60 * 60 * 24 * 30,
+      path: "/",
     });
+    redirectResponse.headers.set("x-device-type", "desktop");
+    return redirectResponse;
   }
 
-  // Set cookie to remember device preference
-  response.cookies.set("device-type", mobile ? "mobile" : "desktop", {
-    maxAge: 60 * 60 * 24 * 30, // 30 days
+  // Non-redirect: reuse the Supabase response so cookies stay intact
+  supabaseResponse.cookies.set("device-type", mobile ? "mobile" : "desktop", {
+    maxAge: 60 * 60 * 24 * 30,
     path: "/",
   });
+  supabaseResponse.headers.set("x-device-type", mobile ? "mobile" : "desktop");
 
-  // Add header for server components to detect device
-  response.headers.set("x-device-type", mobile ? "mobile" : "desktop");
-
-  return response;
+  return supabaseResponse;
 }
 
 export const config = {
