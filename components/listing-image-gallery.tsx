@@ -79,7 +79,7 @@ export function ListingImageGallery({ images, title }: Props) {
 
   return (
     <>
-      <div className="flex flex-col gap-2" dir="ltr">
+      <div className="mx-auto flex w-full flex-col gap-2 sm:max-w-[70%]" dir="ltr">
         <div className="relative w-full min-w-0 flex-1">
           <button
             aria-label="تكبير الصورة"
