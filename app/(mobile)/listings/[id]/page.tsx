@@ -4,15 +4,11 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingCard } from "@/components/listing-card";
-import { ListingContact } from "@/components/listing-contact";
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { ListingShareButton } from "@/components/listing-share-button";
-import { ListingImageGallery } from "@/components/listing-image-gallery";
 import { ListingImageGalleryMobile } from "@/components/listing-image-gallery-mobile";
 import { ListingMobileActionBar } from "@/components/listing-mobile-action-bar";
-import { ListingSellerCard } from "@/components/listing-seller-card";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { labelForCategorySlug } from "@/lib/listings/categories";
@@ -100,8 +96,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const categoryLabelMap = await getCategoryLabelMap();
   const categoryLabel = labelForCategorySlug(listing.category, categoryLabelMap);
 
-  const viewCount = listing.view_count ?? 0;
-  const viewsFmt = new Intl.NumberFormat(numberLocale).format(viewCount);
   const isOwner = Boolean(user?.id === listing.user_id);
   const hasImages = Boolean(listing.images && listing.images.length > 0);
 
@@ -441,178 +435,6 @@ export default async function ListingDetailPage({ params }: PageProps) {
         />
       </div>
 
-      {/* ============ DESKTOP: existing 2-column layout (md+) ============ */}
-      <div className="hidden md:block">
-        <div className="mx-auto w-full max-w-[1280px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-          <div className="mb-4">
-            <Breadcrumb
-              items={[
-                { label: "المعرض", href: "/gallery" },
-                {
-                  label: categoryLabel,
-                  href: `/gallery?category=${encodeURIComponent(listing.category)}`,
-                },
-                { label: listing.title },
-              ]}
-            />
-          </div>
-
-          {listing.status === "pending" ? (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-              هذا الإعلان <strong>قيد المراجعة</strong>.
-            </div>
-          ) : null}
-
-          <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="grid grid-cols-1 lg:grid-cols-[560px_1fr]">
-              <div className="border-b border-zinc-100 p-4 sm:p-5 lg:border-b-0 lg:border-r dark:border-zinc-800">
-                {hasImages ? (
-                  <ListingImageGallery images={listing.images!} title={listing.title} />
-                ) : (
-                  <div className="flex h-[20rem] items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
-                    لا توجد صور
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-4 p-5 sm:p-6 lg:p-7">
-                <div>
-                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-bina-or">
-                    {categoryLabel}
-                  </p>
-                  <div className="flex items-start justify-between gap-3">
-                    <h1 className="min-w-0 flex-1 text-xl font-bold leading-snug text-zinc-900 sm:text-2xl md:text-[1.65rem] dark:text-zinc-50">
-                      {listing.title}
-                    </h1>
-                    <div className="flex shrink-0 items-center gap-2" dir="ltr">
-                      <ListingFavoriteHeart
-                        initialFavorited={isFavorited}
-                        isLoggedIn={Boolean(user)}
-                        listingId={listing.id}
-                      />
-                      <ListingShareButton title={listing.title} url={shareUrl} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-hidden rounded-xl border border-zinc-100 text-sm dark:border-zinc-800">
-                  <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
-                    <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                      السعر
-                    </span>
-                    <div className="px-4 py-3">
-                      <span className="text-2xl font-bold text-bina-or tabular-nums">
-                        {priceFmt}
-                      </span>{" "}
-                      <span className="text-sm text-zinc-600 dark:text-zinc-400">
-                        {listing.price_unit}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
-                    <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                      {t("type")}
-                    </span>
-                    <span className="px-4 py-3 font-semibold text-zinc-800 dark:text-zinc-200">
-                      {typeLabels[listing.type]} · {conditionLabels[listing.condition]}
-                    </span>
-                  </div>
-                  {listing.location ? (
-                    <div className="flex items-center border-b border-zinc-100 dark:border-zinc-800">
-                      <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                        الموقع
-                      </span>
-                      <span className="px-4 py-3 text-zinc-800 dark:text-zinc-200">
-                        📍 {listing.location}
-                      </span>
-                    </div>
-                  ) : null}
-                  {isOwner ? (
-                    <div className="flex items-center">
-                      <span className="w-32 shrink-0 border-r border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-                        المشاهدات
-                      </span>
-                      <span className="px-4 py-3 tabular-nums text-zinc-800 dark:text-zinc-200">
-                        {viewsFmt}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-
-                <ListingSellerCard
-                  avatarUrl={sellerProfile?.avatar_url ?? null}
-                  createdAt={sellerProfile?.created_at ?? null}
-                  fullName={sellerProfile?.full_name ?? null}
-                  isOwner={isOwner}
-                  lastSeenAt={sellerProfile?.last_seen_at ?? null}
-                  userId={listing.user_id}
-                />
-
-                <div className="mt-auto pt-2">
-                  <ListingContact
-                    isLoggedIn={Boolean(user)}
-                    isOwner={isOwner}
-                    listingId={listing.id}
-                  />
-                  {isOwner ? (
-                    <Link
-                      className="mt-3 inline-block text-sm font-medium text-zinc-900 underline dark:text-zinc-100"
-                      href={`/listings/${listing.id}/edit`}
-                    >
-                      تعديل الإعلان
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {similarListings && similarListings.length > 0 ? (
-            <section className="mt-6">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                  {t("similarTitle")}
-                </h2>
-                <Link
-                  className="text-sm font-medium text-bina-or hover:underline"
-                  href={`/gallery?category=${encodeURIComponent(listing.category)}`}
-                >
-                  {t("viewAll")} ←
-                </Link>
-              </div>
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                {similarListings.map((row) => (
-                  <li key={row.id}>
-                    <ListingCard
-                      categoryLabelMap={categoryLabelMap}
-                      favorite={{
-                        initialFavorited: similarFavoritedIds.has(row.id),
-                        isLoggedIn: Boolean(user),
-                        loginReturnTo: `/listings/${listing.id}`,
-                      }}
-                      listing={row}
-                      viewerUserId={user?.id ?? null}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
-
-          <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="border-b border-zinc-100 px-5 py-4 sm:px-6 dark:border-zinc-800">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                {t("description")}
-              </h2>
-            </div>
-            <div className="px-5 py-5 sm:px-6 sm:py-6">
-              <p className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-700 dark:text-zinc-300">
-                {listing.description || t("noDescription")}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
     </>
   );
 }

@@ -36,22 +36,31 @@ export async function proxy(request: NextRequest) {
   const mobile = isMobileDevice(userAgent) || isNativeApp(userAgent);
   const pathname = request.nextUrl.pathname;
 
-  // Redirect logic: desktop users at root go to /web
-  // Mobile users stay at root. Preserve Supabase cookies on the redirect.
-  if (!mobile && pathname === "/") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/web";
-    const redirectResponse = NextResponse.redirect(url);
-    // Forward all Supabase auth cookies onto the redirect response
-    for (const cookie of supabaseResponse.cookies.getAll()) {
-      redirectResponse.cookies.set(cookie);
+  // Redirect logic: desktop users at certain paths go to /web equivalents.
+  // Preserve Supabase cookies on the redirect.
+  const desktopRedirectPaths: [RegExp, (m: RegExpMatchArray) => string][] = [
+    [/^\/$/, () => "/web"],
+    [/^\/listings\/([^/]+)$/, (m) => `/web/listings/${m[1]}`],
+  ];
+
+  if (!mobile) {
+    for (const [pattern, toPath] of desktopRedirectPaths) {
+      const match = pathname.match(pattern);
+      if (match) {
+        const url = request.nextUrl.clone();
+        url.pathname = toPath(match);
+        const redirectResponse = NextResponse.redirect(url);
+        for (const cookie of supabaseResponse.cookies.getAll()) {
+          redirectResponse.cookies.set(cookie);
+        }
+        redirectResponse.cookies.set("device-type", "desktop", {
+          maxAge: 60 * 60 * 24 * 30,
+          path: "/",
+        });
+        redirectResponse.headers.set("x-device-type", "desktop");
+        return redirectResponse;
+      }
     }
-    redirectResponse.cookies.set("device-type", "desktop", {
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
-    redirectResponse.headers.set("x-device-type", "desktop");
-    return redirectResponse;
   }
 
   // Non-redirect: reuse the Supabase response so cookies stay intact
