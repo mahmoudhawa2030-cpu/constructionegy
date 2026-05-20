@@ -244,16 +244,14 @@ export default async function WebListingDetailPage({ params }: PageProps) {
                     <span className="w-32 shrink-0 border-e border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500">
                       {locale === "ar" ? "الموقع" : "Location"}
                     </span>
-                    <span className="px-4 py-3 text-zinc-800">
-                      📍 {listing.location}
-                    </span>
+                    <span className="px-4 py-3 text-zinc-800">📍 {listing.location}</span>
                   </div>
                 ) : null}
                 <div className="flex items-center border-b border-zinc-100">
                   <span className="w-32 shrink-0 border-e border-zinc-100 bg-zinc-50 px-4 py-3 font-medium text-zinc-500">
                     {locale === "ar" ? "تاريخ النشر" : "Posted"}
                   </span>
-                  <span className="px-4 py-3 text-zinc-600 text-xs">{timeAgoLabel}</span>
+                  <span className="px-4 py-3 text-xs text-zinc-600">{timeAgoLabel}</span>
                 </div>
                 {isOwner ? (
                   <div className="flex items-center">
@@ -275,7 +273,7 @@ export default async function WebListingDetailPage({ params }: PageProps) {
                 userId={listing.user_id}
               />
 
-              {/* Contact + Ad ID */}
+              {/* Contact + Ad ID + edit */}
               <div className="mt-auto pt-2">
                 <ListingContact
                   isLoggedIn={Boolean(user)}
@@ -284,7 +282,8 @@ export default async function WebListingDetailPage({ params }: PageProps) {
                 />
                 <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
                   <span>
-                    {t("adId")} <span className="font-bold tracking-wider text-zinc-700">{shortAdId}</span>
+                    {t("adId")}{" "}
+                    <span className="font-bold tracking-wider text-zinc-700">{shortAdId}</span>
                   </span>
                   <button
                     className="flex items-center gap-1 text-zinc-500 hover:text-zinc-800 transition-colors"
