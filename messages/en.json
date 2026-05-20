@@ -121,7 +121,11 @@
   "common": {
     "searchPlaceholder": "Search products, suppliers, categories...",
     "search": "Search",
-    "viewAll": "View all"
+    "viewAll": "View all",
+    "helpCenter": "Help Center",
+    "contactUs": "Contact Us",
+    "flashDeals": "Flash Deals",
+    "postRfq": "Post RFQ"
   },
   "home": {
     "heroTitle": "Connect with Verified Construction Suppliers",

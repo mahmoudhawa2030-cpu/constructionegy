@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { WebHeader } from "@/components/web/web-header";
 import { WebFooter } from "@/components/web/web-footer";
 import { getUnreadIncomingTotal } from "@/lib/messages/unread";
+import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function WebLayout({
@@ -17,6 +18,7 @@ export default async function WebLayout({
 
   let profile = null;
   let unreadMsg = 0;
+  const categories = await getActiveCategoriesForSelect();
 
   if (user) {
     const [profileData, unreadCount] = await Promise.all([
@@ -40,6 +42,7 @@ export default async function WebLayout({
         userName={profile?.full_name ?? null}
         userAvatar={profile?.avatar_url ?? null}
         unreadMessageCount={unreadMsg}
+        categories={categories}
       />
       <main className="flex-1">
         {children}

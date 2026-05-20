@@ -18,31 +18,33 @@ export function SearchInput() {
 
   return (
     <form onSubmit={handleSubmit} className="relative w-full">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={t("searchPlaceholder")}
-        className="w-full rounded-lg border border-[var(--bina-border)] bg-[var(--bina-steel)] px-4 py-2.5 pl-10 text-sm outline-none transition-colors placeholder:text-[var(--bina-muted)] focus:border-[var(--bina-primary)] focus:bg-white"
-      />
-      <svg
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--bina-muted)]"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-      <button
-        type="submit"
-        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-[var(--bina-primary)] px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--bina-primary-dark)]"
-      >
-        {t("search")}
-      </button>
+      <div className="flex items-center rounded-lg bg-[#1c1c1e] px-3 py-1 gap-2 ring-1 ring-transparent focus-within:ring-[var(--bina-primary)]">
+        <svg
+          className="shrink-0 text-zinc-400"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("searchPlaceholder")}
+          className="min-w-0 flex-1 bg-transparent py-1.5 text-sm text-white outline-none placeholder:text-zinc-500"
+        />
+        <button
+          type="submit"
+          className="shrink-0 rounded-md bg-[var(--bina-primary)] px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-[var(--bina-primary-dk)] active:scale-95"
+        >
+          {t("search")}
+        </button>
+      </div>
     </form>
   );
 }

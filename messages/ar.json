@@ -121,7 +121,11 @@
   "common": {
     "searchPlaceholder": "ابحث عن المنتجات، الموردين، الفئات...",
     "search": "بحث",
-    "viewAll": "عرض الكل"
+    "viewAll": "عرض الكل",
+    "helpCenter": "مركز المساعدة",
+    "contactUs": "اتصل بنا",
+    "flashDeals": "عروض سريعة",
+    "postRfq": "نشر طلب عرض"
   },
   "home": {
     "heroTitle": "تواصل مع موردي البناء المعتمدين",
