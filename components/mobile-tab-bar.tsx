@@ -67,6 +67,12 @@ function NavIcon({ name, active }: { name: IconKey; active: boolean }) {
 export function MobileTabBar({ homeHref = "/" }: Props) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+
+  // Listing detail pages render their own OLX-style Chat / Call action bar at
+  // the bottom — hide the global tab bar there to avoid stacking two bottom bars.
+  const isListingDetail = /^\/listings\/[^/]+$/.test(pathname ?? "");
+  if (isListingDetail) return null;
+
   function isActive(href: string) {
     if (href === homeHref) return pathname === homeHref;
     return pathname === href || pathname.startsWith(`${href}/`);
