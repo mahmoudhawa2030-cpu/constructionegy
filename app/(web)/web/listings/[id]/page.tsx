@@ -184,11 +184,14 @@ export default async function WebListingDetailPage({ params }: PageProps) {
 
         {/* Main card */}
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-          <div className="grid grid-cols-1 lg:grid-cols-[560px_1fr]">
+          <div className="grid grid-cols-1 lg:grid-cols-[672px_1fr]">
             {/* Gallery */}
             <div className="border-b border-zinc-100 p-4 sm:p-5 lg:border-b-0 lg:border-e">
               {hasImages ? (
-                <ListingImageGallery images={listing.images!} title={listing.title} />
+                <div className="web-listing-gallery">
+                  <style>{`@media (min-width:1024px){.web-listing-gallery button.relative.block{height:26.4rem!important}}`}</style>
+                  <ListingImageGallery images={listing.images!} title={listing.title} />
+                </div>
               ) : (
                 <div className="flex h-[20rem] items-center justify-center rounded-lg bg-zinc-100 text-sm text-zinc-500">
                   {locale === "ar" ? "لا توجد صور" : "No images"}
