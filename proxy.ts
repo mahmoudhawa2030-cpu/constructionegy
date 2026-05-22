@@ -40,6 +40,7 @@ export async function proxy(request: NextRequest) {
   // Preserve Supabase cookies on the redirect.
   const desktopRedirectPaths: [RegExp, (m: RegExpMatchArray) => string][] = [
     [/^\/$/, () => "/web"],
+    [/^\/gallery$/, () => "/web/gallery"],
     [/^\/listings\/([^/]+)$/, (m) => `/web/listings/${m[1]}`],
   ];
 
