@@ -40,41 +40,63 @@ export default async function ListingDetailPage({ params }: PageProps) {
   const t = await getTranslations("listingDetail");
   const locale = await getLocale();
 
-  const { data: listing, error } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  // STEP 1 — fetch listing + user in parallel (everything else depends on these)
+  const [listingRes, userRes] = await Promise.all([
+    supabase.from("listings").select("*").eq("id", id).maybeSingle(),
+    supabase.auth.getUser(),
+  ]);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const listing = listingRes.data;
+  const error = listingRes.error;
+  const user = userRes.data.user;
 
   if (error || !listing) {
     notFound();
   }
 
-  const { data: sellerProfile } = await supabase
-    .from("profiles")
-    .select("full_name, avatar_url, created_at, last_seen_at")
-    .eq("id", listing.user_id)
-    .maybeSingle();
+  // STEP 2 — fan out all remaining queries in a single round-trip batch
+  const [
+    sellerRes,
+    activeAdsRes,
+    similarRes,
+    categoryLabelMap,
+    isFavoritedRes,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("full_name, avatar_url, created_at, last_seen_at")
+      .eq("id", listing.user_id)
+      .maybeSingle(),
+    supabase
+      .from("listings")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", listing.user_id)
+      .eq("status", "active"),
+    supabase
+      .from("listings")
+      .select("*")
+      .eq("category", listing.category)
+      .eq("status", "active")
+      .neq("id", listing.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+    getCategoryLabelMap(),
+    user
+      ? supabase
+          .from("listing_favorites")
+          .select("listing_id")
+          .eq("user_id", user.id)
+          .eq("listing_id", listing.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null } as const),
+  ]);
 
-  const { count: activeAdsCount } = await supabase
-    .from("listings")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", listing.user_id)
-    .eq("status", "active");
+  const sellerProfile = sellerRes.data;
+  const activeAdsCount = activeAdsRes.count;
+  const similarListings = similarRes.data;
+  const isFavorited = Boolean(isFavoritedRes.data);
 
-  const { data: similarListings } = await supabase
-    .from("listings")
-    .select("*")
-    .eq("category", listing.category)
-    .eq("status", "active")
-    .neq("id", listing.id)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
+  // STEP 3 — only after we know similar listing IDs, fetch favorite rows for them
   let similarFavoritedIds = new Set<string>();
   if (user && similarListings && similarListings.length > 0) {
     const ids = similarListings.map((l) => l.id);
@@ -93,22 +115,9 @@ export default async function ListingDetailPage({ params }: PageProps) {
     maximumFractionDigits: 0,
   }).format(Number(listing.price));
 
-  const categoryLabelMap = await getCategoryLabelMap();
   const categoryLabel = labelForCategorySlug(listing.category, categoryLabelMap);
-
   const isOwner = Boolean(user?.id === listing.user_id);
   const hasImages = Boolean(listing.images && listing.images.length > 0);
-
-  let isFavorited = false;
-  if (user) {
-    const { data: favRow } = await supabase
-      .from("listing_favorites")
-      .select("listing_id")
-      .eq("user_id", user.id)
-      .eq("listing_id", listing.id)
-      .maybeSingle();
-    isFavorited = Boolean(favRow);
-  }
 
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
@@ -145,8 +154,8 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <>
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
-      {/* ============ MOBILE: OLX-style layout (hidden md+) ============ */}
-      <div className="md:hidden bg-white text-zinc-900">
+      {/* OLX-style mobile layout */}
+      <div className="bg-white text-zinc-900">
         {/* Edge-to-edge gallery */}
         {hasImages ? (
           <ListingImageGalleryMobile
