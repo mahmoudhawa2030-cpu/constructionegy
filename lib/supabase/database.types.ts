@@ -375,18 +375,26 @@ export type Database = {
           badge_count: number | null
           badge_label_ar: string | null
           badge_label_en: string | null
+          bg_color: string | null
           category_slug: string | null
           created_at: string
+          cta_label_ar: string | null
+          cta_label_en: string | null
           description_ar: string | null
           description_en: string | null
           enabled: boolean
+          fg_color: string | null
           href: string
           icon_emoji: string | null
           icon_key: string | null
           id: string
           image_url: string | null
+          kicker_ar: string | null
+          kicker_en: string | null
+          listing_id: string | null
           section_id: string
           sort_order: number
+          supplier_id: string | null
           title_ar: string
           title_en: string
           updated_at: string
@@ -395,18 +403,26 @@ export type Database = {
           badge_count?: number | null
           badge_label_ar?: string | null
           badge_label_en?: string | null
+          bg_color?: string | null
           category_slug?: string | null
           created_at?: string
+          cta_label_ar?: string | null
+          cta_label_en?: string | null
           description_ar?: string | null
           description_en?: string | null
           enabled?: boolean
+          fg_color?: string | null
           href?: string
           icon_emoji?: string | null
           icon_key?: string | null
           id?: string
           image_url?: string | null
+          kicker_ar?: string | null
+          kicker_en?: string | null
+          listing_id?: string | null
           section_id: string
           sort_order?: number
+          supplier_id?: string | null
           title_ar?: string
           title_en?: string
           updated_at?: string
@@ -415,18 +431,26 @@ export type Database = {
           badge_count?: number | null
           badge_label_ar?: string | null
           badge_label_en?: string | null
+          bg_color?: string | null
           category_slug?: string | null
           created_at?: string
+          cta_label_ar?: string | null
+          cta_label_en?: string | null
           description_ar?: string | null
           description_en?: string | null
           enabled?: boolean
+          fg_color?: string | null
           href?: string
           icon_emoji?: string | null
           icon_key?: string | null
           id?: string
           image_url?: string | null
+          kicker_ar?: string | null
+          kicker_en?: string | null
+          listing_id?: string | null
           section_id?: string
           sort_order?: number
+          supplier_id?: string | null
           title_ar?: string
           title_en?: string
           updated_at?: string

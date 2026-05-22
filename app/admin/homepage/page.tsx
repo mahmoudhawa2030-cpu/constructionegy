@@ -1,114 +1,112 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import {
-  AdminCreateHomepageSectionForm,
-  AdminDeleteHomepageSectionForm,
-} from "@/components/admin-homepage-forms";
+import { AdminWebHomepageEditor } from "@/components/admin-web-homepage-editor";
 import { adminUi } from "@/lib/admin-ui";
+import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
+import {
+  WEB_HOME_SECTION_SLUGS,
+  getWebHomeData,
+  type WebHomeSectionSlug,
+} from "@/lib/homepage/web-home-data";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminHomepageListPage() {
-  const t = await getTranslations("adminHomepage");
+export default async function AdminHomepagePage() {
+  const t = await getTranslations("adminWebHomepage");
   const supabase = await createClient();
 
-  const { data: sections, error } = await supabase
-    .from("homepage_sections")
-    .select("id, slug, section_type, sort_order, enabled, title_ar, title_en")
-    .order("sort_order", { ascending: true });
+  // Fetch sections + items + picker data in parallel
+  const [webHomeData, listingsRes, suppliersRes, categoryOptions] = await Promise.all([
+    getWebHomeData(supabase),
+    supabase
+      .from("listings")
+      .select("id, title, price")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("profiles")
+      .select("id, full_name, legal_company_name")
+      .eq("business_verification_status", "approved")
+      .limit(200),
+    getActiveCategoriesForSelect(),
+  ]);
 
-  const sectionIds = sections?.map((s) => s.id) ?? [];
-  const counts = new Map<string, number>();
-  if (sectionIds.length > 0) {
-    const { data: items } = await supabase
-      .from("homepage_section_items")
-      .select("section_id")
-      .in("section_id", sectionIds);
-    for (const row of items ?? []) {
-      counts.set(row.section_id, (counts.get(row.section_id) ?? 0) + 1);
-    }
-  }
+  const listingOptions = (listingsRes.data ?? []).map((l) => ({
+    id: l.id,
+    title: l.title,
+    price: l.price,
+  }));
+
+  const supplierOptions = (suppliersRes.data ?? []).map((p) => ({
+    id: p.id,
+    name: p.legal_company_name?.trim() || p.full_name || "Supplier",
+  }));
 
   return (
     <div className={adminUi.page}>
+      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className={adminUi.pageTitle}>{t("title")}</h1>
           <p className={adminUi.pageLead}>{t("lead")}</p>
         </div>
-        <Link className={adminUi.linkBack} href="/admin">
-          {t("backAdmin")}
-        </Link>
-      </div>
-
-      {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400">{t("loadError")}</p>
-      ) : null}
-
-      <div className={adminUi.messageStripInfo}>
-        <p className="text-sm">{t("mobileNote")}</p>
-      </div>
-
-      <div className={`${adminUi.widget} mb-6`}>
-        <div className={adminUi.widgetHeader}>{t("desktopCategoriesLinkTitle")}</div>
-        <div className={`${adminUi.widgetBodyFlush} p-4`}>
-          <p className="text-sm text-[var(--admin-text-secondary)]">{t("desktopCategoriesLinkLead")}</p>
-          <Link className={`${adminUi.btnPrimary} mt-3 inline-block px-4 py-2 text-sm`} href="/admin/homepage/desktop-categories">
-            {t("desktopCategoriesManage")}
+        <div className="flex items-center gap-3">
+          <Link className={adminUi.btnSecondary + " px-3 py-1.5"} href="/web" target="_blank">
+            {t("previewWebHome")}
+          </Link>
+          <Link className={adminUi.linkBack} href="/admin">
+            {t("backAdmin")}
           </Link>
         </div>
       </div>
 
-      <AdminCreateHomepageSectionForm />
-
-      <div className={adminUi.widget}>
-        <div className={adminUi.widgetHeader}>{t("sectionsTableTitle")}</div>
-        <div className={adminUi.widgetBodyFlush}>
-          <div className={adminUi.tableWrap}>
-            <table className={adminUi.table}>
-              <thead>
-                <tr className={adminUi.theadRow}>
-                  <th className={adminUi.th}>{t("colOrder")}</th>
-                  <th className={adminUi.th}>{t("colSlug")}</th>
-                  <th className={adminUi.th}>{t("colType")}</th>
-                  <th className={adminUi.th}>{t("colTitles")}</th>
-                  <th className={adminUi.th}>{t("colItems")}</th>
-                  <th className={adminUi.th}>{t("colEnabled")}</th>
-                  <th className={adminUi.th}>{t("colActions")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(sections ?? []).map((s) => (
-                  <tr key={s.id} className={adminUi.tbodyRow}>
-                    <td className={`${adminUi.td} tabular-nums`}>{s.sort_order}</td>
-                    <td className={adminUi.td}>
-                      <code className={adminUi.code}>{s.slug}</code>
-                    </td>
-                    <td className={adminUi.td}>{s.section_type === "carousel" ? t("typeCarousel") : t("typeGrid")}</td>
-                    <td className={`${adminUi.tdMuted} max-w-[12rem] truncate`}>
-                      {s.title_ar || "—"} / {s.title_en || "—"}
-                    </td>
-                    <td className={`${adminUi.td} tabular-nums`}>{counts.get(s.id) ?? 0}</td>
-                    <td className={adminUi.td}>{s.enabled ? t("yes") : t("no")}</td>
-                    <td className={adminUi.td}>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Link className={adminUi.btnToolbar} href={`/admin/homepage/${s.id}`}>
-                          {t("edit")}
-                        </Link>
-                        <AdminDeleteHomepageSectionForm sectionId={s.id} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div className={adminUi.messageStripInfo}>
+        <p className="text-sm">{t("infoNote")}</p>
       </div>
 
-      {!sections?.length ? <p className="text-sm text-[var(--admin-text-secondary)]">{t("emptySections")}</p> : null}
+      {/* Render one editor per known section */}
+      <div className="grid gap-6">
+        {WEB_HOME_SECTION_SLUGS.map((slug) => {
+          const section = webHomeData[slug];
+          if (!section) {
+            return (
+              <div
+                key={slug}
+                className="rounded-sm border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950"
+              >
+                {t("missingSection", { slug })}
+              </div>
+            );
+          }
+          return (
+            <AdminWebHomepageEditor
+              key={slug}
+              section={section}
+              sectionSlug={slug as WebHomeSectionSlug}
+              listingOptions={listingOptions}
+              supplierOptions={supplierOptions}
+              categoryOptions={categoryOptions}
+            />
+          );
+        })}
+      </div>
+
+      {/* Legacy: link to old desktop categories tool */}
+      <div className={`${adminUi.widget} mt-4`}>
+        <div className={adminUi.widgetHeader}>{t("legacyTitle")}</div>
+        <div className={`${adminUi.widgetBodyFlush} p-4`}>
+          <p className="text-sm text-[var(--admin-text-secondary)]">{t("legacyLead")}</p>
+          <Link
+            className={`${adminUi.btnSecondary} mt-3 inline-block px-4 py-2 text-sm`}
+            href="/admin/homepage/desktop-categories"
+          >
+            {t("legacyLink")}
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
