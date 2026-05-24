@@ -56,6 +56,7 @@ const FIELD_PRESETS: Record<WebHomeSectionSlug, FormShape[]> = {
   web_categories_strip: [
     "category_slug",
     "title",
+    "image_url",
     "icon_emoji",
     "bg_color",
     "fg_color",

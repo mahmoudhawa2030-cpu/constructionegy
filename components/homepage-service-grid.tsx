@@ -48,6 +48,7 @@ export function HomepageServiceGrid({ items, locale, cardAria }: Props) {
                 emojiClassName="text-[1.404rem] leading-none sm:text-[1.641rem] md:text-[2.34rem]"
                 iconEmoji={item.icon_emoji}
                 iconKey={item.icon_key}
+                imageUrl={item.image_url}
               />
               <span className="font-bina-display line-clamp-2 text-[11.7px] font-semibold leading-tight text-bina-text sm:text-[14.3px] md:text-[0.975rem]">
                 {title}

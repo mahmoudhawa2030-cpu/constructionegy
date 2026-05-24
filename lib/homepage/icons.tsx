@@ -62,13 +62,26 @@ export function isHomepageIconKey(s: string): s is HomepageIconKey {
 type IconSlotProps = {
   iconKey: string | null | undefined;
   iconEmoji: string | null | undefined;
+  imageUrl?: string | null | undefined;
   /** Lucide stroke icon */
   className?: string;
   /** Wrapper for emoji fallback */
   emojiClassName?: string;
 };
 
-export function HomepageItemIcon({ iconKey, iconEmoji, className, emojiClassName }: IconSlotProps) {
+export function HomepageItemIcon({ iconKey, iconEmoji, imageUrl, className, emojiClassName }: IconSlotProps) {
+  const imgSrc = imageUrl?.trim();
+  if (imgSrc) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imgSrc}
+        alt=""
+        aria-hidden
+        className={className ?? "h-7 w-7 rounded object-cover"}
+      />
+    );
+  }
   const key = iconKey?.trim();
   if (key && isHomepageIconKey(key)) {
     const Icon = ICON_MAP[key];
