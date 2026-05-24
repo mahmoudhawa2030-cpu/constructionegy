@@ -13,6 +13,7 @@ import {
   updateHomepageItemAction,
   updateHomepageSectionAction,
 } from "@/app/admin/homepage/actions";
+import { AdminImageUploadField } from "@/components/admin-image-upload-field";
 import { adminUi } from "@/lib/admin-ui";
 import type { CategoryOption } from "@/lib/categories/queries";
 import { HOMEPAGE_ICON_KEYS } from "@/lib/homepage/icons";
@@ -238,10 +239,9 @@ export function AdminCreateHomepageItemForm({
           <input className={adminUi.input} name="icon_emoji" placeholder="📁" type="text" />
           <span className="text-xs text-[var(--admin-text-secondary)]">{t("iconEmojiHint")}</span>
         </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className={adminUi.label}>{t("imageUrl")}</span>
-          <input className={adminUi.inputMono} dir="ltr" name="image_url" placeholder="https://..." type="text" />
-        </label>
+        <div className="text-sm sm:col-span-2">
+          <AdminImageUploadField label={t("imageUrl")} />
+        </div>
         <label className="flex flex-col gap-1 text-sm">
           <span className={adminUi.label}>{t("badgeCount")}</span>
           <input className={adminUi.input} name="badge_count" type="number" />
@@ -322,10 +322,9 @@ export function AdminEditHomepageItemForm({ item, categories }: { item: ItemRow;
           <input className={adminUi.input} defaultValue={item.icon_emoji ?? ""} name="icon_emoji" type="text" />
           <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("iconEmojiHint")}</span>
         </label>
-        <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
-          <span className={adminUi.label}>{t("imageUrl")}</span>
-          <input className={adminUi.inputMono} defaultValue={item.image_url ?? ""} dir="ltr" name="image_url" type="text" />
-        </label>
+        <div className="text-xs sm:col-span-2">
+          <AdminImageUploadField defaultValue={item.image_url ?? ""} label={t("imageUrl")} />
+        </div>
         <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
           <span className={adminUi.label}>{t("descriptionAr")}</span>
           <input className={adminUi.input} defaultValue={item.description_ar ?? ""} name="description_ar" type="text" />

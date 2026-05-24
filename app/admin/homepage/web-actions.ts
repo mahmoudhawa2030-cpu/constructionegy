@@ -1,11 +1,71 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
+
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { requireAdmin } from "@/lib/auth/admin";
 import { createClient } from "@/lib/supabase/server";
+import { getStorageBaseUrl } from "@/lib/supabase/desktop-category-icon-url";
 import { WEB_HOME_SECTION_SLUGS } from "@/lib/homepage/web-home-data";
+
+const HERO_IMAGES_BUCKET = "homepage-hero-images";
+const ALLOWED_MIME = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
+
+function extFromMime(mime: string): string | null {
+  switch (mime) {
+    case "image/jpeg": return "jpg";
+    case "image/png":  return "png";
+    case "image/webp": return "webp";
+    case "image/gif":  return "gif";
+    default: return null;
+  }
+}
+
+export type UploadImageActionState =
+  | { ok: true; url: string }
+  | { ok: false; message: string };
+
+/**
+ * Upload a hero slider image to Supabase Storage.
+ * Returns the public URL on success.
+ */
+export async function uploadHeroImageAction(
+  _prev: UploadImageActionState | null,
+  formData: FormData,
+): Promise<UploadImageActionState> {
+  await requireAdmin();
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, message: "No file provided." };
+  }
+  if (!ALLOWED_MIME.has(file.type)) {
+    return { ok: false, message: "Only JPEG, PNG, WebP or GIF are allowed." };
+  }
+  if (file.size > MAX_BYTES) {
+    return { ok: false, message: "File is too large (max 4 MB)." };
+  }
+
+  const ext = extFromMime(file.type);
+  if (!ext) return { ok: false, message: "Unsupported image type." };
+
+  const path = `slider/${randomUUID()}.${ext}`;
+  const supabase = await createClient();
+  const buf = Buffer.from(await file.arrayBuffer());
+
+  const { error } = await supabase.storage
+    .from(HERO_IMAGES_BUCKET)
+    .upload(path, buf, { contentType: file.type, upsert: false });
+
+  if (error) return { ok: false, message: error.message };
+
+  const base = getStorageBaseUrl();
+  const url = `${base}/${HERO_IMAGES_BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`;
+  return { ok: true, url };
+}
 
 const uuid = z.string().uuid();
 const slug = z.string().trim().regex(/^[a-z][a-z0-9_]*$/, "Invalid slug.");

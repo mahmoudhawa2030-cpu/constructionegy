@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState } from "react";
+import { useState, useActionState, useRef, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -9,6 +9,7 @@ import {
   toggleWebSectionAction,
   updateWebItemAction,
   updateWebSectionAction,
+  uploadHeroImageAction,
   type WebHomepageActionState,
 } from "@/app/admin/homepage/web-actions";
 import { adminUi } from "@/lib/admin-ui";
@@ -474,14 +475,10 @@ function ItemForm({
       ) : null}
 
       {fields.includes("image_url") ? (
-        <Labeled label={t("imageUrl")} className="sm:col-span-2">
-          <input
-            name="image_url"
-            defaultValue={initial?.image_url ?? ""}
-            className={adminUi.input}
-            placeholder="https://…"
-          />
-        </Labeled>
+        <ImageUploadField
+          defaultValue={initial?.image_url ?? ""}
+          t={t}
+        />
       ) : null}
 
       {fields.includes("category_slug") ? (
@@ -634,6 +631,94 @@ function ItemForm({
         ) : null}
       </div>
     </form>
+  );
+}
+
+function ImageUploadField({
+  defaultValue,
+  t,
+}: {
+  defaultValue: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
+  const [url, setUrl] = useState(defaultValue);
+  const [uploadState, setUploadState] = useState<"idle" | "uploading" | "ok" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [isPending, startTransition] = useTransition();
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("file", file);
+    setUploadState("uploading");
+    setErrorMsg("");
+    startTransition(async () => {
+      const result = await uploadHeroImageAction(null, fd);
+      if (result.ok) {
+        setUrl(result.url);
+        setUploadState("ok");
+      } else {
+        setUploadState("error");
+        setErrorMsg(result.message);
+      }
+    });
+  }
+
+  return (
+    <div className="sm:col-span-2 flex flex-col gap-2">
+      <span className="text-xs font-semibold text-[var(--admin-text-secondary)]">{t("uploadImage")}</span>
+
+      {/* Preview */}
+      {url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          className="h-28 w-full rounded object-cover border border-[var(--admin-cell-border)]"
+        />
+      ) : null}
+
+      {/* File picker */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={isPending}
+          className={`${adminUi.btnSecondary} px-3 py-1.5 text-sm`}
+        >
+          {isPending ? t("uploading") : t("uploadChoose")}
+        </button>
+        {uploadState === "ok" && (
+          <span className="text-xs text-emerald-600">{t("uploadSuccess")}</span>
+        )}
+        {uploadState === "error" && (
+          <span className="text-xs text-red-600">{t("uploadFailed")}: {errorMsg}</span>
+        )}
+        <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("uploadHint")}</span>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* Hidden field carries the final URL into the form */}
+      <input type="hidden" name="image_url" value={url} />
+
+      {/* URL text input as fallback */}
+      <Labeled label={t("orPasteUrl")} className="">
+        <input
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setUploadState("idle"); }}
+          className={adminUi.input}
+          placeholder="https://…"
+        />
+      </Labeled>
+    </div>
   );
 }
 
