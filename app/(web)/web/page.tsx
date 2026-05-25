@@ -156,10 +156,15 @@ export default async function WebHomePage() {
                         <div className="w-[62px] h-[62px] rounded-full p-[2.5px] bg-gradient-to-br from-[#B71C1C] via-[#FFCA28] to-[#B71C1C]">
                           <div className="w-full h-full rounded-full border-2.5 border-white flex items-center justify-center overflow-hidden">
                             <div
-                              className="w-full h-full rounded-full flex items-center justify-center text-2xl"
+                              className="w-full h-full rounded-full flex items-center justify-center text-2xl overflow-hidden"
                               style={{ backgroundColor: cat.bg_color ?? "#F5F5F5", color: cat.fg_color ?? "#555" }}
                             >
-                              {cat.icon_emoji || "📦"}
+                              {cat.image_url ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={cat.image_url} alt="" className="w-full h-full object-cover" />
+                              ) : (
+                                cat.icon_emoji || "📦"
+                              )}
                             </div>
                           </div>
                         </div>
