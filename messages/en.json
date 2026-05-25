@@ -1490,5 +1490,29 @@
     "viewProfile": "View profile",
     "loadError": "Could not load profile views. Try again.",
     "totalViews": "{count} view(s)"
+  },
+  "adminMedia": {
+    "title": "Media Library",
+    "lead": "All images stored in Supabase Storage buckets. Filter, preview, copy URLs or delete files.",
+    "backAdmin": "Back to Admin",
+    "totalFiles": "Total files",
+    "totalSize": "Total size",
+    "searchPlaceholder": "Search by filename…",
+    "allBuckets": "All buckets",
+    "viewGrid": "Grid",
+    "viewList": "List",
+    "files": "files",
+    "noResults": "No files match your filter.",
+    "empty": "No media files found in any bucket.",
+    "colPreview": "Preview",
+    "colName": "File / Path",
+    "colBucket": "Bucket",
+    "colExt": "Type",
+    "colSize": "Size",
+    "colDate": "Date",
+    "colActions": "Actions",
+    "open": "Open",
+    "delete": "Delete",
+    "confirmDelete": "Delete this file permanently? This cannot be undone."
   }
 }

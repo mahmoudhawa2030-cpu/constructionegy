@@ -116,6 +116,11 @@ export default async function AdminDashboardPage() {
                   </Link>
                 </li>
                 <li>
+                  <Link className={adminUi.objectLink} href="/admin/media" prefetch={true}>
+                    مكتبة الوسائط
+                  </Link>
+                </li>
+                <li>
                   <Link className={adminUi.objectLink} href="/listings/new">
                     إضافة إعلان
                   </Link>
