@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 
+import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SearchInput } from "./search-input";
 import { UserNav } from "./user-nav";
 
@@ -53,6 +54,7 @@ export function WebHeader({ hasUser, userId, userName, userAvatar, unreadMessage
           <div className="flex items-center gap-4 text-xs text-white/80">
             <Link href="/help" className="hover:text-white transition-colors">{tCommon("helpCenter")}</Link>
             <Link href="/contact" className="hover:text-white transition-colors">{tCommon("contactUs")}</Link>
+            <LocaleSwitcher className="border-white/20 bg-white/10 text-white [&_button]:text-white/80 [&_button:hover]:text-white [&_.bg-white]:bg-white/20 [&_.bg-white]:text-white [&_.shadow-sm]:shadow-none" />
           </div>
         </div>
       </div>
