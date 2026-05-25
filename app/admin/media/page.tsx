@@ -10,6 +10,7 @@ import { MediaGrid } from "./media-grid";
 export const dynamic = "force-dynamic";
 
 const IMAGE_BUCKETS = [
+  { id: "listing-images", label: "Listing Photos" },
   { id: "homepage-hero-images", label: "Hero Slider Images" },
   { id: "homepage-desktop-category-icons", label: "Desktop Category Icons" },
 ];

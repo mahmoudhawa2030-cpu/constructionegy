@@ -1493,7 +1493,7 @@
   },
   "adminMedia": {
     "title": "Media Library",
-    "lead": "All images stored in Supabase Storage buckets. Filter, preview, copy URLs or delete files.",
+    "lead": "All images stored in Supabase Storage — listing photos, hero slides, and category icons. 100 per page.",
     "backAdmin": "Back to Admin",
     "totalFiles": "Total files",
     "totalSize": "Total size",
@@ -1513,6 +1513,9 @@
     "colActions": "Actions",
     "open": "Open",
     "delete": "Delete",
-    "confirmDelete": "Delete this file permanently? This cannot be undone."
+    "confirmDelete": "Delete this file permanently? This cannot be undone.",
+    "page": "Page",
+    "prev": "Prev",
+    "next": "Next"
   }
 }

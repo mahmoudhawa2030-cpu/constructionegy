@@ -8,9 +8,12 @@ import { deleteMediaFileAction, type MediaActionState } from "./actions";
 import type { MediaFile } from "./page";
 
 const BUCKET_COLORS: Record<string, string> = {
+  "listing-images": "bg-green-100 text-green-800",
   "homepage-hero-images": "bg-blue-100 text-blue-800",
   "homepage-desktop-category-icons": "bg-purple-100 text-purple-800",
 };
+
+const PAGE_SIZE = 100;
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -63,6 +66,7 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
   const [search, setSearch] = useState("");
   const [bucket, setBucket] = useState("all");
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [page, setPage] = useState(1);
 
   const buckets = Array.from(new Set(files.map((f) => f.bucket)));
 
@@ -72,6 +76,15 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  function goToPage(p: number) {
+    setPage(Math.max(1, Math.min(p, totalPages)));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   return (
     <div className="flex flex-col gap-4">
       {/* Toolbar */}
@@ -79,13 +92,13 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
         <input
           type="search"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder={t("searchPlaceholder")}
           className={`${adminUi.input} w-56`}
         />
         <select
           value={bucket}
-          onChange={(e) => setBucket(e.target.value)}
+          onChange={(e) => { setBucket(e.target.value); setPage(1); }}
           className={adminUi.select}
         >
           <option value="all">{t("allBuckets")}</option>
@@ -109,14 +122,16 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
             ☰ {t("viewList")}
           </button>
         </div>
-        <span className={adminUi.footnote}>{filtered.length} {t("files")}</span>
+        <span className={adminUi.footnote}>
+          {filtered.length} {t("files")} · {t("page")} {safePage}/{totalPages}
+        </span>
       </div>
 
       {filtered.length === 0 ? (
         <p className="text-sm text-[var(--admin-text-secondary)]">{t("noResults")}</p>
       ) : view === "grid" ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-          {filtered.map((f) => (
+          {paginated.map((f) => (
             <div
               key={`${f.bucket}/${f.path}`}
               className={`${adminUi.card} flex flex-col overflow-hidden`}
@@ -184,7 +199,7 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((f) => (
+                  {paginated.map((f) => (
                     <tr key={`${f.bucket}/${f.path}`} className={adminUi.tbodyRow}>
                       <td className={adminUi.td}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -237,6 +252,72 @@ export function MediaGrid({ files }: { files: MediaFile[] }) {
               </table>
             </div>
           </div>
+        </div>
+      )}
+      {/* Pagination controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
+          <button
+            type="button"
+            onClick={() => goToPage(1)}
+            disabled={safePage === 1}
+            className={`${adminUi.btnSecondary} disabled:opacity-40`}
+          >
+            «
+          </button>
+          <button
+            type="button"
+            onClick={() => goToPage(safePage - 1)}
+            disabled={safePage === 1}
+            className={`${adminUi.btnSecondary} disabled:opacity-40`}
+          >
+            ‹ {t("prev")}
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter((p) => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+            .reduce<Array<number | "…">>((acc, p, idx, arr) => {
+              if (idx > 0 && typeof arr[idx - 1] === "number" && (arr[idx - 1] as number) + 1 < p) {
+                acc.push("…");
+              }
+              acc.push(p);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === "…" ? (
+                <span key={`ellipsis-${idx}`} className={`${adminUi.footnote} px-1`}>…</span>
+              ) : (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => goToPage(item as number)}
+                  className={`min-w-[2rem] px-2 py-1.5 text-xs font-semibold rounded-sm border transition-colors ${
+                    safePage === item
+                      ? "border-[var(--admin-brand)] bg-[var(--admin-brand)] text-white"
+                      : "border-[var(--admin-shell-border)] bg-white text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+          <button
+            type="button"
+            onClick={() => goToPage(safePage + 1)}
+            disabled={safePage === totalPages}
+            className={`${adminUi.btnSecondary} disabled:opacity-40`}
+          >
+            {t("next")} ›
+          </button>
+          <button
+            type="button"
+            onClick={() => goToPage(totalPages)}
+            disabled={safePage === totalPages}
+            className={`${adminUi.btnSecondary} disabled:opacity-40`}
+          >
+            »
+          </button>
         </div>
       )}
     </div>
