@@ -41,7 +41,7 @@ export async function proxy(request: NextRequest) {
   const desktopRedirectPaths: [RegExp, (m: RegExpMatchArray) => string][] = [
     [/^\/$/, () => "/web"],
     [/^\/gallery$/, () => "/web/gallery"],
-    [/^\/listings\/([^/]+)$/, (m) => `/web/listings/${m[1]}`],
+    [/^\/listings\/(?!new$)([^/]+)$/, (m) => `/web/listings/${m[1]}`],
   ];
 
   if (!mobile) {
