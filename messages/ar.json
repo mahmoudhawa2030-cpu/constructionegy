@@ -694,6 +694,8 @@
       "legalCompanyMissing": "لا يوجد اسم قانوني محفوظ.",
       "noDocs": "لا مستندات مرفوعة.",
       "open": "فتح",
+      "openInTab": "فتح في تبويب جديد",
+      "closeViewer": "إغلاق",
       "docType": {
         "commercial_register": "السجل التجاري",
         "tax_card": "البطاقة الضريبية",

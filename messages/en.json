@@ -692,6 +692,8 @@
       "legalCompanyMissing": "No legal company name on file.",
       "noDocs": "No documents uploaded.",
       "open": "Open",
+      "openInTab": "Open in new tab",
+      "closeViewer": "Close",
       "docType": {
         "commercial_register": "Commercial register",
         "tax_card": "Tax card",

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { AdminBusinessVerificationActions } from "@/components/admin-business-verification-actions";
+import { AdminDocViewer } from "@/components/admin-doc-viewer";
+import type { AdminDocLink } from "@/components/admin-doc-viewer";
 import { RFQ_SIGNED_URL_TTL } from "@/lib/rfq/constants";
 import { adminUi } from "@/lib/admin-ui";
 import { fetchProfileLegalCompanyName } from "@/lib/profiles/legal-company-name";
@@ -46,19 +48,21 @@ export default async function AdminVerificationDetailPage({ params }: PageProps)
 
   const { data: docs } = await supabase
     .from("business_verification_documents")
-    .select("document_type, original_filename, storage_path, byte_size")
+    .select("id, document_type, original_filename, storage_path, byte_size, created_at")
     .eq("user_id", userId)
-    .order("document_type", { ascending: true });
+    .order("created_at", { ascending: false });
 
-  const links: { type: string; name: string; url: string | null }[] = [];
+  const links: AdminDocLink[] = [];
   for (const d of docs ?? []) {
     const { data: signed } = await supabase.storage
       .from("business-verification")
       .createSignedUrl(d.storage_path, RFQ_SIGNED_URL_TTL);
     links.push({
       type: d.document_type,
+      label: docTypeLabel(d.document_type, t),
       name: d.original_filename,
       url: signed?.signedUrl ?? null,
+      uploadedAt: d.created_at,
     });
   }
 
@@ -121,25 +125,7 @@ export default async function AdminVerificationDetailPage({ params }: PageProps)
       <div className={adminUi.widget}>
         <div className={adminUi.widgetHeader}>{t("documentsHeading")}</div>
         <div className={adminUi.widgetBody}>
-          {links.length === 0 ? (
-            <p className="text-sm text-[var(--admin-text-secondary)]">{t("noDocs")}</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {links.map((x) => (
-                <li key={x.type} className="text-sm">
-                  <strong>{docTypeLabel(x.type, t)}</strong> — {x.name}
-                  {x.url ? (
-                    <>
-                      {" "}
-                      <a className="text-[var(--admin-brand)] underline" href={x.url} rel="noreferrer" target="_blank">
-                        {t("open")}
-                      </a>
-                    </>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          )}
+          <AdminDocViewer links={links} noDocs={t("noDocs")} />
         </div>
       </div>
     </div>
