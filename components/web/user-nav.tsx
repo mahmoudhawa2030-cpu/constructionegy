@@ -82,7 +82,7 @@ export function UserNav({ hasUser, userId, userName, userAvatar, unreadMessageCo
             <Link href="/profile" className="block px-4 py-2 text-sm text-[var(--bina-text)] hover:bg-[var(--bina-steel)]">
               {t("profile")}
             </Link>
-            <Link href="/listings" className="block px-4 py-2 text-sm text-[var(--bina-text)] hover:bg-[var(--bina-steel)]">
+            <Link href="/users/myads" className="block px-4 py-2 text-sm text-[var(--bina-text)] hover:bg-[var(--bina-steel)]">
               {t("myListings")}
             </Link>
             <Link href="/bookings" className="block px-4 py-2 text-sm text-[var(--bina-text)] hover:bg-[var(--bina-steel)]">
