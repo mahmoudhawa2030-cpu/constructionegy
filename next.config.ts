@@ -23,6 +23,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: "/web/listings/new",
+        destination: "/listings/new",
+        permanent: false,
+      },
+      {
+        source: "/web/listings/:id/edit",
+        destination: "/listings/:id/edit",
+        permanent: false,
+      },
+    ];
+  },
   // RFQ pages must not be cached by CDN/browser after deploy (Capacitor WebView often pins the production origin).
   async headers() {
     return [
