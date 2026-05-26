@@ -21,6 +21,18 @@ type Props = {
   children: React.ReactNode;
 };
 
+function getPageTitle(pathname: string): string {
+  if (pathname === "/messages" || pathname?.startsWith("/messages/")) return "الرسائل";
+  if (pathname === "/gallery") return "المعرض";
+  if (pathname === "/profile") return "الملف الشخصي";
+  if (pathname?.startsWith("/profile/")) return "الملف الشخصي";
+  if (pathname === "/bookings") return "الحجوزات";
+  if (pathname === "/favorites") return "المفضلة";
+  if (pathname === "/rfq") return "طلبات العروض";
+  if (pathname === "/notifications") return "الإشعارات";
+  return "";
+}
+
 function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; children: React.ReactNode }) {
   const t = useTranslations("nav");
   const tHome = useTranslations("home");
@@ -31,6 +43,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
   const isMobileFeedHome = pathname === "/" || pathname === "";
   /** Scanner has its own header — hide the global one */
   const isScannerPage = pathname?.includes("/tools/scanner");
+  const pageTitle = getPageTitle(pathname || "");
 
   return (
     <div className="flex h-full flex-col">
@@ -50,7 +63,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
             </svg>
           </button>
           <span className="min-w-0 flex-1 truncate text-center text-sm font-semibold text-white">
-            {tHome("title")}
+            {pageTitle || tHome("title")}
           </span>
           <span aria-hidden className="inline-block h-10 w-10 shrink-0" />
         </header>
