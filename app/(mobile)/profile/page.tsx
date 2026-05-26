@@ -21,9 +21,11 @@ type ProfileFields = Pick<
 >;
 
 type VerificationDocRow = {
+  id: string;
   document_type: BusinessVerificationDocType;
   original_filename: string | null;
   previewUrl: string | null;
+  createdAt: string;
 };
 
 function imagePreviewExt(filename: string): boolean {
@@ -67,8 +69,9 @@ export default async function ProfilePage() {
   if (user && profile) {
     const { data: rawDocs } = await supabase
       .from("business_verification_documents")
-      .select("document_type, original_filename, storage_path")
-      .eq("user_id", user.id);
+      .select("id, document_type, original_filename, storage_path, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
     for (const row of rawDocs ?? []) {
       let previewUrl: string | null = null;
       const name = row.original_filename ?? "";
@@ -79,9 +82,11 @@ export default async function ProfilePage() {
         previewUrl = signed?.signedUrl ?? null;
       }
       verificationDocs.push({
+        id: row.id,
         document_type: row.document_type as BusinessVerificationDocType,
         original_filename: row.original_filename,
         previewUrl,
+        createdAt: row.created_at,
       });
     }
   }

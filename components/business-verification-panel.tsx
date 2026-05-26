@@ -13,9 +13,11 @@ import { BUSINESS_VERIFICATION_DOC_TYPES } from "@/lib/business-verification/con
 import { RFQ_LEGAL_COMPANY_NAME_MAX, RFQ_LEGAL_COMPANY_NAME_MIN } from "@/lib/rfq/domain";
 
 type DocRow = {
+  id: string;
   document_type: BusinessVerificationDocType;
   original_filename: string | null;
   previewUrl: string | null;
+  createdAt: string;
 };
 
 type Props = {
@@ -45,11 +47,13 @@ export function BusinessVerificationPanel({ status, documents, adminNotes, legal
     setLegalInput((legalCompanyName ?? "").trim());
   }, [legalCompanyName]);
 
-  const byType = Object.fromEntries(documents.map((d) => [d.document_type, d])) as Partial<
-    Record<BusinessVerificationDocType, DocRow>
-  >;
+  const byType = Object.fromEntries(
+    BUSINESS_VERIFICATION_DOC_TYPES.map((dt) => [
+      dt,
+      documents.filter((d) => d.document_type === dt),
+    ]),
+  ) as Record<BusinessVerificationDocType, DocRow[]>;
 
-  const canUpload = status === "none" || status === "pending" || status === "rejected";
   const savedLegalTrimmed = (legalCompanyName ?? "").trim();
   const uploadsAllowed =
     savedLegalTrimmed.length >= RFQ_LEGAL_COMPANY_NAME_MIN &&
@@ -134,13 +138,6 @@ export function BusinessVerificationPanel({ status, documents, adminNotes, legal
       ) : null}
       {status === "none" ? <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{t("statusNone")}</p> : null}
 
-      {!canUpload && savedLegalTrimmed ? (
-        <p className="mt-3 text-sm text-zinc-800 dark:text-zinc-200">
-          <span className="font-medium">{t("legalCompanyNameLabel")}:</span>{" "}
-          <span dir="auto">{savedLegalTrimmed}</span>
-        </p>
-      ) : null}
-
       {message ? (
         <p
           className={`mt-2 text-sm ${message.ok ? "text-emerald-700 dark:text-emerald-300" : "text-red-600 dark:text-red-400"}`}
@@ -150,123 +147,148 @@ export function BusinessVerificationPanel({ status, documents, adminNotes, legal
         </p>
       ) : null}
 
-      {canUpload ? (
-        <form
-          action={legalSaveAction}
-          className="mt-4 flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-600 dark:bg-zinc-950"
+      {/* ── Company name — always editable ── */}
+      <form
+        action={legalSaveAction}
+        className="mt-4 flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-600 dark:bg-zinc-950"
+      >
+        <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50" id={legalLabelId}>
+          {t("legalCompanyNameLabel")}
+          <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>*</span>
+        </p>
+        <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
+        <input
+          aria-labelledby={legalLabelId}
+          className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+          id={legalInputId}
+          maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
+          name="legal_company_name"
+          onChange={(e) => setLegalInput(e.target.value)}
+          type="text"
+          value={legalInput}
+        />
+        <button
+          className="self-start rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
+          disabled={legalSavePending}
+          type="submit"
         >
-          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50" id={legalLabelId}>
-            {t("legalCompanyNameLabel")}
-            <span className="ms-1 text-red-600 dark:text-red-400" aria-hidden>
-              *
-            </span>
-          </p>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">{t("legalCompanyNameHint")}</p>
-          <input
-            aria-labelledby={legalLabelId}
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
-            id={legalInputId}
-            maxLength={RFQ_LEGAL_COMPANY_NAME_MAX}
-            name="legal_company_name"
-            onChange={(e) => setLegalInput(e.target.value)}
-            type="text"
-            value={legalInput}
-          />
-          <button
-            className="self-start rounded-lg bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
-            disabled={legalSavePending}
-            type="submit"
+          {legalSavePending ? ta("savingLegalCompany") : ta("saveLegalCompany")}
+        </button>
+        {legalSaveState ? (
+          <p
+            className={legalSaveState.ok ? "text-sm text-emerald-700 dark:text-emerald-300" : "text-sm text-red-600 dark:text-red-400"}
+            role="status"
           >
-            {legalSavePending ? ta("savingLegalCompany") : ta("saveLegalCompany")}
-          </button>
-          {legalSaveState ? (
-            <p
-              className={
-                legalSaveState.ok
-                  ? "text-sm text-emerald-700 dark:text-emerald-300"
-                  : "text-sm text-red-600 dark:text-red-400"
-              }
-              role="status"
-            >
-              {legalSaveState.message}
-            </p>
-          ) : null}
-        </form>
-      ) : null}
+            {legalSaveState.message}
+          </p>
+        ) : null}
+      </form>
 
-      {canUpload && !uploadsAllowed ? (
+      {!uploadsAllowed ? (
         <p className="mt-3 text-sm text-amber-800 dark:text-amber-200">{t("uploadsLockedUntilLegalName")}</p>
       ) : null}
 
-      {canUpload ? (
-        <ul
-          className={`mt-4 flex flex-col gap-4 ${!uploadsAllowed ? "pointer-events-none opacity-50" : ""}`}
-          aria-disabled={!uploadsAllowed}
-        >
-          {BUSINESS_VERIFICATION_DOC_TYPES.map((docType) => {
-            const doc = byType[docType];
-            const previewUrl = doc?.previewUrl ?? null;
-            return (
-              <li
-                key={docType}
-                className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-600 dark:bg-zinc-950"
-              >
-                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{t(`doc.${docType}`)}</p>
-                {doc?.original_filename ? (
-                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                    {t("currentFile")}: {doc.original_filename}
+      {/* ── Documents — always upload new, old shown as read-only history ── */}
+      <ul
+        className={`mt-4 flex flex-col gap-4 ${!uploadsAllowed ? "pointer-events-none opacity-50" : ""}`}
+        aria-disabled={!uploadsAllowed}
+      >
+        {BUSINESS_VERIFICATION_DOC_TYPES.map((docType) => {
+          const docs = byType[docType];
+          const latest = docs[0] ?? null;
+          return (
+            <li
+              key={docType}
+              className="rounded-lg border border-zinc-200 bg-white p-3 dark:border-zinc-600 dark:bg-zinc-950"
+            >
+              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">{t(`doc.${docType}`)}</p>
+
+              {/* Latest upload preview */}
+              {latest ? (
+                <div className="mt-1">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {t("currentFile")}: <span className="font-medium">{latest.original_filename}</span>
                   </p>
-                ) : (
-                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{t("missing")}</p>
-                )}
-                {previewUrl ? (
-                  <a
-                    className="mt-2 inline-block overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-600"
-                    href={previewUrl}
-                    rel="noreferrer"
-                    target="_blank"
-                  >
-                    <Image
-                      alt={t("previewImageAlt")}
-                      className="max-h-48 w-auto max-w-full object-contain"
-                      height={192}
-                      src={previewUrl}
-                      unoptimized
-                      width={320}
-                    />
-                  </a>
-                ) : null}
-                <input
-                  ref={(el) => {
-                    inputRefs.current[docType] = el;
-                  }}
-                  accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
-                  className="mt-2 block w-full text-xs text-zinc-600 file:me-2 file:rounded-md file:border-0 file:bg-zinc-200 file:px-2 file:py-1 dark:text-zinc-400 dark:file:bg-zinc-800"
+                  {latest.previewUrl ? (
+                    <a
+                      className="mt-2 inline-block overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-600"
+                      href={latest.previewUrl}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <Image
+                        alt={t("previewImageAlt")}
+                        className="max-h-48 w-auto max-w-full object-contain"
+                        height={192}
+                        src={latest.previewUrl}
+                        unoptimized
+                        width={320}
+                      />
+                    </a>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{t("missing")}</p>
+              )}
+
+              {/* Upload new */}
+              <input
+                ref={(el) => { inputRefs.current[docType] = el; }}
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+                className="mt-2 block w-full text-xs text-zinc-600 file:me-2 file:rounded-md file:border-0 file:bg-zinc-200 file:px-2 file:py-1 dark:text-zinc-400 dark:file:bg-zinc-800"
+                disabled={busyType !== null || !uploadsAllowed}
+                type="file"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  e.target.value = "";
+                  if (f) void upload(docType, f);
+                }}
+              />
+              {busyType === docType ? (
+                <p className="mt-1 text-xs text-zinc-500">{t("uploading")}</p>
+              ) : (
+                <button
+                  className="mt-2 rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900"
                   disabled={busyType !== null || !uploadsAllowed}
-                  type="file"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    e.target.value = "";
-                    if (f) void upload(docType, f);
-                  }}
-                />
-                {busyType === docType ? (
-                  <p className="mt-1 text-xs text-zinc-500">{t("uploading")}</p>
-                ) : (
-                  <button
-                    className="mt-2 rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    disabled={busyType !== null || !uploadsAllowed}
-                    type="button"
-                    onClick={() => inputRefs.current[docType]?.click()}
-                  >
-                    {t("chooseFile")}
-                  </button>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
+                  type="button"
+                  onClick={() => inputRefs.current[docType]?.click()}
+                >
+                  {latest ? t("replaceFile") : t("chooseFile")}
+                </button>
+              )}
+
+              {/* Previous uploads — read-only history */}
+              {docs.length > 1 ? (
+                <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-700">
+                  <p className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">{t("previousUploads")}</p>
+                  <ul className="flex flex-col gap-1.5">
+                    {docs.slice(1).map((doc) => (
+                      <li key={doc.id} className="flex items-center gap-2 rounded-md bg-zinc-50 px-2 py-1.5 dark:bg-zinc-900">
+                        <span className="flex-1 truncate text-xs text-zinc-600 dark:text-zinc-400" title={doc.original_filename ?? ""}>
+                          {doc.original_filename ?? "—"}
+                        </span>
+                        <span className="shrink-0 text-[10px] tabular-nums text-zinc-400 dark:text-zinc-500">
+                          {new Date(doc.createdAt).toLocaleDateString()}
+                        </span>
+                        {doc.previewUrl ? (
+                          <a
+                            href={doc.previewUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="shrink-0 text-[10px] text-zinc-500 underline hover:text-zinc-800 dark:hover:text-zinc-200"
+                          >
+                            {t("viewFile")}
+                          </a>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
 
       <p className="mt-3 text-xs text-zinc-500 dark:text-zinc-500">{t("formatsHint")}</p>
     </section>

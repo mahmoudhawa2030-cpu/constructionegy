@@ -31,17 +31,6 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: false, code: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("business_verification_status")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const st = profile?.business_verification_status ?? "none";
-  if (!["none", "pending", "rejected"].includes(st)) {
-    return NextResponse.json({ ok: false, code: "NOT_EDITABLE" }, { status: 403 });
-  }
-
   const legalRow = await fetchProfileLegalCompanyName(supabase, user.id);
   const legal = (legalRow ?? "").trim();
   if (legal.length < RFQ_LEGAL_COMPANY_NAME_MIN || legal.length > RFQ_LEGAL_COMPANY_NAME_MAX) {
@@ -79,17 +68,6 @@ export async function POST(request: Request): Promise<NextResponse> {
   const contentType = file.type || "application/octet-stream";
   const newPath = `${user.id}/${randomUUID()}_${safeBase}`;
 
-  const { data: existing } = await supabase
-    .from("business_verification_documents")
-    .select("id, storage_path")
-    .eq("user_id", user.id)
-    .eq("document_type", docTypeRaw)
-    .maybeSingle();
-
-  if (existing?.storage_path) {
-    await supabase.storage.from("business-verification").remove([existing.storage_path]);
-  }
-
   const { error: upErr } = await supabase.storage
     .from("business-verification")
     .upload(newPath, buf, { contentType, upsert: false });
@@ -98,18 +76,17 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: false, code: "STORAGE_FAILED", detail: upErr.message }, { status: 500 });
   }
 
-  const { error: dbErr } = await supabase.from("business_verification_documents").upsert(
-    {
-      user_id: user.id,
-      document_type: docTypeRaw,
-      storage_path: newPath,
-      original_filename: safeBase,
-      content_type: contentType,
-      byte_size: buf.length,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,document_type" },
-  );
+  const now = new Date().toISOString();
+  const { error: dbErr } = await supabase.from("business_verification_documents").insert({
+    user_id: user.id,
+    document_type: docTypeRaw,
+    storage_path: newPath,
+    original_filename: safeBase,
+    content_type: contentType,
+    byte_size: buf.length,
+    created_at: now,
+    updated_at: now,
+  });
 
   if (dbErr) {
     await supabase.storage.from("business-verification").remove([newPath]);
