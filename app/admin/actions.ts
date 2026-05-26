@@ -34,3 +34,20 @@ export async function updateListingStatusFromForm(formData: FormData) {
   revalidatePath("/gallery");
   revalidatePath(`/listings/${listingId}`);
 }
+
+export async function deleteListingAsAdmin(formData: FormData) {
+  await requireAdmin();
+  const listingId = formData.get("listing_id");
+  if (typeof listingId !== "string") {
+    throw new Error("بيانات غير صالحة");
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("listings").delete().eq("id", listingId);
+  if (error) {
+    throw new Error(error.message);
+  }
+  revalidatePath("/admin");
+  revalidatePath("/admin/listings");
+  revalidatePath("/gallery");
+}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { updateListingStatusFromForm } from "@/app/admin/actions";
+import { deleteListingAsAdmin, updateListingStatusFromForm } from "@/app/admin/actions";
 import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
@@ -113,6 +113,23 @@ export default async function AdminListingsPage() {
                     </select>
                     <button className={adminUi.btnPrimary} type="submit">
                       حفظ
+                    </button>
+                  </form>
+                  <form
+                    action={deleteListingAsAdmin}
+                    className="mt-2"
+                    onSubmit={(e) => {
+                      if (!confirm("حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.")) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <input name="listing_id" type="hidden" value={row.id} />
+                    <button
+                      className="rounded border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                      type="submit"
+                    >
+                      حذف
                     </button>
                   </form>
                 </td>
