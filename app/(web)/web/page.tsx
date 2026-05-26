@@ -144,7 +144,7 @@ export default async function WebHomePage() {
                     {tCommon("viewAll")} ›
                   </Link>
                 </div>
-                <div className="flex gap-3.5 overflow-x-auto scrollbar-hide pb-1">
+                <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-1">
                   {categories.items.map((cat) => {
                     const href = cat.category_slug ? `/gallery?category=${encodeURIComponent(cat.category_slug)}` : cat.href;
                     return (
@@ -153,10 +153,10 @@ export default async function WebHomePage() {
                         href={href}
                         className="flex flex-col items-center gap-1.5 flex-shrink-0"
                       >
-                        <div className="w-[62px] h-[62px] rounded-full p-[2.5px] bg-gradient-to-br from-[#B71C1C] via-[#FFCA28] to-[#B71C1C]">
+                        <div className="w-[78px] h-[78px] rounded-full p-[2.5px] bg-gradient-to-br from-[#B71C1C] via-[#FFCA28] to-[#B71C1C]">
                           <div className="w-full h-full rounded-full border-2.5 border-white flex items-center justify-center overflow-hidden">
                             <div
-                              className="w-full h-full rounded-full flex items-center justify-center text-2xl overflow-hidden"
+                              className="w-full h-full rounded-full flex items-center justify-center text-3xl overflow-hidden"
                               style={{ backgroundColor: cat.bg_color ?? "#F5F5F5", color: cat.fg_color ?? "#555" }}
                             >
                               {cat.image_url ? (
@@ -168,7 +168,7 @@ export default async function WebHomePage() {
                             </div>
                           </div>
                         </div>
-                        <span className="text-[11px] text-[#444] text-center max-w-16 leading-tight font-medium">
+                        <span className="text-[13px] text-[#444] text-center max-w-20 leading-tight font-medium">
                           {pick(cat.title_ar, cat.title_en, locale)}
                         </span>
                       </Link>
