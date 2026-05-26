@@ -209,21 +209,7 @@ export default async function ProfilePage() {
       </div>
       </div>
 
-      {user ? (
-        <ProfileListingsGrid
-          categoryLabelMap={categoryLabelMap}
-          viewerUserId={user.id}
-          empty={t.rich("emptyMyListingsRich", {
-            link: (chunks) => (
-              <Link className="font-medium text-zinc-900 underline dark:text-zinc-100" href="/listings/new">
-                {chunks}
-              </Link>
-            ),
-          })}
-          listings={myListings}
-          title={t("myListingsTitle")}
-        />
-      ) : null}
+      {/* Posts/listings grid disabled */}
     </div>
   );
 }
