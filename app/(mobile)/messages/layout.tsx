@@ -24,7 +24,7 @@ export default async function MessagesLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-2 sm:px-4 sm:py-3">
-      <div className="mb-4 hidden md:block">
+      <div className="mb-4">
         <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">الرسائل</h1>
         <p className="text-sm text-zinc-500 dark:text-zinc-400">تواصل مع البائعين والمشترين</p>
       </div>
