@@ -134,13 +134,7 @@ export default async function ProfilePage() {
             {t("login")}
           </Link>
         ) : null}
-        {user && profile ? (
-          <ExpertVerificationPanel
-            adminNotes={profile.expert_verification_admin_notes}
-            credentialsSummary={profile.expert_credentials_summary}
-            status={profile.expert_verification_status}
-          />
-        ) : null}
+        {/* ExpertVerificationPanel disabled */}
         {user && profile ? (
           <BusinessVerificationPanel
             adminNotes={profile.business_verification_admin_notes}
