@@ -24,7 +24,11 @@ export default async function MessagesLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-3 py-2 sm:px-4 sm:py-3">
-      <div className="flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom)-1rem)] flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom)-1.5rem)]">
+      <div className="mb-4 hidden md:block">
+        <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">الرسائل</h1>
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">تواصل مع البائعين والمشترين</p>
+      </div>
+      <div className="flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom)-1rem)] flex-1 flex-col overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom)-1.5rem)] md:min-h-[calc(100dvh-12rem)]">
         <MessagesSplitLayout
           sidebar={<MessagesInboxPanel userId={user.id} error={error} items={items} />}
         >
