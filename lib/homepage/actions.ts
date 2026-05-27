@@ -51,11 +51,11 @@ export async function saveMobileHomepageSections(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.role !== "admin") {
+  if (!profile?.is_admin) {
     return { success: false, error: "Not authorized" };
   }
 
@@ -94,11 +94,11 @@ export async function saveMobileHomepageContent(
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("is_admin")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.role !== "admin") {
+  if (!profile?.is_admin) {
     return { success: false, error: "Not authorized" };
   }
 

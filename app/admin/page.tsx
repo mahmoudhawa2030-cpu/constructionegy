@@ -112,7 +112,7 @@ export default async function AdminDashboardPage() {
                 </li>
                 <li>
                   <Link className={adminUi.objectLink} href="/admin/homepage/mobile" prefetch={true}>
-                    {t("mobileHomepage")}
+                    {tAdmin("mobileHomepage")}
                   </Link>
                 </li>
                 <li>
