@@ -8,6 +8,7 @@ import {
   saveMobileHomepageSections,
 } from "@/lib/homepage/actions";
 import type {
+  BilingualText,
   FlashDealsContent,
   HeroContent,
   HomepageContent,
@@ -18,6 +19,7 @@ import type {
   SectionConfig,
 } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
+import { BilingualTextInput } from "./bilingual-text-input";
 
 interface Props {
   initialConfig: MobileHomepageConfig | null;
@@ -104,7 +106,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
   };
 
   // Update membership perks
-  const updateMembershipPerk = (index: number, updates: Partial<{ value: string; label: string }>) => {
+  const updateMembershipPerk = (index: number, updates: Partial<{ value: string; label: BilingualText }>) => {
     const newPerks = [...content.membership.perks];
     newPerks[index] = { ...newPerks[index], ...updates };
     setContent({
@@ -233,61 +235,36 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           </h2>
 
           <div className="grid gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("heroKicker")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.hero.kicker}
-                onChange={(e) => updateHero({ kicker: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("heroTitleLabel")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.hero.title}
-                onChange={(e) => updateHero({ title: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("heroSubtitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.hero.subtitle}
-                onChange={(e) => updateHero({ subtitle: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("browseDealsText")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.hero.browseDealsText}
-                onChange={(e) => updateHero({ browseDealsText: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("postRfqText")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.hero.postRfqText}
-                onChange={(e) => updateHero({ postRfqText: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
+            <BilingualTextInput
+              label={t("heroKicker")}
+              value={content.hero.kicker}
+              onChange={(value) => updateHero({ kicker: value })}
+              placeholder={{ ar: "ابنِ بثقة", en: "BUILD WITH CONFIDENCE" }}
+            />
+            <BilingualTextInput
+              label={t("heroTitleLabel")}
+              value={content.hero.title}
+              onChange={(value) => updateHero({ title: value })}
+              placeholder={{ ar: "سوق البناء رقم #1 في مصر", en: "Egypt's #1 Construction Marketplace" }}
+            />
+            <BilingualTextInput
+              label={t("heroSubtitle")}
+              value={content.hero.subtitle}
+              onChange={(value) => updateHero({ subtitle: value })}
+              placeholder={{ ar: "مواد بناء عالية الجودة", en: "High-quality construction materials" }}
+            />
+            <BilingualTextInput
+              label={t("browseDealsText")}
+              value={content.hero.browseDealsText}
+              onChange={(value) => updateHero({ browseDealsText: value })}
+              placeholder={{ ar: "تصفح الصفقات", en: "Browse Deals" }}
+            />
+            <BilingualTextInput
+              label={t("postRfqText")}
+              value={content.hero.postRfqText}
+              onChange={(value) => updateHero({ postRfqText: value })}
+              placeholder={{ ar: "نشر طلب عرض", en: "Post RFQ" }}
+            />
 
             <div className="border-t border-[var(--admin-shell-border)] pt-4">
               <h3 className="mb-3 text-sm font-semibold text-[var(--admin-text)]">{t("heroStats")}</h3>
@@ -347,28 +324,18 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           </h2>
 
           <div className="grid gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("flashTitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.flash_deals.title}
-                onChange={(e) => updateFlash({ title: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("flashSubtitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.flash_deals.subtitle}
-                onChange={(e) => updateFlash({ subtitle: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
+            <BilingualTextInput
+              label={t("flashTitle")}
+              value={content.flash_deals.title}
+              onChange={(value) => updateFlash({ title: value })}
+              placeholder={{ ar: "الصفقات السريعة", en: "Flash Deals" }}
+            />
+            <BilingualTextInput
+              label={t("flashSubtitle")}
+              value={content.flash_deals.subtitle}
+              onChange={(value) => updateFlash({ subtitle: value })}
+              placeholder={{ ar: "عروض محدودة الوقت", en: "Limited time offers" }}
+            />
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
@@ -424,50 +391,30 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           </h2>
 
           <div className="grid gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("memberKicker")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.membership.kicker}
-                onChange={(e) => updateMembership({ kicker: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("welcomeText")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.membership.welcomeText}
-                onChange={(e) => updateMembership({ welcomeText: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("memberSubtitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.membership.subtitle}
-                onChange={(e) => updateMembership({ subtitle: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("redeemButton")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.membership.redeemButton}
-                onChange={(e) => updateMembership({ redeemButton: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
+            <BilingualTextInput
+              label={t("memberKicker")}
+              value={content.membership.kicker}
+              onChange={(value) => updateMembership({ kicker: value })}
+              placeholder={{ ar: "عضوية مميزة", en: "PREMIUM MEMBERSHIP" }}
+            />
+            <BilingualTextInput
+              label={t("welcomeText")}
+              value={content.membership.welcomeText}
+              onChange={(value) => updateMembership({ welcomeText: value })}
+              placeholder={{ ar: "مرحباً بعودتك", en: "Welcome Back" }}
+            />
+            <BilingualTextInput
+              label={t("memberSubtitle")}
+              value={content.membership.subtitle}
+              onChange={(value) => updateMembership({ subtitle: value })}
+              placeholder={{ ar: "استمتع بامتيازات حصرية", en: "Enjoy exclusive benefits" }}
+            />
+            <BilingualTextInput
+              label={t("redeemButton")}
+              value={content.membership.redeemButton}
+              onChange={(value) => updateMembership({ redeemButton: value })}
+              placeholder={{ ar: "استرداد", en: "Redeem" }}
+            />
 
             <div className="border-t border-[var(--admin-shell-border)] pt-4">
               <h3 className="mb-3 text-sm font-semibold text-[var(--admin-text)]">{t("membershipPerks")}</h3>
@@ -483,14 +430,11 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                       onChange={(e) => updateMembershipPerk(index, { value: e.target.value })}
                       className="mb-2 w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
                     />
-                    <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
-                      {t("perkLabel")} {index + 1} (i18n key)
-                    </label>
-                    <input
-                      type="text"
+                    <BilingualTextInput
+                      label={`${t("perkLabel")} ${index + 1}`}
                       value={perk.label}
-                      onChange={(e) => updateMembershipPerk(index, { label: e.target.value })}
-                      className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
+                      onChange={(value) => updateMembershipPerk(index, { label: value })}
+                      placeholder={{ ar: "خصم خاص", en: "Special Discount" }}
                     />
                   </div>
                 ))}
@@ -522,39 +466,24 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                   {t("promoCard")} {index + 1}
                 </h3>
                 <div className="grid gap-3">
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
-                      {t("promoKicker")} (i18n key)
-                    </label>
-                    <input
-                      type="text"
-                      value={card.kicker}
-                      onChange={(e) => updatePromoCard(index, { kicker: e.target.value })}
-                      className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
-                      {t("promoCardTitle")} (i18n key)
-                    </label>
-                    <input
-                      type="text"
-                      value={card.title}
-                      onChange={(e) => updatePromoCard(index, { title: e.target.value })}
-                      className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
-                      {t("promoCta")} (i18n key)
-                    </label>
-                    <input
-                      type="text"
-                      value={card.cta}
-                      onChange={(e) => updatePromoCard(index, { cta: e.target.value })}
-                      className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-                    />
-                  </div>
+                  <BilingualTextInput
+                    label={t("promoKicker")}
+                    value={card.kicker}
+                    onChange={(value) => updatePromoCard(index, { kicker: value })}
+                    placeholder={{ ar: "شحن مجاني", en: "FREE SHIPPING" }}
+                  />
+                  <BilingualTextInput
+                    label={t("promoCardTitle")}
+                    value={card.title}
+                    onChange={(value) => updatePromoCard(index, { title: value })}
+                    placeholder={{ ar: "على جميع الطلبات", en: "On All Orders" }}
+                  />
+                  <BilingualTextInput
+                    label={t("promoCta")}
+                    value={card.cta}
+                    onChange={(value) => updatePromoCard(index, { cta: value })}
+                    placeholder={{ ar: "اطلب الآن", en: "Claim Now" }}
+                  />
                   <div>
                     <label className="mb-1 block text-xs text-[var(--admin-text-secondary)]">
                       {t("promoLink")}
@@ -606,39 +535,24 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           </h2>
 
           <div className="grid gap-4">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("rfqTitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.rfq.title}
-                onChange={(e) => updateRFQ({ title: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("rfqSubtitle")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.rfq.subtitle}
-                onChange={(e) => updateRFQ({ subtitle: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-[var(--admin-text)]">
-                {t("rfqCta")} (i18n key)
-              </label>
-              <input
-                type="text"
-                value={content.rfq.cta}
-                onChange={(e) => updateRFQ({ cta: e.target.value })}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-[var(--admin-field-bg)] px-3 py-2 text-sm"
-              />
-            </div>
+            <BilingualTextInput
+              label={t("rfqTitle")}
+              value={content.rfq.title}
+              onChange={(value) => updateRFQ({ title: value })}
+              placeholder={{ ar: "تحتاج مواد بناء؟", en: "Need Construction Materials?" }}
+            />
+            <BilingualTextInput
+              label={t("rfqSubtitle")}
+              value={content.rfq.subtitle}
+              onChange={(value) => updateRFQ({ subtitle: value })}
+              placeholder={{ ar: "احصل على عروض من موردين موثوقين", en: "Get quotes from trusted suppliers" }}
+            />
+            <BilingualTextInput
+              label={t("rfqCta")}
+              value={content.rfq.cta}
+              onChange={(value) => updateRFQ({ cta: value })}
+              placeholder={{ ar: "نشر طلب عرض", en: "Post RFQ" }}
+            />
           </div>
 
           <button

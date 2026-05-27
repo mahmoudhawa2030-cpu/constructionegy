@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
+import { useBilingualText } from "@/lib/bilingual-text";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -113,6 +114,7 @@ export function HomeStorefront({
   content,
 }: Props) {
   const t = useTranslations("storefront");
+  const getText = useBilingualText();
 
   // Use provided config or defaults
   const activeSections = sections ?? DEFAULT_SECTIONS;
@@ -179,40 +181,40 @@ export function HomeStorefront({
       <div className="bg-[var(--bina-primary)]">
         <div className="mx-3 mt-1.5 mb-1.5 overflow-hidden rounded-2xl bg-[var(--bina-primary-lt)] p-4">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bina-accent)]">
-            {t("heroKicker")}
+            {getText(homepageContent.hero.kicker)}
           </div>
           <h2 className="mt-1.5 text-[20px] font-bold leading-tight tracking-tight text-white">
-            {t("heroTitle")}
+            {getText(homepageContent.hero.title)}
           </h2>
           <p className="mt-1.5 text-[12px] leading-relaxed text-white/75">
-            {t("heroSubtitle")}
+            {getText(homepageContent.hero.subtitle)}
           </p>
           <div className="mt-3.5 flex gap-2">
             <Link
               href="/gallery"
               className="rounded-lg bg-[var(--bina-accent)] px-4 py-2 text-[12px] font-bold text-[var(--bina-on-accent)] active:opacity-80"
             >
-              {t("browseDeals")}
+              {getText(homepageContent.hero.browseDealsText)}
             </Link>
             <Link
               href="/rfq/new"
               className="rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-[12px] font-semibold text-white active:opacity-80"
             >
-              {t("postRfq")}
+              {getText(homepageContent.hero.postRfqText)}
             </Link>
           </div>
         </div>
         <div className="grid grid-cols-3 border-t border-white/15 bg-[var(--bina-primary-dk)]">
           <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">50K+</div>
+            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.products}</div>
             <div className="text-[10px] text-white/65">{t("statProducts")}</div>
           </div>
           <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">3,200</div>
+            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.suppliers}</div>
             <div className="text-[10px] text-white/65">{t("statSuppliers")}</div>
           </div>
           <div className="py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">98%</div>
+            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.onTime}</div>
             <div className="text-[10px] text-white/65">{t("statOnTime")}</div>
           </div>
         </div>
@@ -231,29 +233,24 @@ export function HomeStorefront({
             <div className="relative flex items-start justify-between">
               <div>
                 <div className="text-[10px] font-semibold tracking-wider text-[var(--bina-accent)]">
-                  ✦ {t("memberKicker")}
+                  ✦ {getText(homepageContent.membership.kicker)}
                 </div>
                 <div className="mt-1.5 text-[17px] font-bold text-white">
-                  {t("welcomeBack", { name: displayName ?? "" })}
+                  {getText(homepageContent.membership.welcomeText).replace("{name}", displayName ?? "")}
                 </div>
                 <div className="mt-1 text-[12px] text-white/60">
-                  {t("memberSub")}
+                  {getText(homepageContent.membership.subtitle)}
                 </div>
               </div>
               <span className="rounded-lg bg-[var(--bina-accent)] px-3.5 py-2 text-[12px] font-bold text-[var(--bina-on-accent)]">
-                {t("redeem")}
+                {getText(homepageContent.membership.redeemButton)}
               </span>
             </div>
             <div className="relative mt-3.5 flex gap-4">
-              {[
-                { v: "12%", l: t("perkDiscount") },
-                { v: t("perkFreeVal"), l: t("perkFreight") },
-                { v: "Net-60", l: t("perkTerms") },
-                { v: "24/7", l: t("perkSupport") },
-              ].map((p, i) => (
+              {homepageContent.membership.perks.map((p, i) => (
                 <div key={i} className="text-center">
-                  <div className="text-[15px] font-bold text-[var(--bina-accent)]">{p.v}</div>
-                  <div className="mt-0.5 text-[10px] text-white/55">{p.l}</div>
+                  <div className="text-[15px] font-bold text-[var(--bina-accent)]">{p.value}</div>
+                  <div className="mt-0.5 text-[10px] text-white/55">{getText(p.label)}</div>
                 </div>
               ))}
             </div>
@@ -272,8 +269,8 @@ export function HomeStorefront({
                 </svg>
               </div>
               <div>
-                <div className="text-[15px] font-bold text-[var(--bina-text)]">{t("flashDeals")}</div>
-                <div className="text-[11px] text-[#888]">{t("flashSub")}</div>
+                <div className="text-[15px] font-bold text-[var(--bina-text)]">{getText(homepageContent.flash_deals.title)}</div>
+                <div className="text-[11px] text-[#888]">{getText(homepageContent.flash_deals.subtitle)}</div>
               </div>
             </div>
             <div className="flex items-center gap-0.5">
@@ -415,26 +412,34 @@ export function HomeStorefront({
       {isSectionEnabled("promo_banners") ? (
       <div className="px-3">
         <div className="grid grid-cols-2 gap-2">
-          <Link href="/gallery" className="rounded-2xl bg-[var(--bina-primary)] p-3.5">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-white/70">{t("promoShippingKicker")}</div>
-            <div className="mt-1 text-[13px] font-bold leading-tight text-white">{t("promoShipping")}</div>
-            <div className="mt-2 text-[11px] font-bold text-[var(--bina-accent)]">{t("claimNow")} ›</div>
-          </Link>
-          <Link href="/subscription-required" className="rounded-2xl bg-[#1a1a1a] p-3.5">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-white/50">{t("promoTermsKicker")}</div>
-            <div className="mt-1 text-[13px] font-bold leading-tight text-white">{t("promoTerms")}</div>
-            <div className="mt-2 text-[11px] font-bold text-[var(--bina-accent)]">{t("applyNow")} ›</div>
-          </Link>
-          <Link href="/gallery" className="rounded-2xl bg-[#E65100] p-3.5">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-white/70">{t("promoTrustKicker")}</div>
-            <div className="mt-1 text-[13px] font-bold leading-tight text-white">{t("promoTrust")}</div>
-            <div className="mt-2 text-[11px] font-bold text-white">{t("learnMore")} ›</div>
-          </Link>
-          <Link href="/users" className="rounded-2xl bg-[#1B5E20] p-3.5">
-            <div className="text-[9px] font-bold uppercase tracking-wider text-white/70">{t("promoNewKicker")}</div>
-            <div className="mt-1 text-[13px] font-bold leading-tight text-white">{t("promoNew")}</div>
-            <div className="mt-2 text-[11px] font-bold text-[var(--bina-accent)]">{t("browseAll")} ›</div>
-          </Link>
+          {homepageContent.promo_banners.cards.map((card, index) => {
+            const bgColor = card.color === 'primary' ? 'bg-[var(--bina-primary)]' :
+                           card.color === 'dark' ? 'bg-[#1a1a1a]' :
+                           card.color === 'orange' ? 'bg-[#E65100]' :
+                           'bg-[#1B5E20]';
+            const textColor = card.color === 'primary' ? 'text-[var(--bina-accent)]' :
+                             card.color === 'dark' ? 'text-[var(--bina-accent)]' :
+                             card.color === 'orange' ? 'text-white' :
+                             'text-[var(--bina-accent)]';
+            const kickerColor = card.color === 'primary' ? 'text-white/70' :
+                               card.color === 'dark' ? 'text-white/50' :
+                               card.color === 'orange' ? 'text-white/70' :
+                               'text-white/70';
+            
+            return (
+              <Link key={index} href={card.link} className={`rounded-2xl ${bgColor} p-3.5`}>
+                <div className={`text-[9px] font-bold uppercase tracking-wider ${kickerColor}`}>
+                  {getText(card.kicker)}
+                </div>
+                <div className="mt-1 text-[13px] font-bold leading-tight text-white">
+                  {getText(card.title)}
+                </div>
+                <div className={`mt-2 text-[11px] font-bold ${textColor}`}>
+                  {getText(card.cta)} ›
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </div>
       ) : null}
@@ -499,15 +504,15 @@ export function HomeStorefront({
                 <line x1="16" y1="13" x2="8" y2="13" />
                 <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
-              <div className="text-[15px] font-bold text-white">{t("rfqTitle")}</div>
+              <div className="text-[15px] font-bold text-white">{getText(homepageContent.rfq.title)}</div>
             </div>
-            <div className="mt-1 text-[12px] text-white/70">{t("rfqSub")}</div>
+            <div className="mt-1 text-[12px] text-white/70">{getText(homepageContent.rfq.subtitle)}</div>
           </div>
           <Link
             href={latestRfqHref ?? "/rfq/new"}
             className="flex w-full items-center justify-center gap-1.5 bg-[var(--bina-primary)] px-4 py-3.5 text-[14px] font-bold text-white active:opacity-90"
           >
-            {t("rfqCta")}
+            {getText(homepageContent.rfq.cta)}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />

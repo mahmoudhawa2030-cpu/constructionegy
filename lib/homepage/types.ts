@@ -12,6 +12,11 @@ export type SectionId =
   | "rfq"
   | "recent_orders";
 
+export interface BilingualText {
+  ar: string;
+  en: string;
+}
+
 export interface SectionConfig {
   id: SectionId;
   enabled: boolean;
@@ -20,16 +25,16 @@ export interface SectionConfig {
 }
 
 export interface PromoCardConfig {
-  kicker: string;
-  title: string;
-  cta: string;
+  kicker: BilingualText;
+  title: BilingualText;
+  cta: BilingualText;
   link: string;
   color: "primary" | "dark" | "orange" | "green";
 }
 
 export interface MembershipPerk {
   value: string;
-  label: string;
+  label: BilingualText;
 }
 
 export interface HeroStats {
@@ -39,27 +44,27 @@ export interface HeroStats {
 }
 
 export interface HeroContent {
-  kicker: string;
-  title: string;
-  subtitle: string;
-  browseDealsText: string;
-  postRfqText: string;
+  kicker: BilingualText;
+  title: BilingualText;
+  subtitle: BilingualText;
+  browseDealsText: BilingualText;
+  postRfqText: BilingualText;
   stats: HeroStats;
 }
 
 export interface FlashDealsContent {
-  title: string;
-  subtitle: string;
+  title: BilingualText;
+  subtitle: BilingualText;
   timerHours: number;
   timerMinutes: number;
   timerSeconds: number;
 }
 
 export interface MembershipContent {
-  kicker: string;
-  welcomeText: string;
-  subtitle: string;
-  redeemButton: string;
+  kicker: BilingualText;
+  welcomeText: BilingualText;
+  subtitle: BilingualText;
+  redeemButton: BilingualText;
   perks: MembershipPerk[];
 }
 
@@ -68,9 +73,9 @@ export interface PromoBannersContent {
 }
 
 export interface RFQContent {
-  title: string;
-  subtitle: string;
-  cta: string;
+  title: BilingualText;
+  subtitle: BilingualText;
+  cta: BilingualText;
 }
 
 export interface HomepageContent {
@@ -107,11 +112,11 @@ export const DEFAULT_SECTIONS: SectionConfig[] = [
 // Default content (matches current hardcoded values)
 export const DEFAULT_CONTENT: HomepageContent = {
   hero: {
-    kicker: "heroKicker",
-    title: "heroTitle",
-    subtitle: "heroSubtitle",
-    browseDealsText: "browseDeals",
-    postRfqText: "postRfq",
+    kicker: { ar: "ابنِ بثقة", en: "BUILD WITH CONFIDENCE" },
+    title: { ar: "سوق البناء رقم #1 في مصر", en: "Egypt's #1 Construction Marketplace" },
+    subtitle: { ar: "مواد بناء عالية الجودة من الموردين الموثوقين", en: "High-quality construction materials from trusted suppliers" },
+    browseDealsText: { ar: "تصفح الصفقات", en: "Browse Deals" },
+    postRfqText: { ar: "نشر طلب عرض", en: "Post RFQ" },
     stats: {
       products: "50K+",
       suppliers: "3,200",
@@ -119,59 +124,59 @@ export const DEFAULT_CONTENT: HomepageContent = {
     },
   },
   flash_deals: {
-    title: "flashDeals",
-    subtitle: "flashSub",
+    title: { ar: "الصفقات السريعة", en: "Flash Deals" },
+    subtitle: { ar: "عروض محدودة الوقت", en: "Limited time offers" },
     timerHours: 5,
     timerMinutes: 28,
     timerSeconds: 44,
   },
   membership: {
-    kicker: "memberKicker",
-    welcomeText: "welcomeBack",
-    subtitle: "memberSub",
-    redeemButton: "redeem",
+    kicker: { ar: "عضوية مميزة", en: "PREMIUM MEMBERSHIP" },
+    welcomeText: { ar: "مرحباً بعودتك", en: "Welcome Back" },
+    subtitle: { ar: "استمتع بامتيازات حصرية", en: "Enjoy exclusive benefits" },
+    redeemButton: { ar: "استرداد", en: "Redeem" },
     perks: [
-      { value: "12%", label: "perkDiscount" },
-      { value: "perkFreeVal", label: "perkFreight" },
-      { value: "Net-60", label: "perkTerms" },
-      { value: "24/7", label: "perkSupport" },
+      { value: "12%", label: { ar: "خصم خاص", en: "Special Discount" } },
+      { value: "perkFreeVal", label: { ar: "شحن مجاني", en: "Free Shipping" } },
+      { value: "Net-60", label: { ar: "شروط دفع مرنة", en: "Flexible Terms" } },
+      { value: "24/7", label: { ar: "دعم على مدار الساعة", en: "24/7 Support" } },
     ],
   },
   promo_banners: {
     cards: [
       {
-        kicker: "promoShippingKicker",
-        title: "promoShipping",
-        cta: "claimNow",
+        kicker: { ar: "شحن مجاني", en: "FREE SHIPPING" },
+        title: { ar: "على جميع الطلبات", en: "On All Orders" },
+        cta: { ar: "اطلب الآن", en: "Claim Now" },
         link: "/gallery",
         color: "primary",
       },
       {
-        kicker: "promoTermsKicker",
-        title: "promoTerms",
-        cta: "applyNow",
+        kicker: { ar: "شروط مرنة", en: "FLEXIBLE TERMS" },
+        title: { ar: "Net-60 دفع", en: "Net-60 Payment" },
+        cta: { ar: "قدم الآن", en: "Apply Now" },
         link: "/subscription-required",
         color: "dark",
       },
       {
-        kicker: "promoTrustKicker",
-        title: "promoTrust",
-        cta: "learnMore",
+        kicker: { ar: "موثوق", en: "TRUSTED" },
+        title: { ar: "موردين معتمدين", en: "Verified Suppliers" },
+        cta: { ar: "اعرف المزيد", en: "Learn More" },
         link: "/gallery",
         color: "orange",
       },
       {
-        kicker: "promoNewKicker",
-        title: "promoNew",
-        cta: "browseAll",
+        kicker: { ar: "جديد", en: "NEW" },
+        title: { ar: "انضم كعامل", en: "Join as Supplier" },
+        cta: { ar: "تصفح الكل", en: "Browse All" },
         link: "/users",
         color: "green",
       },
     ],
   },
   rfq: {
-    title: "rfqTitle",
-    subtitle: "rfqSub",
-    cta: "rfqCta",
+    title: { ar: "تحتاج مواد بناء؟", en: "Need Construction Materials?" },
+    subtitle: { ar: "احصل على عروض من موردين موثوقين", en: "Get quotes from trusted suppliers" },
+    cta: { ar: "نشر طلب عرض", en: "Post RFQ" },
   },
 };
