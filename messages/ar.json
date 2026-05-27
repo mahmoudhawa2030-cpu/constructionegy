@@ -1594,6 +1594,9 @@
     "promo_banners": "بانرات العروض",
     "suppliers": "أفضل الموردين",
     "rfq": "نموذج طلب العروض",
-    "recent_orders": "الطلبات الأخيرة"
+    "recent_orders": "الطلبات الأخيرة",
+    "listing_category": "فئة الإعلانات",
+    "data_chart": "رسم بياني",
+    "custom_content": "محتوى مخصص"
   }
 }

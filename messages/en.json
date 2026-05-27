@@ -1593,6 +1593,9 @@
     "promo_banners": "Promo Banners",
     "suppliers": "Top Suppliers",
     "rfq": "RFQ Form",
-    "recent_orders": "Recent Orders"
+    "recent_orders": "Recent Orders",
+    "listing_category": "Listing Category",
+    "data_chart": "Data Chart",
+    "custom_content": "Custom Content"
   }
 }
