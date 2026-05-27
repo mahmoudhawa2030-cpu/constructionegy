@@ -2,6 +2,8 @@ import { FeedTopbar } from "@/components/feed-topbar";
 import { HomeStorefront } from "@/components/home-storefront";
 import { PullToRefreshScroll } from "@/components/pull-to-refresh-scroll";
 import { fetchStorefrontData } from "@/lib/homepage/storefront-data";
+import { getMergedHomepageConfig } from "@/lib/homepage/actions";
+import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +15,7 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [storefront, latestRfqRes, profileRes] = await Promise.all([
+  const [storefront, latestRfqRes, profileRes, homepageConfig] = await Promise.all([
     fetchStorefrontData(supabase, user?.id ?? null),
     supabase
       .from("rfq_drafts")
@@ -25,6 +27,7 @@ export default async function HomePage() {
     user?.id
       ? supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle()
       : Promise.resolve({ data: null, error: null } as const),
+    getMergedHomepageConfig(),
   ]);
 
   const latestRfqHref = latestRfqRes.data?.id ? `/rfq/${latestRfqRes.data.id}` : null;
@@ -43,6 +46,8 @@ export default async function HomePage() {
           suppliers={storefront.suppliers}
           recentOrders={storefront.recentOrders}
           latestRfqHref={latestRfqHref}
+          sections={homepageConfig.sections}
+          content={homepageConfig.content}
         />
       </PullToRefreshScroll>
     </div>

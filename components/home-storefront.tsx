@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 
+import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
+import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type StorefrontCategory = {
@@ -51,6 +54,8 @@ type Props = {
   suppliers: StorefrontSupplier[];
   recentOrders: StorefrontOrder[];
   latestRfqHref?: string | null;
+  sections?: SectionConfig[];
+  content?: HomepageContent;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -104,11 +109,27 @@ export function HomeStorefront({
   suppliers,
   recentOrders,
   latestRfqHref,
+  sections,
+  content,
 }: Props) {
   const t = useTranslations("storefront");
 
-  // Flash deals timer (5h 28m 44s starting state, matches mockup)
-  const [secondsLeft, setSecondsLeft] = useState(5 * 3600 + 28 * 60 + 44);
+  // Use provided config or defaults
+  const activeSections = sections ?? DEFAULT_SECTIONS;
+  const homepageContent = content ?? DEFAULT_CONTENT;
+
+  // Helper to check if section is enabled
+  const isSectionEnabled = (id: string) => {
+    const section = activeSections.find((s) => s.id === id);
+    return section?.enabled ?? true;
+  };
+
+  // Flash deals timer - use config values
+  const [secondsLeft, setSecondsLeft] = useState(
+    homepageContent.flash_deals.timerHours * 3600 +
+      homepageContent.flash_deals.timerMinutes * 60 +
+      homepageContent.flash_deals.timerSeconds
+  );
   useEffect(() => {
     const i = setInterval(() => setSecondsLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(i);
@@ -122,7 +143,7 @@ export function HomeStorefront({
     <div className="flex flex-col gap-2 pb-4">
 
       {/* ── STORIES (categories ring) ─────────────────────────────────────── */}
-      {categories.length > 0 ? (
+      {isSectionEnabled("stories") && categories.length > 0 ? (
         <div className="flex gap-3 overflow-x-auto bg-white px-3.5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {categories.slice(0, 8).map((cat, i) => {
             const c = colorFor(i);
@@ -154,6 +175,7 @@ export function HomeStorefront({
       ) : null}
 
       {/* ── HERO BANNER + STATS ───────────────────────────────────────────── */}
+      {isSectionEnabled("hero") ? (
       <div className="bg-[var(--bina-primary)]">
         <div className="mx-3 mt-1.5 mb-1.5 overflow-hidden rounded-2xl bg-[var(--bina-primary-lt)] p-4">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bina-accent)]">
@@ -195,9 +217,10 @@ export function HomeStorefront({
           </div>
         </div>
       </div>
+      ) : null}
 
       {/* ── MEMBERSHIP CARD (logged-in) ──────────────────────────────────── */}
-      {hasUser ? (
+      {isSectionEnabled("membership") && hasUser ? (
         <div className="px-3">
           <Link
             href="/profile"
@@ -239,7 +262,7 @@ export function HomeStorefront({
       ) : null}
 
       {/* ── FLASH DEALS ───────────────────────────────────────────────────── */}
-      {flashDeals.length > 0 ? (
+      {isSectionEnabled("flash_deals") && flashDeals.length > 0 ? (
         <div className="bg-white">
           <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
             <div className="flex items-center gap-2">
@@ -297,7 +320,7 @@ export function HomeStorefront({
       ) : null}
 
       {/* ── CATEGORIES GRID ──────────────────────────────────────────────── */}
-      {categories.length > 0 ? (
+      {isSectionEnabled("categories") && categories.length > 0 ? (
         <div className="bg-white px-3.5 py-3">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("shopByCategory")}</h3>
@@ -389,6 +412,7 @@ export function HomeStorefront({
       ) : null}
 
       {/* ── PROMO BANNERS ────────────────────────────────────────────────── */}
+      {isSectionEnabled("promo_banners") ? (
       <div className="px-3">
         <div className="grid grid-cols-2 gap-2">
           <Link href="/gallery" className="rounded-2xl bg-[var(--bina-primary)] p-3.5">
@@ -413,9 +437,10 @@ export function HomeStorefront({
           </Link>
         </div>
       </div>
+      ) : null}
 
       {/* ── TOP SUPPLIERS ────────────────────────────────────────────────── */}
-      {suppliers.length > 0 ? (
+      {isSectionEnabled("suppliers") && suppliers.length > 0 ? (
         <div className="bg-white px-3 py-3">
           <div className="mb-3 flex items-center justify-between px-0.5">
             <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("topSuppliers")}</h3>
@@ -463,6 +488,7 @@ export function HomeStorefront({
       ) : null}
 
       {/* ── RFQ FORM ─────────────────────────────────────────────────────── */}
+      {isSectionEnabled("rfq") ? (
       <div className="px-3">
         <div className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white">
           <div className="bg-[var(--bina-primary)] px-4 py-3.5">
@@ -489,9 +515,10 @@ export function HomeStorefront({
           </Link>
         </div>
       </div>
+      ) : null}
 
       {/* ── RECENT ORDERS ────────────────────────────────────────────────── */}
-      {hasUser && recentOrders.length > 0 ? (
+      {isSectionEnabled("recent_orders") && hasUser && recentOrders.length > 0 ? (
         <div className="px-3">
           <div className="mb-2 mt-1 flex items-center justify-between px-0.5">
             <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("recentOrders")}</h3>
