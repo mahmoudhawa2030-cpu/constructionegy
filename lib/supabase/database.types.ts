@@ -706,6 +706,33 @@ export type Database = {
           },
         ]
       }
+      mobile_homepage_config: {
+        Row: {
+          id: string
+          key: string
+          sections: unknown
+          content: unknown
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          sections?: unknown
+          content?: unknown
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          sections?: unknown
+          content?: unknown
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           buyer_id: string

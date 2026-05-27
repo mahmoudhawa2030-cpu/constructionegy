@@ -16,7 +16,7 @@ const CONFIG_KEY = "default";
 export async function getMobileHomepageConfig(): Promise<MobileHomepageConfig | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("mobile_homepage_config")
     .select("*")
     .eq("key", CONFIG_KEY)
@@ -60,7 +60,7 @@ export async function saveMobileHomepageSections(
   }
 
   // Upsert config
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("mobile_homepage_config")
     .upsert(
       {
@@ -103,14 +103,14 @@ export async function saveMobileHomepageContent(
   }
 
   // Get existing config or create new
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from("mobile_homepage_config")
     .select("id, sections")
     .eq("key", CONFIG_KEY)
     .maybeSingle();
 
   if (existing) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("mobile_homepage_config")
       .update({ content })
       .eq("id", existing.id);
@@ -119,7 +119,7 @@ export async function saveMobileHomepageContent(
       return { success: false, error: error.message };
     }
   } else {
-    const { error } = await supabase.from("mobile_homepage_config").insert({
+    const { error } = await (supabase as any).from("mobile_homepage_config").insert({
       key: CONFIG_KEY,
       sections: DEFAULT_SECTIONS,
       content,
