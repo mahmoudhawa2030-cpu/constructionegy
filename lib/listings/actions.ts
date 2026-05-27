@@ -146,6 +146,7 @@ export async function updateListing(
       description: body.description,
       location: body.location,
       images: body.images,
+      status: "pending",
     })
     .eq("id", listingId)
     .eq("user_id", user.id);
