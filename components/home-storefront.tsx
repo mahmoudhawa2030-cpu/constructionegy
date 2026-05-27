@@ -8,6 +8,7 @@ import { useTranslations } from "next-intl";
 import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
 import { useBilingualText } from "@/lib/bilingual-text";
+import { ListingCategorySection, DataChartSection, CustomContentSection } from "./dynamic-sections";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -121,9 +122,16 @@ export function HomeStorefront({
   const homepageContent = content ?? DEFAULT_CONTENT;
 
   // Helper to check if section is enabled
-  const isSectionEnabled = (id: string) => {
-    const section = activeSections.find((s) => s.id === id);
+  const isSectionEnabled = (type: string) => {
+    const section = activeSections.find((s) => s.type === type);
     return section?.enabled ?? true;
+  };
+
+  // Helper to get enabled sections sorted by order
+  const getEnabledSections = () => {
+    return activeSections
+      .filter(s => s.enabled)
+      .sort((a, b) => a.order - b.order);
   };
 
   // Flash deals timer - use config values
@@ -141,437 +149,278 @@ export function HomeStorefront({
   const tM = Math.floor((secondsLeft % 3600) / 60);
   const tS = secondsLeft % 60;
 
-  return (
-    <div className="flex flex-col gap-2 pb-4">
-
-      {/* ── STORIES (categories ring) ─────────────────────────────────────── */}
-      {isSectionEnabled("stories") && categories.length > 0 ? (
-        <div className="flex gap-3 overflow-x-auto bg-white px-3.5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {categories.slice(0, 8).map((cat, i) => {
-            const c = colorFor(i);
-            return (
-              <Link
-                key={cat.slug}
-                href={`/gallery?category=${encodeURIComponent(cat.slug)}`}
-                className="flex shrink-0 flex-col items-center gap-1.5"
-              >
-                <div
-                  className="h-14 w-14 rounded-full p-[2px]"
-                  style={{
-                    background: i < 3
-                      ? "conic-gradient(#C62828 0%,#FFCA28 50%,#C62828 100%)"
-                      : "#e0e0e0",
-                  }}
-                >
-                  <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-white" style={{ background: c.bg }}>
-                    <span className="text-[20px]">{cat.icon_emoji ?? "📦"}</span>
-                  </div>
-                </div>
-                <span className="line-clamp-1 max-w-[56px] text-center text-[10px] text-[#444]">
-                  {cat.label_ar}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      ) : null}
-
-      {/* ── HERO BANNER + STATS ───────────────────────────────────────────── */}
-      {isSectionEnabled("hero") ? (
-      <div className="bg-[var(--bina-primary)]">
-        <div className="mx-3 mt-1.5 mb-1.5 overflow-hidden rounded-2xl bg-[var(--bina-primary-lt)] p-4">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bina-accent)]">
-            {getText(homepageContent.hero.kicker)}
-          </div>
-          <h2 className="mt-1.5 text-[20px] font-bold leading-tight tracking-tight text-white">
-            {getText(homepageContent.hero.title)}
-          </h2>
-          <p className="mt-1.5 text-[12px] leading-relaxed text-white/75">
-            {getText(homepageContent.hero.subtitle)}
-          </p>
-          <div className="mt-3.5 flex gap-2">
-            <Link
-              href="/gallery"
-              className="rounded-lg bg-[var(--bina-accent)] px-4 py-2 text-[12px] font-bold text-[var(--bina-on-accent)] active:opacity-80"
-            >
-              {getText(homepageContent.hero.browseDealsText)}
-            </Link>
-            <Link
-              href="/rfq/new"
-              className="rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-[12px] font-semibold text-white active:opacity-80"
-            >
-              {getText(homepageContent.hero.postRfqText)}
-            </Link>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 border-t border-white/15 bg-[var(--bina-primary-dk)]">
-          <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.products}</div>
-            <div className="text-[10px] text-white/65">{t("statProducts")}</div>
-          </div>
-          <div className="border-r border-white/15 py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.suppliers}</div>
-            <div className="text-[10px] text-white/65">{t("statSuppliers")}</div>
-          </div>
-          <div className="py-2.5 text-center">
-            <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.onTime}</div>
-            <div className="text-[10px] text-white/65">{t("statOnTime")}</div>
-          </div>
-        </div>
-      </div>
-      ) : null}
-
-      {/* ── MEMBERSHIP CARD (logged-in) ──────────────────────────────────── */}
-      {isSectionEnabled("membership") && hasUser ? (
-        <div className="px-3">
-          <Link
-            href="/profile"
-            className="relative block overflow-hidden rounded-2xl bg-[#1a1a1a] p-4"
-          >
-            <div className="absolute -right-5 -top-5 h-24 w-24 rounded-full bg-[var(--bina-primary)] opacity-30" />
-            <div className="absolute -bottom-7 -left-2 h-20 w-20 rounded-full bg-[var(--bina-accent)] opacity-[0.12]" />
-            <div className="relative flex items-start justify-between">
-              <div>
-                <div className="text-[10px] font-semibold tracking-wider text-[var(--bina-accent)]">
-                  ✦ {getText(homepageContent.membership.kicker)}
-                </div>
-                <div className="mt-1.5 text-[17px] font-bold text-white">
-                  {getText(homepageContent.membership.welcomeText).replace("{name}", displayName ?? "")}
-                </div>
-                <div className="mt-1 text-[12px] text-white/60">
-                  {getText(homepageContent.membership.subtitle)}
-                </div>
-              </div>
-              <span className="rounded-lg bg-[var(--bina-accent)] px-3.5 py-2 text-[12px] font-bold text-[var(--bina-on-accent)]">
-                {getText(homepageContent.membership.redeemButton)}
-              </span>
-            </div>
-            <div className="relative mt-3.5 flex gap-4">
-              {homepageContent.membership.perks.map((p, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-[15px] font-bold text-[var(--bina-accent)]">{p.value}</div>
-                  <div className="mt-0.5 text-[10px] text-white/55">{getText(p.label)}</div>
-                </div>
-              ))}
-            </div>
-          </Link>
-        </div>
-      ) : null}
-
-      {/* ── FLASH DEALS ───────────────────────────────────────────────────── */}
-      {isSectionEnabled("flash_deals") && flashDeals.length > 0 ? (
-        <div className="bg-white">
-          <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bina-primary)]">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFCA28">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                </svg>
-              </div>
-              <div>
-                <div className="text-[15px] font-bold text-[var(--bina-text)]">{getText(homepageContent.flash_deals.title)}</div>
-                <div className="text-[11px] text-[#888]">{getText(homepageContent.flash_deals.subtitle)}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-0.5">
-              <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tH)}</span>
-              <span className="text-[11px] font-bold text-[#888]">:</span>
-              <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tM)}</span>
-              <span className="text-[11px] font-bold text-[#888]">:</span>
-              <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tS)}</span>
-            </div>
-          </div>
-          <div className="flex gap-2 overflow-x-auto px-3.5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {flashDeals.map((listing) => (
-              <Link
-                key={listing.id}
-                href={`/listings/${listing.id}`}
-                className="flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-[#ebebeb] bg-[#f9f9f9]"
-              >
-                <div className="relative flex h-20 items-center justify-center bg-[#FFF3E0]">
-                  <span className="absolute left-1.5 top-1.5 rounded bg-[var(--bina-primary)] px-1.5 py-0.5 text-[10px] font-bold text-white">
-                    -{discountFor(listing.id)}%
-                  </span>
-                  {listing.images[0] ? (
-                    <Image src={listing.images[0]} alt={listing.title} fill className="object-cover" />
-                  ) : (
-                    <span className="text-[32px]">📦</span>
-                  )}
-                </div>
-                <div className="px-2 py-1.5">
-                  <div className="line-clamp-2 min-h-[28px] text-[11px] text-[#222]">{listing.title}</div>
-                  <div className="mt-0.5 text-[14px] font-bold text-[var(--bina-primary)]">
-                    {formatPrice(listing.price, listing.price_unit)}
-                  </div>
-                  <div className="mt-1 h-[3px] rounded-sm bg-[#eee]">
-                    <div className="h-full rounded-sm bg-[var(--bina-primary)]" style={{ width: `${Math.min(95, 40 + listing.view_count)}%` }} />
-                  </div>
-                  <div className="mt-0.5 text-[10px] font-medium text-[var(--bina-primary)]">
-                    {Math.min(95, 40 + listing.view_count)}% {t("claimed")}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── CATEGORIES GRID ──────────────────────────────────────────────── */}
-      {isSectionEnabled("categories") && categories.length > 0 ? (
-        <div className="bg-white px-3.5 py-3">
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("shopByCategory")}</h3>
-            <Link href="/gallery" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("allCount", { count: categories.length })} ›
-            </Link>
-          </div>
-          <div className="grid grid-cols-5 gap-1.5">
-            {categories.slice(0, 10).map((cat, i) => {
+  // Render section based on type
+  const renderSection = (section: SectionConfig) => {
+    switch (section.type) {
+      case 'stories':
+        if (categories.length === 0) return null;
+        return (
+          <div key={section.id} className="flex gap-3 overflow-x-auto bg-white px-3.5 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {categories.slice(0, 8).map((cat, i) => {
               const c = colorFor(i);
               return (
                 <Link
                   key={cat.slug}
                   href={`/gallery?category=${encodeURIComponent(cat.slug)}`}
-                  className="flex flex-col items-center gap-1.5 py-1"
+                  className="flex shrink-0 flex-col items-center gap-1.5"
                 >
                   <div
-                    className="flex h-[50px] w-[50px] items-center justify-center rounded-xl"
-                    style={{ background: c.bg }}
+                    className="h-14 w-14 rounded-full p-[2px]"
+                    style={{
+                      background: i < 3
+                        ? "conic-gradient(#C62828 0%,#FFCA28 50%,#C62828 100%)"
+                        : "#e0e0e0",
+                    }}
                   >
-                    <span className="text-[22px]">{cat.icon_emoji ?? "📦"}</span>
+                    <div className="flex h-full w-full items-center justify-center rounded-full border-2 border-white" style={{ background: c.bg }}>
+                      <span className="text-[20px]">{cat.icon_emoji ?? "📦"}</span>
+                    </div>
                   </div>
-                  <span className="line-clamp-2 text-center text-[10px] leading-tight text-[#555]">
+                  <span className="line-clamp-1 max-w-[56px] text-center text-[10px] text-[#444]">
                     {cat.label_ar}
                   </span>
                 </Link>
               );
             })}
           </div>
-        </div>
-      ) : null}
+        );
 
-      {/* ── TRENDING PRODUCTS GRID ───────────────────────────────────────── */}
-      {trending.length > 0 ? (
-        <div className="bg-white px-3 py-3">
-          <div className="mb-3 flex items-center justify-between px-0.5">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("trendingNow")}</h3>
-            <Link href="/gallery" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("viewAll")} ›
+      case 'listing_category':
+        return (
+          <ListingCategorySection 
+            key={section.id} 
+            section={section} 
+            categories={categories} 
+          />
+        );
+
+      case 'data_chart':
+        return (
+          <DataChartSection key={section.id} section={section} />
+        );
+
+      case 'custom_content':
+        return (
+          <CustomContentSection key={section.id} section={section} />
+        );
+
+      // Keep existing sections with their original rendering
+      case 'hero':
+        return (
+          <div key={section.id} className="bg-[var(--bina-primary)]">
+            <div className="mx-3 mt-1.5 mb-1.5 overflow-hidden rounded-2xl bg-[var(--bina-primary-lt)] p-4">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-[var(--bina-accent)]">
+                {getText(homepageContent.hero.kicker)}
+              </div>
+              <h2 className="mt-1.5 text-[20px] font-bold leading-tight tracking-tight text-white">
+                {getText(homepageContent.hero.title)}
+              </h2>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-white/75">
+                {getText(homepageContent.hero.subtitle)}
+              </p>
+              <div className="mt-3.5 flex gap-2">
+                <Link
+                  href="/gallery"
+                  className="rounded-lg bg-[var(--bina-accent)] px-4 py-2 text-[12px] font-bold text-[var(--bina-on-accent)] active:opacity-80"
+                >
+                  {getText(homepageContent.hero.browseDealsText)}
+                </Link>
+                <Link
+                  href="/rfq/new"
+                  className="rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-[12px] font-semibold text-white active:opacity-80"
+                >
+                  {getText(homepageContent.hero.postRfqText)}
+                </Link>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 border-t border-white/15 bg-[var(--bina-primary-dk)]">
+              <div className="border-r border-white/15 py-2.5 text-center">
+                <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.products}</div>
+                <div className="text-[10px] text-white/65">{t("statProducts")}</div>
+              </div>
+              <div className="border-r border-white/15 py-2.5 text-center">
+                <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.suppliers}</div>
+                <div className="text-[10px] text-white/65">{t("statSuppliers")}</div>
+              </div>
+              <div className="py-2.5 text-center">
+                <div className="text-[16px] font-bold text-[var(--bina-accent)]">{homepageContent.hero.stats.onTime}</div>
+                <div className="text-[10px] text-white/65">{t("statOnTime")}</div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'membership':
+        if (!hasUser) return null;
+        return (
+          <div key={section.id} className="px-3">
+            <Link
+              href="/profile"
+              className="relative block overflow-hidden rounded-2xl bg-[#1a1a1a] p-4"
+            >
+              <div className="absolute -right-5 -top-5 h-24 w-24 rounded-full bg-[var(--bina-primary)] opacity-30" />
+              <div className="absolute -bottom-7 -left-2 h-20 w-20 rounded-full bg-[var(--bina-accent)] opacity-[0.12]" />
+              <div className="relative flex items-start justify-between">
+                <div>
+                  <div className="text-[10px] font-semibold tracking-wider text-[var(--bina-accent)]">
+                    ✦ {getText(homepageContent.membership.kicker)}
+                  </div>
+                  <div className="mt-1.5 text-[17px] font-bold text-white">
+                    {getText(homepageContent.membership.welcomeText).replace("{name}", displayName ?? "")}
+                  </div>
+                  <div className="mt-1 text-[12px] text-white/60">
+                    {getText(homepageContent.membership.subtitle)}
+                  </div>
+                </div>
+                <span className="rounded-lg bg-[var(--bina-accent)] px-3.5 py-2 text-[12px] font-bold text-[var(--bina-on-accent)]">
+                  {getText(homepageContent.membership.redeemButton)}
+                </span>
+              </div>
+              <div className="relative mt-3.5 flex gap-4">
+                {homepageContent.membership.perks.map((p, i) => (
+                  <div key={i} className="text-center">
+                    <div className="text-[15px] font-bold text-[var(--bina-accent)]">{p.value}</div>
+                    <div className="mt-0.5 text-[10px] text-white/55">{getText(p.label)}</div>
+                  </div>
+                ))}
+              </div>
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {trending.map((listing, i) => {
-              const c = colorFor(i);
-              const badges = ["Hot", "New", "-25%", "Bulk"];
-              const badgeClr = ["#FFEBEE,#B71C1C", "#E8F5E9,#1B5E20", "#FFF8E1,#E65100", "#EDE7F6,#4527A0"];
-              const [bg, txt] = badgeClr[i % 4].split(",");
-              return (
+        );
+
+      case 'flash_deals':
+        if (flashDeals.length === 0) return null;
+        return (
+          <div key={section.id} className="bg-white">
+            <div className="flex items-center justify-between px-3.5 pt-3 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--bina-primary)]">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFCA28">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold text-[var(--bina-text)]">{getText(homepageContent.flash_deals.title)}</div>
+                  <div className="text-[11px] text-[#888]">{getText(homepageContent.flash_deals.subtitle)}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tH)}</span>
+                <span className="text-[11px] font-bold text-[#888]">:</span>
+                <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tM)}</span>
+                <span className="text-[11px] font-bold text-[#888]">:</span>
+                <span className="min-w-[28px] rounded-md bg-[#1a1a1a] px-1.5 py-1 text-center text-[13px] font-bold tabular-nums text-white">{pad(tS)}</span>
+              </div>
+            </div>
+            <div className="flex gap-2 overflow-x-auto px-3.5 pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {flashDeals.map((listing) => (
                 <Link
                   key={listing.id}
                   href={`/listings/${listing.id}`}
-                  className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white"
+                  className="flex w-[120px] shrink-0 flex-col overflow-hidden rounded-xl border border-[#ebebeb] bg-[#f9f9f9]"
                 >
-                  <div className="relative flex h-[110px] items-center justify-center" style={{ background: c.bg }}>
-                    <span className="absolute left-1.5 top-1.5 rounded px-1.5 py-0.5 text-[10px] font-bold" style={{ background: bg, color: txt }}>
-                      {badges[i % 4]}
+                  <div className="relative flex h-20 items-center justify-center bg-[#FFF3E0]">
+                    <span className="absolute left-1.5 top-1.5 rounded bg-[var(--bina-primary)] px-1.5 py-0.5 text-[10px] font-bold text-white">
+                      -{discountFor(listing.id)}%
                     </span>
-                    <button className="absolute right-1.5 top-1.5 flex h-[26px] w-[26px] items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.1)]">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#B71C1C" strokeWidth="2">
-                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-                      </svg>
-                    </button>
                     {listing.images[0] ? (
                       <Image src={listing.images[0]} alt={listing.title} fill className="object-cover" />
                     ) : (
-                      <span className="text-[40px]">📦</span>
+                      <span className="text-[32px]">📦</span>
                     )}
                   </div>
-                  <div className="p-2">
-                    <div className="line-clamp-2 min-h-[34px] text-[12px] font-medium text-[var(--bina-text)]">{listing.title}</div>
-                    <div className="mt-1 text-[15px] font-bold text-[var(--bina-primary)]">
+                  <div className="px-2 py-1.5">
+                    <div className="line-clamp-2 min-h-[28px] text-[11px] text-[#222]">{listing.title}</div>
+                    <div className="mt-0.5 text-[14px] font-bold text-[var(--bina-primary)]">
                       {formatPrice(listing.price, listing.price_unit)}
                     </div>
-                    {listing.location ? (
-                      <div className="mt-0.5 text-[11px] text-[#888]">{listing.location}</div>
-                    ) : null}
-                    <div className="mt-1.5 flex items-center justify-between border-t border-[#f5f5f5] pt-1.5">
-                      <span className="truncate text-[10px] text-[#888]">{timeAgo(listing.created_at)}</span>
-                      <span className="ml-1 rounded bg-[#E8F5E9] px-1.5 py-0.5 text-[9px] font-semibold text-[#1B5E20]">
-                        ✓ {t("verified")}
-                      </span>
+                    <div className="mt-1 h-[3px] rounded-sm bg-[#eee]">
+                      <div className="h-full rounded-sm bg-[var(--bina-primary)]" style={{ width: `${Math.min(95, 40 + listing.view_count)}%` }} />
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-medium text-[var(--bina-primary)]">
+                      {Math.min(95, 40 + listing.view_count)}% {t("claimed")}
                     </div>
                   </div>
                 </Link>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── PROMO BANNERS ────────────────────────────────────────────────── */}
-      {isSectionEnabled("promo_banners") ? (
-      <div className="px-3">
-        <div className="grid grid-cols-2 gap-2">
-          {homepageContent.promo_banners.cards.map((card, index) => {
-            const bgColor = card.color === 'primary' ? 'bg-[var(--bina-primary)]' :
-                           card.color === 'dark' ? 'bg-[#1a1a1a]' :
-                           card.color === 'orange' ? 'bg-[#E65100]' :
-                           'bg-[#1B5E20]';
-            const textColor = card.color === 'primary' ? 'text-[var(--bina-accent)]' :
-                             card.color === 'dark' ? 'text-[var(--bina-accent)]' :
-                             card.color === 'orange' ? 'text-white' :
-                             'text-[var(--bina-accent)]';
-            const kickerColor = card.color === 'primary' ? 'text-white/70' :
-                               card.color === 'dark' ? 'text-white/50' :
-                               card.color === 'orange' ? 'text-white/70' :
-                               'text-white/70';
-            
-            return (
-              <Link key={index} href={card.link} className={`rounded-2xl ${bgColor} p-3.5`}>
-                <div className={`text-[9px] font-bold uppercase tracking-wider ${kickerColor}`}>
-                  {getText(card.kicker)}
-                </div>
-                <div className="mt-1 text-[13px] font-bold leading-tight text-white">
-                  {getText(card.title)}
-                </div>
-                <div className={`mt-2 text-[11px] font-bold ${textColor}`}>
-                  {getText(card.cta)} ›
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-      ) : null}
-
-      {/* ── TOP SUPPLIERS ────────────────────────────────────────────────── */}
-      {isSectionEnabled("suppliers") && suppliers.length > 0 ? (
-        <div className="bg-white px-3 py-3">
-          <div className="mb-3 flex items-center justify-between px-0.5">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("topSuppliers")}</h3>
-            <Link href="/users" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("directory")} ›
-            </Link>
-          </div>
-          <div className="flex gap-2.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {suppliers.map((s, i) => {
-              const c = colorFor(i);
-              const initials = s.display_name.slice(0, 2).toUpperCase();
-              return (
-                <Link
-                  key={s.id}
-                  href={`/users/${s.id}`}
-                  className="w-[148px] shrink-0 rounded-2xl border border-[#ebebeb] bg-white p-3"
-                >
-                  <div
-                    className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl text-[13px] font-bold"
-                    style={{ background: c.bg, color: c.stroke }}
-                  >
-                    {s.avatar_url ? (
-                      <Image src={s.avatar_url} alt={s.display_name} width={40} height={40} className="rounded-xl object-cover" />
-                    ) : (
-                      initials
-                    )}
-                  </div>
-                  <div className="line-clamp-1 text-[13px] font-semibold text-[var(--bina-text)]">{s.display_name}</div>
-                  <div className="mt-0.5 text-[11px] text-[#999]">
-                    {s.listing_count} {t("products")}
-                  </div>
-                  {s.verified ? (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      <span className="rounded bg-[#f5f5f5] px-1.5 py-0.5 text-[10px] font-medium text-[#555]">✓ {t("verified")}</span>
-                    </div>
-                  ) : null}
-                  <div className="mt-2 rounded-md border border-[#FFCDD2] bg-[#FFF5F5] py-1.5 text-center text-[11px] font-semibold text-[var(--bina-primary)]">
-                    + {t("follow")}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
-      {/* ── RFQ FORM ─────────────────────────────────────────────────────── */}
-      {isSectionEnabled("rfq") ? (
-      <div className="px-3">
-        <div className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white">
-          <div className="bg-[var(--bina-primary)] px-4 py-3.5">
-            <div className="flex items-center gap-2">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-              <div className="text-[15px] font-bold text-white">{getText(homepageContent.rfq.title)}</div>
+              ))}
             </div>
-            <div className="mt-1 text-[12px] text-white/70">{getText(homepageContent.rfq.subtitle)}</div>
           </div>
-          <Link
-            href={latestRfqHref ?? "/rfq/new"}
-            className="flex w-full items-center justify-center gap-1.5 bg-[var(--bina-primary)] px-4 py-3.5 text-[14px] font-bold text-white active:opacity-90"
-          >
-            {getText(homepageContent.rfq.cta)}
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </Link>
-        </div>
-      </div>
-      ) : null}
+        );
 
-      {/* ── RECENT ORDERS ────────────────────────────────────────────────── */}
-      {isSectionEnabled("recent_orders") && hasUser && recentOrders.length > 0 ? (
-        <div className="px-3">
-          <div className="mb-2 mt-1 flex items-center justify-between px-0.5">
-            <h3 className="text-[15px] font-bold text-[var(--bina-text)]">{t("recentOrders")}</h3>
-            <Link href="/bookings" className="text-[12px] font-medium text-[var(--bina-primary)]">
-              {t("viewAll")} ›
-            </Link>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white">
-            {recentOrders.map((o, idx) => {
-              const statusColors: Record<string, { bg: string; text: string }> = {
-                delivered: { bg: "#E8F5E9", text: "#1B5E20" },
-                in_transit: { bg: "#FFF3E0", text: "#E65100" },
-                processing: { bg: "#E3F2FD", text: "#1565C0" },
-              };
-              const c = statusColors[o.status.toLowerCase().replace(/\s+/g, "_")] ?? { bg: "#f5f5f5", text: "#555" };
-              return (
-                <Link
-                  key={o.id}
-                  href={`/bookings`}
-                  className={`flex items-center gap-2.5 px-3.5 py-3 ${idx < recentOrders.length - 1 ? "border-b border-[#f7f7f7]" : ""}`}
-                >
-                  <div className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-xl" style={{ background: c.bg }}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={c.text} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="1" y="3" width="15" height="13" />
-                      <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                      <circle cx="5.5" cy="18.5" r="2.5" />
-                      <circle cx="18.5" cy="18.5" r="2.5" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-[12px] font-semibold text-[var(--bina-text)]">#{o.id.slice(0, 8)}</div>
-                    <div className="line-clamp-1 text-[11px] text-[#999]">{o.title}</div>
-                    <div className="text-[10px] text-[#bbb]">{timeAgo(o.created_at)}</div>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    {o.amount ? (
-                      <div className="text-[13px] font-bold text-[var(--bina-text)]">{formatPrice(o.amount, "EGP")}</div>
-                    ) : null}
-                    <div className="mt-0.5 inline-block rounded px-2 py-0.5 text-[10px] font-semibold" style={{ background: c.bg, color: c.text }}>
-                      {o.status}
+      case 'promo_banners':
+        return (
+          <div key={section.id} className="px-3">
+            <div className="grid grid-cols-2 gap-2">
+              {homepageContent.promo_banners.cards.map((card, index) => {
+                const bgColor = card.color === 'primary' ? 'bg-[var(--bina-primary)]' :
+                               card.color === 'dark' ? 'bg-[#1a1a1a]' :
+                               card.color === 'orange' ? 'bg-[#E65100]' :
+                               'bg-[#1B5E20]';
+                const textColor = card.color === 'primary' ? 'text-[var(--bina-accent)]' :
+                                 card.color === 'dark' ? 'text-[var(--bina-accent)]' :
+                                 card.color === 'orange' ? 'text-white' :
+                                 'text-[var(--bina-accent)]';
+                const kickerColor = card.color === 'primary' ? 'text-white/70' :
+                                   card.color === 'dark' ? 'text-white/50' :
+                                   card.color === 'orange' ? 'text-white/70' :
+                                   'text-white/70';
+                
+                return (
+                  <Link key={index} href={card.link} className={`rounded-2xl ${bgColor} p-3.5`}>
+                    <div className={`text-[9px] font-bold uppercase tracking-wider ${kickerColor}`}>
+                      {getText(card.kicker)}
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
+                    <div className="mt-1 text-[13px] font-bold leading-tight text-white">
+                      {getText(card.title)}
+                    </div>
+                    <div className={`mt-2 text-[11px] font-bold ${textColor}`}>
+                      {getText(card.cta)} ›
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ) : null}
+        );
+
+      case 'rfq':
+        return (
+          <div key={section.id} className="px-3">
+            <div className="overflow-hidden rounded-2xl border border-[#ebebeb] bg-white">
+              <div className="bg-[var(--bina-primary)] px-4 py-3.5">
+                <div className="flex items-center gap-2">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                  <div className="text-[15px] font-bold text-white">{getText(homepageContent.rfq.title)}</div>
+                </div>
+                <div className="mt-1 text-[12px] text-white/70">{getText(homepageContent.rfq.subtitle)}</div>
+              </div>
+              <Link
+                href={latestRfqHref ?? "/rfq/new"}
+                className="flex w-full items-center justify-center gap-1.5 bg-[var(--bina-primary)] px-4 py-3.5 text-[14px] font-bold text-white active:opacity-90"
+              >
+                {getText(homepageContent.rfq.cta)}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2 pb-4">
+      {getEnabledSections().map(section => renderSection(section))}
     </div>
   );
 }

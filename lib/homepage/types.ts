@@ -1,6 +1,6 @@
 // Mobile homepage configuration types
 
-export type SectionId =
+export type SectionType = 
   | "stories"
   | "hero"
   | "membership"
@@ -10,7 +10,10 @@ export type SectionId =
   | "promo_banners"
   | "suppliers"
   | "rfq"
-  | "recent_orders";
+  | "recent_orders"
+  | "listing_category"
+  | "data_chart"
+  | "custom_content";
 
 export interface BilingualText {
   ar: string;
@@ -18,10 +21,12 @@ export interface BilingualText {
 }
 
 export interface SectionConfig {
-  id: SectionId;
+  id: string; // Changed from SectionId to string to support dynamic IDs
+  type: SectionType;
   enabled: boolean;
   order: number;
-  title: string;
+  title: BilingualText;
+  customData?: any; // For custom sections to store their specific data
 }
 
 export interface PromoCardConfig {
@@ -97,16 +102,16 @@ export interface MobileHomepageConfig {
 
 // Default sections order and settings
 export const DEFAULT_SECTIONS: SectionConfig[] = [
-  { id: "stories", enabled: true, order: 1, title: "Categories" },
-  { id: "hero", enabled: true, order: 2, title: "Hero Banner" },
-  { id: "membership", enabled: true, order: 3, title: "Membership Card" },
-  { id: "flash_deals", enabled: true, order: 4, title: "Flash Deals" },
-  { id: "categories", enabled: true, order: 5, title: "Categories Grid" },
-  { id: "trending", enabled: true, order: 6, title: "Trending Products" },
-  { id: "promo_banners", enabled: true, order: 7, title: "Promo Banners" },
-  { id: "suppliers", enabled: true, order: 8, title: "Top Suppliers" },
-  { id: "rfq", enabled: true, order: 9, title: "RFQ Form" },
-  { id: "recent_orders", enabled: true, order: 10, title: "Recent Orders" },
+  { id: "stories", type: "stories", enabled: true, order: 1, title: { ar: "الفئات", en: "Categories" } },
+  { id: "hero", type: "hero", enabled: true, order: 2, title: { ar: "بانر العرض", en: "Hero Banner" } },
+  { id: "membership", type: "membership", enabled: true, order: 3, title: { ar: "بطاقة العضوية", en: "Membership Card" } },
+  { id: "flash_deals", type: "flash_deals", enabled: true, order: 4, title: { ar: "الصفقات السريعة", en: "Flash Deals" } },
+  { id: "categories", type: "categories", enabled: true, order: 5, title: { ar: "شبكة الفئات", en: "Categories Grid" } },
+  { id: "trending", type: "trending", enabled: true, order: 6, title: { ar: "المنتجات الرائجة", en: "Trending Products" } },
+  { id: "promo_banners", type: "promo_banners", enabled: true, order: 7, title: { ar: "لافتات ترويجية", en: "Promo Banners" } },
+  { id: "suppliers", type: "suppliers", enabled: true, order: 8, title: { ar: "الموردون الرئيسيون", en: "Top Suppliers" } },
+  { id: "rfq", type: "rfq", enabled: true, order: 9, title: { ar: "نموذج طلب العرض", en: "RFQ Form" } },
+  { id: "recent_orders", type: "recent_orders", enabled: true, order: 10, title: { ar: "الطلبات الأخيرة", en: "Recent Orders" } },
 ];
 
 // Default content (matches current hardcoded values)

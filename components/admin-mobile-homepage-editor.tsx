@@ -17,6 +17,7 @@ import type {
   PromoBannersContent,
   RFQContent,
   SectionConfig,
+  SectionType,
 } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
 import { BilingualTextInput } from "./bilingual-text-input";
@@ -62,6 +63,75 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
     setSections(
       sections.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s))
     );
+  };
+
+  // Add new section
+  const addSection = (type: SectionType) => {
+    const newId = `${type}_${Date.now()}`;
+    const newSection: SectionConfig = {
+      id: newId,
+      type,
+      enabled: true,
+      order: sections.length + 1,
+      title: {
+        ar: getSectionTitle(type, 'ar'),
+        en: getSectionTitle(type, 'en')
+      },
+      customData: getDefaultCustomData(type)
+    };
+    
+    const newSections = [...sections, newSection];
+    // Update order numbers
+    newSections.forEach((s, i) => {
+      s.order = i + 1;
+    });
+    
+    setSections(newSections);
+  };
+
+  // Remove section
+  const removeSection = (id: string) => {
+    const newSections = sections.filter(s => s.id !== id);
+    // Update order numbers
+    newSections.forEach((s, i) => {
+      s.order = i + 1;
+    });
+    
+    setSections(newSections);
+  };
+
+  // Helper to get section title by type and locale
+  const getSectionTitle = (type: SectionType, locale: 'ar' | 'en'): string => {
+    const titles = {
+      listing_category: { ar: 'فئة الإعلانات', en: 'Listing Category' },
+      data_chart: { ar: 'رسم بياني', en: 'Data Chart' },
+      custom_content: { ar: 'محتوى مخصص', en: 'Custom Content' },
+      stories: { ar: 'الفئات', en: 'Categories' },
+      hero: { ar: 'بانر العرض', en: 'Hero Banner' },
+      membership: { ar: 'بطاقة العضوية', en: 'Membership Card' },
+      flash_deals: { ar: 'الصفقات السريعة', en: 'Flash Deals' },
+      categories: { ar: 'شبكة الفئات', en: 'Categories Grid' },
+      trending: { ar: 'المنتجات الرائجة', en: 'Trending Products' },
+      promo_banners: { ar: 'لافتات ترويجية', en: 'Promo Banners' },
+      suppliers: { ar: 'الموردون الرئيسيون', en: 'Top Suppliers' },
+      rfq: { ar: 'نموذج طلب العرض', en: 'RFQ Form' },
+      recent_orders: { ar: 'الطلبات الأخيرة', en: 'Recent Orders' }
+    };
+    return titles[type]?.[locale] || type;
+  };
+
+  // Helper to get default custom data for section type
+  const getDefaultCustomData = (type: SectionType): any => {
+    switch (type) {
+      case 'listing_category':
+        return { categorySlug: '', limit: 10 };
+      case 'data_chart':
+        return { chartType: 'bar', dataSource: 'sales', title: { ar: 'مخطط البيانات', en: 'Data Chart' } };
+      case 'custom_content':
+        return { content: { ar: '', en: '' }, backgroundColor: '#ffffff' };
+      default:
+        return {};
+    }
   };
 
   // Save sections
@@ -195,7 +265,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                     className="h-4 w-4 rounded-sm border-[var(--admin-cell-border)]"
                   />
                   <span className="flex-1 text-sm font-semibold text-[var(--admin-text)]">
-                    {tSections(section.id)}
+                    {section.title.en} ({section.type})
                   </span>
                   <div className="flex gap-1">
                     <button
@@ -212,9 +282,46 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                     >
                       ↓
                     </button>
+                    <button
+                      onClick={() => removeSection(section.id)}
+                      disabled={sections.length <= 1}
+                      className="rounded-sm border border-red-300 bg-red-50 px-2 py-1 text-xs text-red-600 hover:bg-red-100 disabled:opacity-30"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
               ))}
+          </div>
+
+          <div className="mt-4 border-t border-[var(--admin-shell-border)] pt-4">
+            <h3 className="mb-3 text-sm font-semibold text-[var(--admin-text)]">Add New Section</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => addSection('listing_category')}
+                className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+              >
+                📋 Listing Category
+              </button>
+              <button
+                onClick={() => addSection('data_chart')}
+                className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+              >
+                📊 Data Chart
+              </button>
+              <button
+                onClick={() => addSection('custom_content')}
+                className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+              >
+                📝 Custom Content
+              </button>
+              <button
+                onClick={() => addSection('stories')}
+                className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+              >
+                📱 Stories
+              </button>
+            </div>
           </div>
 
           <button
