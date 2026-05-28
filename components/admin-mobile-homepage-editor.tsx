@@ -265,7 +265,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                     className="h-4 w-4 rounded-sm border-[var(--admin-cell-border)]"
                   />
                   <span className="flex-1 text-sm font-semibold text-[var(--admin-text)]">
-                    {tSections(section.type)}
+                    {section.title.en} / {section.title.ar}
                   </span>
                   <div className="flex gap-1">
                     <button
