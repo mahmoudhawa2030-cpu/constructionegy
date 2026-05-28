@@ -20,6 +20,7 @@ export async function GET() {
     return Response.json(categories || []);
   } catch (error) {
     console.error('Server error:', error);
-    return Response.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return Response.json({ error: 'Internal server error', details: errorMessage }, { status: 500 });
   }
 }
