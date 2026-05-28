@@ -21,6 +21,7 @@ import type {
 } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
 import { BilingualTextInput } from "./bilingual-text-input";
+import { SliderItemsEditor } from "./slider-items-editor";
 
 interface Props {
   initialConfig: MobileHomepageConfig | null;
@@ -134,29 +135,12 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
       case 'custom_content':
         return { content: { ar: '', en: '' }, backgroundColor: '#ffffff' };
       case 'slider':
-        return { 
-          items: [
-            {
-              id: '1',
-              image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=400&fit=crop',
-              title: 'Special Offers',
-              subtitle: 'Get amazing deals on construction materials',
-              link: '/gallery',
-              backgroundColor: '#ff6b6b'
-            },
-            {
-              id: '2',
-              image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=400&fit=crop',
-              title: 'Quality Tools',
-              subtitle: 'Professional equipment for every project',
-              link: '/gallery?category=tools',
-              backgroundColor: '#4ecdc4'
-            }
-          ], 
-          autoPlay: true, 
-          interval: 3000, 
-          showDots: true, 
-          showArrows: false 
+        return {
+          items: [],
+          autoPlay: true,
+          interval: 3000,
+          showDots: true,
+          showArrows: false,
         };
       default:
         return {};
@@ -327,40 +311,15 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
       case 'slider':
         return (
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
-                Slider Items (JSON)
-              </label>
-              <textarea
-                value={JSON.stringify(section.customData?.items || [], null, 2)}
-                onChange={(e) => {
-                  try {
-                    const items = JSON.parse(e.target.value);
-                    updateSectionCustomData(sectionId, {
-                      ...section.customData,
-                      items
-                    });
-                  } catch (error) {
-                    // Invalid JSON, don't update
-                  }
-                }}
-                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm font-mono"
-                rows={6}
-                placeholder='[
-  {
-    "id": "1",
-    "image": "https://example.com/image1.jpg",
-    "title": "Special Offer",
-    "subtitle": "Get 50% off",
-    "link": "/special-offer",
-    "backgroundColor": "#ff6b6b"
-  }
-]'
-              />
-              <p className="mt-1 text-xs text-gray-500">
-                Format: Array of objects with id, image, title, subtitle, link, backgroundColor
-              </p>
-            </div>
+            <SliderItemsEditor
+              items={section.customData?.items || []}
+              onChange={(items) =>
+                updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  items,
+                })
+              }
+            />
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
