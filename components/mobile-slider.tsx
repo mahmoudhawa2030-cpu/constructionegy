@@ -66,8 +66,8 @@ export function MobileSlider({
         {items.map((item, index) => (
           <div
             key={item.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-              index === currentIndex ? "opacity-100" : "opacity-0"
+            className={`absolute inset-0 ${
+              index === currentIndex ? "z-10 opacity-100" : "z-0 opacity-0"
             }`}
             style={{
               backgroundColor: item.backgroundColor || "#f5f5f5",
@@ -159,8 +159,9 @@ function SliderContent({ item }: { item: SliderItem }) {
             src={item.image}
             alt={item.title || "Slider image"}
             fill
-            className="object-cover"
+            className="object-cover !opacity-100"
             priority
+            unoptimized
           />
         </div>
       )}
