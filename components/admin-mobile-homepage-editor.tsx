@@ -194,7 +194,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                 </option>
                 {categories.map((cat: any) => (
                   <option key={cat.slug} value={cat.slug}>
-                    {cat.label_ar} / {cat.label_en}
+                    {cat.label_ar}
                   </option>
                 ))}
               </select>
