@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useBilingualText } from "@/lib/bilingual-text";
 import type { SectionConfig } from "@/lib/homepage/types";
+import { MobileSlider } from "./mobile-slider";
 
 interface Props {
   section: SectionConfig;
@@ -82,6 +83,47 @@ export function CustomContentSection({ section }: Props) {
           {getText(content)}
         </div>
       </div>
+    </div>
+  );
+}
+
+export function SliderSection({ section }: Props) {
+  const getText = useBilingualText();
+  const { 
+    items = [], 
+    autoPlay = true, 
+    interval = 3000, 
+    showDots = true, 
+    showArrows = false 
+  } = section.customData || {};
+
+  if (items.length === 0) {
+    return (
+      <div className="px-3 py-3">
+        <h3 className="mb-3 text-[15px] font-bold text-[var(--bina-text)]">
+          {getText(section.title)}
+        </h3>
+        <div className="rounded-lg border border-[#ebebeb] p-8 text-center text-gray-500">
+          <div className="text-4xl mb-2">📱</div>
+          <p className="text-sm">No slider items configured</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 py-3">
+      <h3 className="mb-3 text-[15px] font-bold text-[var(--bina-text)]">
+        {getText(section.title)}
+      </h3>
+      <MobileSlider
+        items={items}
+        autoPlay={autoPlay}
+        interval={interval}
+        showDots={showDots}
+        showArrows={showArrows}
+        className="rounded-lg"
+      />
     </div>
   );
 }

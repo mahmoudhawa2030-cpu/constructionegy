@@ -13,7 +13,8 @@ export type SectionType =
   | "recent_orders"
   | "listing_category"
   | "data_chart"
-  | "custom_content";
+  | "custom_content"
+  | "slider";
 
 export interface BilingualText {
   ar: string;

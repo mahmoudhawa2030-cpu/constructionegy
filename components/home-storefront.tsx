@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
 import { DEFAULT_CONTENT, DEFAULT_SECTIONS } from "@/lib/homepage/types";
 import { useBilingualText } from "@/lib/bilingual-text";
-import { ListingCategorySection, DataChartSection, CustomContentSection } from "./dynamic-sections";
+import { ListingCategorySection, DataChartSection, CustomContentSection, SliderSection } from "./dynamic-sections";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -202,6 +202,11 @@ export function HomeStorefront({
       case 'custom_content':
         return (
           <CustomContentSection key={section.id} section={section} />
+        );
+
+      case 'slider':
+        return (
+          <SliderSection key={section.id} section={section} />
         );
 
       // Keep existing sections with their original rendering

@@ -132,6 +132,31 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
         return { chartType: 'bar', dataSource: 'sales', title: { ar: 'مخطط البيانات', en: 'Data Chart' } };
       case 'custom_content':
         return { content: { ar: '', en: '' }, backgroundColor: '#ffffff' };
+      case 'slider':
+        return { 
+          items: [
+            {
+              id: '1',
+              image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&h=400&fit=crop',
+              title: 'Special Offers',
+              subtitle: 'Get amazing deals on construction materials',
+              link: '/gallery',
+              backgroundColor: '#ff6b6b'
+            },
+            {
+              id: '2',
+              image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=800&h=400&fit=crop',
+              title: 'Quality Tools',
+              subtitle: 'Professional equipment for every project',
+              link: '/gallery?category=tools',
+              backgroundColor: '#4ecdc4'
+            }
+          ], 
+          autoPlay: true, 
+          interval: 3000, 
+          showDots: true, 
+          showArrows: false 
+        };
       default:
         return {};
     }
@@ -298,6 +323,115 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           </div>
         );
 
+      case 'slider':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Slider Items (JSON)
+              </label>
+              <textarea
+                value={JSON.stringify(section.customData?.items || [], null, 2)}
+                onChange={(e) => {
+                  try {
+                    const items = JSON.parse(e.target.value);
+                    updateSectionCustomData(sectionId, {
+                      ...section.customData,
+                      items
+                    });
+                  } catch (error) {
+                    // Invalid JSON, don't update
+                  }
+                }}
+                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm font-mono"
+                rows={6}
+                placeholder='[
+  {
+    "id": "1",
+    "image": "https://example.com/image1.jpg",
+    "title": "Special Offer",
+    "subtitle": "Get 50% off",
+    "link": "/special-offer",
+    "backgroundColor": "#ff6b6b"
+  }
+]'
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Format: Array of objects with id, image, title, subtitle, link, backgroundColor
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                  Auto Play
+                </label>
+                <select
+                  value={section.customData?.autoPlay ? 'true' : 'false'}
+                  onChange={(e) => updateSectionCustomData(sectionId, {
+                    ...section.customData,
+                    autoPlay: e.target.value === 'true'
+                  })}
+                  className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                >
+                  <option value="true">Enabled</option>
+                  <option value="false">Disabled</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                  Interval (ms)
+                </label>
+                <input
+                  type="number"
+                  value={section.customData?.interval || 3000}
+                  onChange={(e) => updateSectionCustomData(sectionId, {
+                    ...section.customData,
+                    interval: parseInt(e.target.value) || 3000
+                  })}
+                  className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                  min="1000"
+                  max="10000"
+                  step="500"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                  Show Dots
+                </label>
+                <select
+                  value={section.customData?.showDots ? 'true' : 'false'}
+                  onChange={(e) => updateSectionCustomData(sectionId, {
+                    ...section.customData,
+                    showDots: e.target.value === 'true'
+                  })}
+                  className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                >
+                  <option value="true">Show</option>
+                  <option value="false">Hide</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                  Show Arrows
+                </label>
+                <select
+                  value={section.customData?.showArrows ? 'true' : 'false'}
+                  onChange={(e) => updateSectionCustomData(sectionId, {
+                    ...section.customData,
+                    showArrows: e.target.value === 'true'
+                  })}
+                  className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                >
+                  <option value="true">Show</option>
+                  <option value="false">Hide</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        );
+
       default:
         return null;
     }
@@ -451,7 +585,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                     >
                       ↓
                     </button>
-                    {(section.type === 'listing_category' || section.type === 'data_chart' || section.type === 'custom_content') && (
+                    {(section.type === 'listing_category' || section.type === 'data_chart' || section.type === 'custom_content' || section.type === 'slider') && (
                       <button
                         onClick={() => setEditingSection(section.id)}
                         className="rounded-sm border border-blue-300 bg-blue-50 px-2 py-1 text-xs text-blue-600 hover:bg-blue-100"
@@ -491,6 +625,12 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                 className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
               >
                 📝 Custom Content
+              </button>
+              <button
+                onClick={() => addSection('slider')}
+                className="rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-xs text-[var(--admin-text)] hover:bg-[var(--admin-zebra-odd)]"
+              >
+                🎠 Slider
               </button>
               <button
                 onClick={() => addSection('stories')}
