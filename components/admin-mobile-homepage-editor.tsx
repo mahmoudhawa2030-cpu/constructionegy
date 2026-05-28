@@ -42,6 +42,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
   const [message, setMessage] = useState("");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Helper to update section order
   const moveSection = (index: number, direction: "up" | "down") => {
@@ -146,14 +147,21 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
   // Fetch categories for listing category sections
   useEffect(() => {
     const fetchCategories = async () => {
+      setLoadingCategories(true);
       try {
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
+          setCategories(Array.isArray(data) ? data : []);
+        } else {
+          console.error('Failed to fetch categories:', response.status);
+          setCategories([]);
         }
       } catch (error) {
         console.error('Failed to fetch categories:', error);
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
       }
     };
     fetchCategories();
@@ -179,14 +187,22 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                   categorySlug: e.target.value
                 })}
                 className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                disabled={loadingCategories}
               >
-                <option value="">Select a category</option>
+                <option value="">
+                  {loadingCategories ? 'Loading categories...' : 'Select a category'}
+                </option>
                 {categories.map((cat: any) => (
                   <option key={cat.slug} value={cat.slug}>
                     {cat.label_ar} / {cat.label_en}
                   </option>
                 ))}
               </select>
+              {categories.length === 0 && !loadingCategories && (
+                <p className="mt-1 text-xs text-red-600">
+                  No categories available. Please check your connection or contact support.
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
