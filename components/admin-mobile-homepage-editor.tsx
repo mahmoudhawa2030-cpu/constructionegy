@@ -118,7 +118,8 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
       promo_banners: { ar: 'لافتات ترويجية', en: 'Promo Banners' },
       suppliers: { ar: 'الموردون الرئيسيون', en: 'Top Suppliers' },
       rfq: { ar: 'نموذج طلب العرض', en: 'RFQ Form' },
-      recent_orders: { ar: 'الطلبات الأخيرة', en: 'Recent Orders' }
+      recent_orders: { ar: 'الطلبات الأخيرة', en: 'Recent Orders' },
+      slider: { ar: 'شريط الإعلانات', en: 'Promo Slider' }
     };
     return titles[type]?.[locale] || type;
   };
