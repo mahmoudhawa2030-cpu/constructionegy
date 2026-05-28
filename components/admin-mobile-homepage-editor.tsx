@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 
 import {
@@ -40,6 +40,8 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
   const [activeTab, setActiveTab] = useState<"sections" | "hero" | "flash" | "membership" | "promo" | "rfq">("sections");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
 
   // Helper to update section order
   const moveSection = (index: number, direction: "up" | "down") => {
@@ -131,6 +133,157 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
         return { content: { ar: '', en: '' }, backgroundColor: '#ffffff' };
       default:
         return {};
+    }
+  };
+
+  // Update section custom data
+  const updateSectionCustomData = (sectionId: string, customData: any) => {
+    setSections(
+      sections.map((s) => (s.id === sectionId ? { ...s, customData } : s))
+    );
+  };
+
+  // Fetch categories for listing category sections
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Render section editor based on type
+  const renderSectionEditor = (sectionId: string) => {
+    const section = sections.find(s => s.id === sectionId);
+    if (!section) return null;
+
+    switch (section.type) {
+      case 'listing_category':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Category
+              </label>
+              <select
+                value={section.customData?.categorySlug || ''}
+                onChange={(e) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  categorySlug: e.target.value
+                })}
+                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat: any) => (
+                  <option key={cat.slug} value={cat.slug}>
+                    {cat.label_ar} / {cat.label_en}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Limit
+              </label>
+              <input
+                type="number"
+                value={section.customData?.limit || 10}
+                onChange={(e) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  limit: parseInt(e.target.value) || 10
+                })}
+                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+                min="1"
+                max="50"
+              />
+            </div>
+          </div>
+        );
+
+      case 'data_chart':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Chart Type
+              </label>
+              <select
+                value={section.customData?.chartType || 'bar'}
+                onChange={(e) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  chartType: e.target.value
+                })}
+                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="bar">Bar Chart</option>
+                <option value="line">Line Chart</option>
+                <option value="pie">Pie Chart</option>
+                <option value="area">Area Chart</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Data Source
+              </label>
+              <select
+                value={section.customData?.dataSource || 'sales'}
+                onChange={(e) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  dataSource: e.target.value
+                })}
+                className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
+              >
+                <option value="sales">Sales Data</option>
+                <option value="products">Product Views</option>
+                <option value="suppliers">Supplier Activity</option>
+                <option value="rfqs">RFQ Statistics</option>
+              </select>
+            </div>
+          </div>
+        );
+
+      case 'custom_content':
+        return (
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Content
+              </label>
+              <BilingualTextInput
+                label=""
+                value={section.customData?.content || { ar: '', en: '' }}
+                onChange={(content) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  content
+                })}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
+                Background Color
+              </label>
+              <input
+                type="color"
+                value={section.customData?.backgroundColor || '#ffffff'}
+                onChange={(e) => updateSectionCustomData(sectionId, {
+                  ...section.customData,
+                  backgroundColor: e.target.value
+                })}
+                className="w-full h-10 rounded-sm border border-[var(--admin-cell-border)] bg-white px-2 py-1"
+              />
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -282,6 +435,14 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
                     >
                       ↓
                     </button>
+                    {(section.type === 'listing_category' || section.type === 'data_chart' || section.type === 'custom_content') && (
+                      <button
+                        onClick={() => setEditingSection(section.id)}
+                        className="rounded-sm border border-blue-300 bg-blue-50 px-2 py-1 text-xs text-blue-600 hover:bg-blue-100"
+                      >
+                        ✏️
+                      </button>
+                    )}
                     <button
                       onClick={() => removeSection(section.id)}
                       disabled={sections.length <= 1}
@@ -331,6 +492,24 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
           >
             {saving ? t("saving") : t("saveSections")}
           </button>
+
+          {/* Edit Section Panel */}
+          {editingSection && (
+            <div className="mt-4 border-t border-[var(--admin-shell-border)] pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-[var(--admin-text)]">
+                  Edit Section: {sections.find(s => s.id === editingSection)?.title.en}
+                </h3>
+                <button
+                  onClick={() => setEditingSection(null)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              {renderSectionEditor(editingSection)}
+            </div>
+          )}
         </div>
       )}
 
