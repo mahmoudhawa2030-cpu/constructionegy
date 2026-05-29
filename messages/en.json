@@ -282,7 +282,8 @@
     "noScans": "No saved scans yet",
     "deleteScan": "Delete scan",
     "openScan": "Open",
-    "magicProUnavailable": "AI model loading…"
+    "magicProUnavailable": "AI model loading…",
+    "processing": "Processing…"
   },
   "toolsMenu": {
     "menuAria": "Open tools menu",

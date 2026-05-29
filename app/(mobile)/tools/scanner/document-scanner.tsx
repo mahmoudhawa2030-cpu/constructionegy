@@ -420,15 +420,28 @@ export function DocumentScanner() {
 
   // ── Apply warp when moving to filter stage ──────────────────────────────────
   const handleApplyCrop = useCallback(async () => {
-    if (!rawImage || !corners || !window.cv) return;
-    const sorted = sortCorners(corners);
-    const warped = perspectiveWarp(rawImage, sorted, window.cv);
-    setWarpedCanvas(warped);
+    if (!rawImage || !corners) return;
+    
+    let canvas: HTMLCanvasElement;
+    
+    if (window.cv) {
+      // OpenCV available: do perspective warp
+      const sorted = sortCorners(corners);
+      canvas = perspectiveWarp(rawImage, sorted, window.cv);
+    } else {
+      // OpenCV not ready: use original image without warp
+      canvas = document.createElement("canvas");
+      canvas.width = rawImage.naturalWidth;
+      canvas.height = rawImage.naturalHeight;
+      canvas.getContext("2d")!.drawImage(rawImage, 0, 0);
+    }
+    
+    setWarpedCanvas(canvas);
     setActiveFilter("magicColor");
     setStage("filter");
     setFilterProcessing(true);
     try {
-      const filtered = await applyFilterAsync(warped, "magicColor");
+      const filtered = await applyFilterAsync(canvas, "magicColor");
       setFilteredCanvas(filtered);
     } finally {
       setFilterProcessing(false);
@@ -778,17 +791,18 @@ export function DocumentScanner() {
       )}
 
       {/* ── STAGE: filter ── */}
-      {stage === "filter" && warpedCanvas && (
+      {stage === "filter" && (
         <div className="flex flex-1 flex-col">
           {/* Preview */}
-          <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black/80 px-2 py-2">
+          <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black px-2 py-2">
             <canvas
               ref={filterCanvasRef}
               className="max-h-full max-w-full rounded-lg shadow-2xl"
             />
             {filterProcessing && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/50">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60">
                 <div className="h-9 w-9 animate-spin rounded-full border-4 border-white border-t-transparent" />
+                <span className="text-xs text-white">{t("processing")}</span>
               </div>
             )}
           </div>
@@ -958,24 +972,46 @@ export function DocumentScanner() {
 
 function FilterThumb({ canvas, filter }: { canvas: HTMLCanvasElement | null; filter: FilterType }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el || !canvas) return;
+    if (!el || !canvas) {
+      setIsReady(false);
+      return;
+    }
+    
     const size = 44;
     el.width = size;
     el.height = size;
     const ctx = el.getContext("2d")!;
-    // Draw source scaled
-    const tmpFull = applyFilter(canvas, filter);
-    // Crop center square
-    const s = Math.min(tmpFull.width, tmpFull.height);
-    const sx = (tmpFull.width - s) / 2;
-    const sy = (tmpFull.height - s) / 2;
-    ctx.drawImage(tmpFull, sx, sy, s, s, 0, 0, size, size);
+    
+    try {
+      // Draw source scaled
+      const tmpFull = applyFilter(canvas, filter);
+      // Crop center square
+      const s = Math.min(tmpFull.width, tmpFull.height);
+      const sx = (tmpFull.width - s) / 2;
+      const sy = (tmpFull.height - s) / 2;
+      ctx.drawImage(tmpFull, sx, sy, s, s, 0, 0, size, size);
+      setIsReady(true);
+    } catch {
+      // Clear canvas on error
+      ctx.clearRect(0, 0, size, size);
+      setIsReady(false);
+    }
   }, [canvas, filter]);
 
-  return <canvas ref={ref} className="h-11 w-11 rounded-md object-cover" />;
+  return (
+    <div className="relative h-11 w-11 rounded-md overflow-hidden bg-gray-200">
+      <canvas ref={ref} className="h-full w-full object-cover" />
+      {!isReady && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent" />
+        </div>
+      )}
+    </div>
+  );
 }
 
 function CanvasImage({ canvas }: { canvas: HTMLCanvasElement }) {
