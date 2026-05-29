@@ -205,13 +205,20 @@ export function DocumentScanner() {
   const handleCapture = useCallback(() => {
     const vid = videoRef.current;
     if (!vid || !cameraStream) return;
-    const w = vid.videoWidth || 1280;
-    const h = vid.videoHeight || 720;
+    // Use maximum video resolution for HD capture
+    const w = vid.videoWidth || 1920;
+    const h = vid.videoHeight || 1080;
     const canvas = document.createElement("canvas");
     canvas.width = w;
     canvas.height = h;
-    canvas.getContext("2d")!.drawImage(vid, 0, 0, w, h);
-    loadImageFromUrl(canvas.toDataURL("image/jpeg", 0.95));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    // Use high quality image smoothing
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(vid, 0, 0, w, h);
+    // Use maximum JPEG quality (1.0 = 100%)
+    loadImageFromUrl(canvas.toDataURL("image/jpeg", 1.0));
   }, [cameraStream, loadImageFromUrl]);
 
   // ── Load image from file input ──────────────────────────────────────────────
@@ -508,7 +515,8 @@ export function DocumentScanner() {
   const persistScan = useCallback((canvas: HTMLCanvasElement) => {
     try {
       const id = `scan-${Date.now()}`;
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+      // HD quality for saved scans (0.95 = 95%)
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.95);
 
       // Build 120px thumbnail
       const tc = document.createElement("canvas");
@@ -556,7 +564,8 @@ export function DocumentScanner() {
     setExporting(true);
     try {
       const canvas = pages.length > 0 ? pages[pages.length - 1].filteredCanvas : filteredCanvas!;
-      const url = canvas.toDataURL("image/jpeg", 0.92);
+      // HD quality export (0.98 = 98% quality)
+      const url = canvas.toDataURL("image/jpeg", 0.98);
       const a = document.createElement("a");
       a.href = url;
       a.download = `scan-${Date.now()}.jpg`;
@@ -579,11 +588,13 @@ export function DocumentScanner() {
       const { jsPDF } = await import("jspdf");
       const first = allPages[0].filteredCanvas;
       const orientation = first.width > first.height ? "l" : "p";
-      const pdf = new jsPDF({ orientation, unit: "px", format: [first.width, first.height], compress: true });
+      // High quality PDF with no compression for images
+      const pdf = new jsPDF({ orientation, unit: "px", format: [first.width, first.height], compress: false });
 
       allPages.forEach((pg, idx) => {
         if (idx > 0) pdf.addPage([pg.filteredCanvas.width, pg.filteredCanvas.height], pg.filteredCanvas.width > pg.filteredCanvas.height ? "l" : "p");
-        const imgData = pg.filteredCanvas.toDataURL("image/jpeg", 0.92);
+        // HD quality for PDF images (0.98 = 98%)
+        const imgData = pg.filteredCanvas.toDataURL("image/jpeg", 0.98);
         pdf.addImage(imgData, "JPEG", 0, 0, pg.filteredCanvas.width, pg.filteredCanvas.height);
       });
 
