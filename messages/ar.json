@@ -284,7 +284,8 @@
     "noScans": "لا توجد مسوحات محفوظة بعد",
     "deleteScan": "حذف المسح",
     "openScan": "فتح",
-    "magicProUnavailable": "جاري تحميل نموذج الذكاء الاصطناعي…"
+    "magicProUnavailable": "جاري تحميل نموذج الذكاء الاصطناعي…",
+    "processing": "جاري المعالجة…"
   },
   "toolsMenu": {
     "menuAria": "فتح قائمة الأدوات",
