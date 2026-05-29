@@ -744,7 +744,7 @@ export function DocumentScanner() {
       {stage === "crop" && rawImage && corners && (
         <div
           ref={containerRef}
-          className="fixed inset-0 z-50 flex flex-1 flex-col items-center overflow-hidden bg-[var(--bina-steel)]"
+          className="relative flex flex-1 flex-col items-center overflow-hidden bg-[var(--bina-steel)]"
           style={{ touchAction: "none" }}
         >
           {/* Image + overlay — fills all space above the buttons bar */}
