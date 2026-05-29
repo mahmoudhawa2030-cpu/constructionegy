@@ -420,22 +420,27 @@ export function DocumentScanner() {
 
   // ── Apply warp when moving to filter stage ──────────────────────────────────
   const handleApplyCrop = useCallback(async () => {
-    if (!rawImage || !corners) return;
+    console.log("[Scanner] Apply clicked, rawImage:", !!rawImage, "corners:", !!corners);
+    if (!rawImage || !corners) {
+      console.warn("[Scanner] Missing rawImage or corners");
+      return;
+    }
     
     let canvas: HTMLCanvasElement;
     
     if (window.cv) {
-      // OpenCV available: do perspective warp
+      console.log("[Scanner] OpenCV ready, doing perspective warp");
       const sorted = sortCorners(corners);
       canvas = perspectiveWarp(rawImage, sorted, window.cv);
     } else {
-      // OpenCV not ready: use original image without warp
+      console.log("[Scanner] OpenCV not ready, using original image");
       canvas = document.createElement("canvas");
       canvas.width = rawImage.naturalWidth;
       canvas.height = rawImage.naturalHeight;
       canvas.getContext("2d")!.drawImage(rawImage, 0, 0);
     }
     
+    console.log("[Scanner] Setting stage to filter");
     setWarpedCanvas(canvas);
     setActiveFilter("magicColor");
     setStage("filter");
@@ -443,6 +448,9 @@ export function DocumentScanner() {
     try {
       const filtered = await applyFilterAsync(canvas, "magicColor");
       setFilteredCanvas(filtered);
+      console.log("[Scanner] Filter applied successfully");
+    } catch (err) {
+      console.error("[Scanner] Filter error:", err);
     } finally {
       setFilterProcessing(false);
     }
@@ -736,7 +744,7 @@ export function DocumentScanner() {
       {stage === "crop" && rawImage && corners && (
         <div
           ref={containerRef}
-          className="relative flex flex-1 flex-col items-center overflow-hidden"
+          className="fixed inset-0 z-50 flex flex-1 flex-col items-center overflow-hidden bg-[var(--bina-steel)]"
           style={{ touchAction: "none" }}
         >
           {/* Image + overlay — fills all space above the buttons bar */}
@@ -792,9 +800,9 @@ export function DocumentScanner() {
 
       {/* ── STAGE: filter ── */}
       {stage === "filter" && (
-        <div className="flex flex-1 flex-col">
-          {/* Preview */}
-          <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-black px-2 py-2">
+        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+          {/* Preview - takes remaining space */}
+          <div className="relative flex flex-1 items-center justify-center overflow-hidden px-2 py-2">
             <canvas
               ref={filterCanvasRef}
               className="max-h-full max-w-full rounded-lg shadow-2xl"
@@ -807,8 +815,9 @@ export function DocumentScanner() {
             )}
           </div>
 
-          {/* Filter strip */}
-          <div className="border-t border-[var(--bina-border)] bg-[var(--bina-steel2)]" style={{ paddingBottom: "calc(4.5rem + env(safe-area-inset-bottom))" }}>
+          {/* Filter strip - fixed at bottom above safe area */}
+          <div className="border-t border-[var(--bina-border)] bg-[var(--bina-steel2)]" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+            {/* Filter thumbnails */}
             <div className="flex gap-2 overflow-x-auto px-3 py-2 scrollbar-hide">
               {FILTERS.map((f) => (
                 <button
