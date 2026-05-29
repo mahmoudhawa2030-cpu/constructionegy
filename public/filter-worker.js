@@ -57,10 +57,11 @@ self.onmessage = function (e) {
       }
       break;
     }
-    case "enhanced": {
+    case "enhanced":
+    case "magicColor": {
       // CamScanner "Enhance": adaptive shadow removal (whiten paper) + darken &
       // sharpen text via contrast curve, while PRESERVING color (blue stamps/ink).
-      // Smooth tones, NOT binarized.
+      // Smooth tones, NOT binarized. (Magic Color uses the same look per user request.)
       const W = width, H = height, N = W * H;
 
       // Store originals
@@ -158,103 +159,6 @@ self.onmessage = function (e) {
       for (let i = 0; i < td.length; i += 4) {
         const v = td[i] > 160 ? 255 : Math.round(td[i] * 0.5);
         d[i] = d[i + 1] = d[i + 2] = v;
-      }
-      break;
-    }
-    case "magicColor": {
-      // CamScanner "Magic Color": pure white background + saturated colored ink.
-      // Matches image-utils.ts exactly so thumbnail == final result.
-      const W = width, H = height, N = W * H;
-
-      // Store original colors
-      const origR = new Uint8Array(N);
-      const origG = new Uint8Array(N);
-      const origB = new Uint8Array(N);
-      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-        origR[p] = d[i]; origG[p] = d[i + 1]; origB[p] = d[i + 2];
-      }
-
-      // Luminance map
-      const lum = new Float32Array(N);
-      for (let i = 0; i < d.length; i += 4) {
-        lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      }
-
-      // Adaptive background map — 16px tiles, 96th percentile (fine = catches shadows)
-      const TILE = 16;
-      const tilesX = Math.ceil(W / TILE);
-      const tilesY = Math.ceil(H / TILE);
-      const bgMap = new Float32Array(tilesX * tilesY);
-      for (let tyi = 0; tyi < tilesY; tyi++) {
-        for (let txi = 0; txi < tilesX; txi++) {
-          const vals = [];
-          const x0 = txi * TILE, x1 = Math.min(x0 + TILE, W);
-          const y0 = tyi * TILE, y1 = Math.min(y0 + TILE, H);
-          for (let py = y0; py < y1; py++)
-            for (let px = x0; px < x1; px++) vals.push(lum[py * W + px]);
-          vals.sort((a, b) => a - b);
-          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.96)] || 245;
-        }
-      }
-
-      const getBg = (x, y) => {
-        const fx = x / TILE - 0.5, fy = y / TILE - 0.5;
-        const tx0 = Math.max(0, Math.floor(fx)), tx1 = Math.min(tilesX - 1, tx0 + 1);
-        const ty0 = Math.max(0, Math.floor(fy)), ty1 = Math.min(tilesY - 1, ty0 + 1);
-        const wx = fx - Math.floor(fx), wy = fy - Math.floor(fy);
-        return (
-          bgMap[ty0 * tilesX + tx0] * (1 - wx) * (1 - wy) +
-          bgMap[ty0 * tilesX + tx1] * wx        * (1 - wy) +
-          bgMap[ty1 * tilesX + tx0] * (1 - wx)  * wy +
-          bgMap[ty1 * tilesX + tx1] * wx         * wy
-        );
-      };
-
-      // Normalized luminance
-      const normLum = new Float32Array(N);
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          const idx = y * W + x;
-          const bg = Math.max(getBg(x, y), 60);
-          normLum[idx] = Math.min(1, lum[idx] / bg);
-        }
-      }
-
-      // Per-pixel binarization with colored ink
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          const idx = (y * W + x) * 4;
-          const lumIdx = y * W + x;
-
-          const rRaw = origR[lumIdx] / 255;
-          const gRaw = origG[lumIdx] / 255;
-          const bRaw = origB[lumIdx] / 255;
-
-          const bgVal = Math.max(getBg(x, y), 60);
-          const rNorm = Math.min(1, rRaw * 255 / bgVal);
-          const gNorm = Math.min(1, gRaw * 255 / bgVal);
-          const bNorm = Math.min(1, bRaw * 255 / bgVal);
-
-          const nLum = normLum[lumIdx];
-          const isGrayBackground = nLum > 0.50 || (nLum > 0.65 && nLum < 0.995);
-          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
-
-          if (isGrayBackground || isColorBackground) {
-            d[idx] = 255; d[idx + 1] = 255; d[idx + 2] = 255;
-          } else {
-            let r = rRaw, g = gRaw, b = bRaw;
-            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-            r = Math.min(1, Math.max(0, gray + (r - gray) * 1.40));
-            g = Math.min(1, Math.max(0, gray + (g - gray) * 1.40));
-            b = Math.min(1, Math.max(0, gray + (b - gray) * 1.40));
-            const inkDarkness = 1 - gray;
-            const darkenFactor = 0.75 - (inkDarkness * 0.15);
-            r *= darkenFactor; g *= darkenFactor; b *= darkenFactor;
-            d[idx]     = Math.round(r * 255);
-            d[idx + 1] = Math.round(g * 255);
-            d[idx + 2] = Math.round(b * 255);
-          }
-        }
       }
       break;
     }

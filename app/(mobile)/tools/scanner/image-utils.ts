@@ -317,10 +317,12 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       }
       break;
     }
-    case "enhanced": {
+    case "enhanced":
+    case "magicColor": {
       // CamScanner "Enhance": adaptive shadow removal (whiten paper) + darken &
       // sharpen text via contrast curve, while PRESERVING color (blue stamps/ink).
-      // Smooth tones, NOT binarized. Matches filter-worker.js exactly.
+      // Smooth tones, NOT binarized. (Magic Color uses the same look per user request.)
+      // Matches filter-worker.js exactly.
       const W = out.width, H = out.height, N = W * H;
 
       const oR = new Uint8Array(N), oG = new Uint8Array(N), oB = new Uint8Array(N);
@@ -391,126 +393,6 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
           d[idx]     = Math.round(r * 255);
           d[idx + 1] = Math.round(g * 255);
           d[idx + 2] = Math.round(b * 255);
-        }
-      }
-      break;
-    }
-    case "magicColor": {
-      // Hybrid: Pure white background + saturated colored ink
-      const W = out.width;
-      const H = out.height;
-      const N = W * H;
-
-      // Store original colors before processing
-      const origR = new Uint8Array(N);
-      const origG = new Uint8Array(N);
-      const origB = new Uint8Array(N);
-      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
-        origR[p] = d[i];
-        origG[p] = d[i + 1];
-        origB[p] = d[i + 2];
-      }
-
-      // ── Step 1: Luminance map for threshold decisions ────────────────────
-      const lum = new Float32Array(N);
-      for (let i = 0; i < d.length; i += 4) {
-        lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-      }
-
-      // ── Step 2: Adaptive background map (16px tiles, 96th percentile) ─────
-      // Aggressive settings to match CamScanner Magic Pro background
-      const TILE = 16;
-      const tilesX = Math.ceil(W / TILE);
-      const tilesY = Math.ceil(H / TILE);
-      const bgMap = new Float32Array(tilesX * tilesY);
-      for (let tyi = 0; tyi < tilesY; tyi++) {
-        for (let txi = 0; txi < tilesX; txi++) {
-          const vals: number[] = [];
-          const x0 = txi * TILE, x1 = Math.min(x0 + TILE, W);
-          const y0 = tyi * TILE, y1 = Math.min(y0 + TILE, H);
-          for (let py = y0; py < y1; py++)
-            for (let px = x0; px < x1; px++) vals.push(lum[py * W + px]);
-          vals.sort((a, b) => a - b);
-          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.96)] || 245;
-        }
-      }
-
-      const getBg = (x: number, y: number): number => {
-        const fx = (x / TILE) - 0.5, fy = (y / TILE) - 0.5;
-        const tx0 = Math.max(0, Math.floor(fx)), tx1 = Math.min(tilesX - 1, tx0 + 1);
-        const ty0 = Math.max(0, Math.floor(fy)), ty1 = Math.min(tilesY - 1, ty0 + 1);
-        const wx = fx - Math.floor(fx), wy = fy - Math.floor(fy);
-        return (
-          bgMap[ty0 * tilesX + tx0] * (1 - wx) * (1 - wy) +
-          bgMap[ty0 * tilesX + tx1] * wx        * (1 - wy) +
-          bgMap[ty1 * tilesX + tx0] * (1 - wx)  * wy +
-          bgMap[ty1 * tilesX + tx1] * wx         * wy
-        );
-      };
-
-      // ── Step 3: Build normalized luminance for binarization ────────────────
-      const normLum = new Float32Array(N);
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          const idx = y * W + x;
-          const bg = Math.max(getBg(x, y), 60);
-          normLum[idx] = Math.min(1, lum[idx] / bg);
-        }
-      }
-
-      // ── Step 4: Per-pixel binarization with colored ink ────────────────────
-      for (let y = 0; y < H; y++) {
-        for (let x = 0; x < W; x++) {
-          const idx = (y * W + x) * 4;
-          const lumIdx = y * W + x;
-
-          // Get original color
-          let rRaw = origR[lumIdx] / 255;
-          let gRaw = origG[lumIdx] / 255;
-          let bRaw = origB[lumIdx] / 255;
-
-          // Normalize against local background
-          const bgVal = Math.max(getBg(x, y), 60);
-          const rNorm = Math.min(1, rRaw * 255 / bgVal);
-          const gNorm = Math.min(1, gRaw * 255 / bgVal);
-          const bNorm = Math.min(1, bRaw * 255 / bgVal);
-
-          // Grayscale luminance for threshold
-          const nLum = normLum[lumIdx];
-
-          // Detect background: grayscale OR any color channel is very bright
-          // Lower threshold 0.68 catches lighter blue/cyan tints that 0.78 missed
-          const isGrayBackground = nLum > 0.50 || (nLum > 0.65 && nLum < 0.995);
-          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
-
-          if (isGrayBackground || isColorBackground) {
-            // Background/shadow/color-tint → pure white (CamScanner style)
-            d[idx] = 255;
-            d[idx + 1] = 255;
-            d[idx + 2] = 255;
-          } else {
-            // Ink pixel → saturate and darken for vivid contrast
-            let r = rRaw;
-            let g = gRaw;
-            let b = bRaw;
-
-            // High saturation boost (40%) to make ink vivid
-            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-            r = Math.min(1, Math.max(0, gray + (r - gray) * 1.40));
-            g = Math.min(1, Math.max(0, gray + (g - gray) * 1.40));
-            b = Math.min(1, Math.max(0, gray + (b - gray) * 1.40));
-
-            // Darken ink for crisp contrast against white background
-            const inkDarkness = 1 - gray;
-            const darkenFactor = 0.75 - (inkDarkness * 0.15); // 0.60 to 0.75
-            r = r * darkenFactor;
-            g = g * darkenFactor;
-            b = b * darkenFactor;
-
-            d[idx]     = Math.round(r * 255);
-            d[idx + 1] = Math.round(g * 255);
-            d[idx + 2] = Math.round(b * 255);
-          }
         }
       }
       break;
