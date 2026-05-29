@@ -16,24 +16,96 @@ self.onmessage = function (e) {
       break;
     }
     case "bw": {
-      for (let i = 0; i < d.length; i += 4) {
-        const v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        const bw = v > 128 ? 255 : 0;
+      // CamScanner B&W: adaptive (local-mean) threshold for clean text on white.
+      const Wb = width, Hb = height;
+      const g = new Float32Array(Wb * Hb);
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      }
+      const R = Math.max(8, Math.round(Math.min(Wb, Hb) * 0.02));
+      const mean = new Float32Array(Wb * Hb);
+      const tmpH = new Float32Array(Wb * Hb);
+      // Horizontal box pass
+      for (let y = 0; y < Hb; y++) {
+        let acc = 0;
+        const row = y * Wb;
+        for (let x = 0; x < Math.min(R, Wb); x++) acc += g[row + x];
+        for (let x = 0; x < Wb; x++) {
+          const xr = x + R, xl = x - R - 1;
+          if (xr < Wb) acc += g[row + xr];
+          if (xl >= 0) acc -= g[row + xl];
+          const cnt = Math.min(xr, Wb - 1) - Math.max(xl + 1, 0) + 1;
+          tmpH[row + x] = acc / cnt;
+        }
+      }
+      // Vertical box pass
+      for (let x = 0; x < Wb; x++) {
+        let acc = 0;
+        for (let y = 0; y < Math.min(R, Hb); y++) acc += tmpH[y * Wb + x];
+        for (let y = 0; y < Hb; y++) {
+          const yr = y + R, yl = y - R - 1;
+          if (yr < Hb) acc += tmpH[yr * Wb + x];
+          if (yl >= 0) acc -= tmpH[yl * Wb + x];
+          const cnt = Math.min(yr, Hb - 1) - Math.max(yl + 1, 0) + 1;
+          mean[y * Wb + x] = acc / cnt;
+        }
+      }
+      const bias = 10;
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const bw = g[p] < mean[p] - bias ? 0 : 255;
         d[i] = d[i + 1] = d[i + 2] = bw;
       }
       break;
     }
     case "enhanced": {
+      // CamScanner "Auto/Enhance": white balance + per-channel auto-levels (2% clip)
+      // + brightness lift + contrast S-curve. Keeps color, brightens paper.
+      const N0 = width * height;
+
+      // ── Grey-world white balance (capped) ──────────────────────────────
+      let sR = 0, sG = 0, sB = 0;
+      for (let i = 0; i < d.length; i += 4) { sR += d[i]; sG += d[i + 1]; sB += d[i + 2]; }
+      const aR = sR / N0, aG = sG / N0, aB = sB / N0;
+      const aAll = (aR + aG + aB) / 3;
+      const wbR = Math.min(Math.max(aAll / (aR || 1), 0.9), 1.18);
+      const wbG = Math.min(Math.max(aAll / (aG || 1), 0.9), 1.18);
+      const wbB = Math.min(Math.max(aAll / (aB || 1), 0.9), 1.18);
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = Math.min(255, d[i]     * wbR);
+        d[i + 1] = Math.min(255, d[i + 1] * wbG);
+        d[i + 2] = Math.min(255, d[i + 2] * wbB);
+      }
+
+      // ── Per-channel auto-levels using 1st/99th percentile (robust) ─────
       for (let ch = 0; ch < 3; ch++) {
-        let min = 255, max = 0;
+        const hist = new Uint32Array(256);
+        for (let i = ch; i < d.length; i += 4) hist[d[i] | 0]++;
+        const clip = Math.max(1, Math.floor(N0 * 0.01));
+        let lo = 0, hi = 255, acc = 0;
+        for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc > clip) { lo = v; break; } }
+        acc = 0;
+        for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc > clip) { hi = v; break; } }
+        const range = Math.max(1, hi - lo);
         for (let i = ch; i < d.length; i += 4) {
-          if (d[i] < min) min = d[i];
-          if (d[i] > max) max = d[i];
+          let v = ((d[i] - lo) / range) * 255;
+          d[i] = v < 0 ? 0 : v > 255 ? 255 : v;
         }
-        const range = max - min || 1;
-        for (let i = ch; i < d.length; i += 4) {
-          d[i] = Math.round(((d[i] - min) / range) * 255);
-        }
+      }
+
+      // ── Gentle contrast S-curve + brightness lift ─────────────────────
+      const lut = new Uint8ClampedArray(256);
+      for (let v = 0; v < 256; v++) {
+        let n = v / 255;
+        // Smoothstep-based contrast around 0.5
+        n = n + (n - 0.5) * 0.18;
+        // Lift shadows/paper slightly toward white
+        n = n + (1 - n) * 0.06;
+        lut[v] = Math.round(Math.min(1, Math.max(0, n)) * 255);
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = lut[d[i]];
+        d[i + 1] = lut[d[i + 1]];
+        d[i + 2] = lut[d[i + 2]];
       }
       break;
     }
@@ -59,20 +131,16 @@ self.onmessage = function (e) {
       break;
     }
     case "magicColor": {
+      // CamScanner "Magic Color": pure white background + saturated colored ink.
+      // Matches image-utils.ts exactly so thumbnail == final result.
       const W = width, H = height, N = W * H;
 
-      // Grey world correction capped at 1.15x
-      let sumR = 0, sumG = 0, sumB = 0;
-      for (let i = 0; i < d.length; i += 4) { sumR += d[i]; sumG += d[i + 1]; sumB += d[i + 2]; }
-      const mR = sumR / N, mG = sumG / N, mB = sumB / N;
-      const mAll = (mR + mG + mB) / 3;
-      const ccR = Math.min(mAll / (mR || 1), 1.15);
-      const ccG = Math.min(mAll / (mG || 1), 1.15);
-      const ccB = Math.min(mAll / (mB || 1), 1.15);
-      for (let i = 0; i < d.length; i += 4) {
-        d[i]     = Math.min(255, Math.round(d[i]     * ccR));
-        d[i + 1] = Math.min(255, Math.round(d[i + 1] * ccG));
-        d[i + 2] = Math.min(255, Math.round(d[i + 2] * ccB));
+      // Store original colors
+      const origR = new Uint8Array(N);
+      const origG = new Uint8Array(N);
+      const origB = new Uint8Array(N);
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        origR[p] = d[i]; origG[p] = d[i + 1]; origB[p] = d[i + 2];
       }
 
       // Luminance map
@@ -81,8 +149,8 @@ self.onmessage = function (e) {
         lum[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // Adaptive background map — 64px tiles, 88th percentile
-      const TILE = 64;
+      // Adaptive background map — 16px tiles, 96th percentile (fine = catches shadows)
+      const TILE = 16;
       const tilesX = Math.ceil(W / TILE);
       const tilesY = Math.ceil(H / TILE);
       const bgMap = new Float32Array(tilesX * tilesY);
@@ -94,7 +162,7 @@ self.onmessage = function (e) {
           for (let py = y0; py < y1; py++)
             for (let px = x0; px < x1; px++) vals.push(lum[py * W + px]);
           vals.sort((a, b) => a - b);
-          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.88)] || 200;
+          bgMap[tyi * tilesX + txi] = vals[Math.floor(vals.length * 0.96)] || 245;
         }
       }
 
@@ -111,46 +179,67 @@ self.onmessage = function (e) {
         );
       };
 
+      // Normalized luminance
+      const normLum = new Float32Array(N);
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const idx = y * W + x;
+          const bg = Math.max(getBg(x, y), 60);
+          normLum[idx] = Math.min(1, lum[idx] / bg);
+        }
+      }
+
+      // Per-pixel binarization with colored ink
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
           const idx = (y * W + x) * 4;
-          let r = d[idx] / 255, g = d[idx + 1] / 255, b = d[idx + 2] / 255;
-          const lumPx = 0.299 * r + 0.587 * g + 0.114 * b;
+          const lumIdx = y * W + x;
 
-          const bg = Math.max(getBg(x, y), 40);
-          const scale = Math.min(220 / bg, 1.5);
-          r = Math.min(1, r * scale);
-          g = Math.min(1, g * scale);
-          b = Math.min(1, b * scale);
+          const rRaw = origR[lumIdx] / 255;
+          const gRaw = origG[lumIdx] / 255;
+          const bRaw = origB[lumIdx] / 255;
 
-          const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-          r = Math.min(1, Math.max(0, gray + (r - gray) * 1.10));
-          g = Math.min(1, Math.max(0, gray + (g - gray) * 1.10));
-          b = Math.min(1, Math.max(0, gray + (b - gray) * 1.10));
+          const bgVal = Math.max(getBg(x, y), 60);
+          const rNorm = Math.min(1, rRaw * 255 / bgVal);
+          const gNorm = Math.min(1, gRaw * 255 / bgVal);
+          const bNorm = Math.min(1, bRaw * 255 / bgVal);
 
-          if (lumPx < 0.45) {
-            const inkFactor = lumPx < 0.20 ? 0.70 : 0.85;
-            r *= inkFactor; g *= inkFactor; b *= inkFactor;
+          const nLum = normLum[lumIdx];
+          const isGrayBackground = nLum > 0.50 || (nLum > 0.65 && nLum < 0.995);
+          const isColorBackground = rNorm > 0.68 || gNorm > 0.68 || bNorm > 0.68;
+
+          if (isGrayBackground || isColorBackground) {
+            d[idx] = 255; d[idx + 1] = 255; d[idx + 2] = 255;
+          } else {
+            let r = rRaw, g = gRaw, b = bRaw;
+            const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+            r = Math.min(1, Math.max(0, gray + (r - gray) * 1.40));
+            g = Math.min(1, Math.max(0, gray + (g - gray) * 1.40));
+            b = Math.min(1, Math.max(0, gray + (b - gray) * 1.40));
+            const inkDarkness = 1 - gray;
+            const darkenFactor = 0.75 - (inkDarkness * 0.15);
+            r *= darkenFactor; g *= darkenFactor; b *= darkenFactor;
+            d[idx]     = Math.round(r * 255);
+            d[idx + 1] = Math.round(g * 255);
+            d[idx + 2] = Math.round(b * 255);
           }
-
-          d[idx]     = Math.round(Math.min(1, Math.max(0, r)) * 255);
-          d[idx + 1] = Math.round(Math.min(1, Math.max(0, g)) * 255);
-          d[idx + 2] = Math.round(Math.min(1, Math.max(0, b)) * 255);
         }
       }
       break;
     }
     case "magicColorPro": {
+      // CamScanner "Magic Pro" / B&W document: pure white background (255),
+      // crisp near-black ink (0-7), aggressive shadow removal, no color cast.
+      // Matches image-utils.ts exactly so thumbnail == final result.
       const W2 = width, H2 = height;
 
-      // Luminance map
       const lum2 = new Float32Array(W2 * H2);
       for (let i = 0; i < d.length; i += 4) {
         lum2[i >> 2] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       }
 
-      // Adaptive background map — 64px tiles, 92nd percentile
-      const TILE2 = 64;
+      // Ultra-fine 16px tiles, 98th percentile = true paper white
+      const TILE2 = 16;
       const tX2 = Math.ceil(W2 / TILE2);
       const tY2 = Math.ceil(H2 / TILE2);
       const bgMap2 = new Float32Array(tX2 * tY2);
@@ -162,7 +251,7 @@ self.onmessage = function (e) {
           for (let py = y0; py < y1; py++)
             for (let px = x0; px < x1; px++) vals.push(lum2[py * W2 + px]);
           vals.sort((a, b) => a - b);
-          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.92)] || 240;
+          bgMap2[tyi * tX2 + txi] = vals[Math.floor(vals.length * 0.98)] || 250;
         }
       }
 
@@ -179,44 +268,39 @@ self.onmessage = function (e) {
         );
       };
 
+      const normLum2 = new Float32Array(W2 * H2);
+      for (let y = 0; y < H2; y++) {
+        for (let x = 0; x < W2; x++) {
+          const idx = y * W2 + x;
+          const bg = Math.max(getBg2(x, y), 60);
+          normLum2[idx] = Math.min(1, lum2[idx] / bg);
+        }
+      }
+
       for (let y = 0; y < H2; y++) {
         for (let x = 0; x < W2; x++) {
           const idx = (y * W2 + x) * 4;
-          const bg = Math.max(getBg2(x, y), 30);
+          const lumIdx = y * W2 + x;
+          const bg = Math.max(getBg2(x, y), 60);
 
-          let r = Math.min(1, d[idx]     / bg);
-          let g = Math.min(1, d[idx + 1] / bg);
-          let b = Math.min(1, d[idx + 2] / bg);
+          const rNorm = Math.min(1, d[idx]     / bg);
+          const gNorm = Math.min(1, d[idx + 1] / bg);
+          const bNorm = Math.min(1, d[idx + 2] / bg);
+          const lumNorm = 0.299 * rNorm + 0.587 * gNorm + 0.114 * bNorm;
 
-          const lp = 0.299 * r + 0.587 * g + 0.114 * b;
+          const isShadowOrBg = normLum2[lumIdx] > 0.75 && normLum2[lumIdx] < 0.995;
 
-          let out2;
-          if (lp > 0.72) {
-            out2 = Math.min(1, lp + (1 - lp) * 0.99);
-          } else if (lp < 0.50) {
-            out2 = lp * lp * (lp < 0.18 ? 0.20 : 0.40);
+          let outVal;
+          if (lumNorm > 0.60 || isShadowOrBg) {
+            outVal = 255;
+          } else if (lumNorm < 0.35) {
+            outVal = Math.round(lumNorm * lumNorm * 55);
           } else {
-            const t = (lp - 0.50) / 0.22;
-            const bright = Math.min(1, lp + (1 - lp) * 0.99);
-            const dark = lp * lp * 0.40;
-            out2 = dark + t * t * (3 - 2 * t) * (bright - dark);
+            const t = (lumNorm - 0.35) / 0.25;
+            outVal = Math.round(7 + t * t * (3 - 2 * t) * 248);
           }
 
-          const inkness = Math.max(0, 1 - lp / 0.50);
-          const desat = inkness * 0.85;
-          const lumOut = 0.299 * r + 0.587 * g + 0.114 * b;
-          r = r + (lumOut - r) * desat;
-          g = g + (lumOut - g) * desat;
-          b = b + (lumOut - b) * desat;
-
-          const scl = lp > 0.01 ? out2 / lp : 0;
-          r = Math.min(1, Math.max(0, r * scl));
-          g = Math.min(1, Math.max(0, g * scl));
-          b = Math.min(1, Math.max(0, b * scl));
-
-          d[idx]     = Math.round(r * 255);
-          d[idx + 1] = Math.round(g * 255);
-          d[idx + 2] = Math.round(b * 255);
+          d[idx] = outVal; d[idx + 1] = outVal; d[idx + 2] = outVal;
         }
       }
       break;

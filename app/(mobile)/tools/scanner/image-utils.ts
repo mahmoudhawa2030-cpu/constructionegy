@@ -274,25 +274,96 @@ export function applyFilter(source: HTMLCanvasElement, filter: FilterType): HTML
       break;
     }
     case "bw": {
-      for (let i = 0; i < d.length; i += 4) {
-        const v = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-        const bw = v > 128 ? 255 : 0;
+      // CamScanner B&W: adaptive (local-mean) threshold for clean text on white.
+      const Wb = out.width, Hb = out.height;
+      const g = new Float32Array(Wb * Hb);
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        g[p] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+      }
+      // Box-blur local mean using running rows (radius scaled to image)
+      const R = Math.max(8, Math.round(Math.min(Wb, Hb) * 0.02));
+      const mean = new Float32Array(Wb * Hb);
+      // Horizontal pass
+      const tmpH = new Float32Array(Wb * Hb);
+      for (let y = 0; y < Hb; y++) {
+        let acc = 0;
+        const row = y * Wb;
+        for (let x = 0; x < Math.min(R, Wb); x++) acc += g[row + x];
+        for (let x = 0; x < Wb; x++) {
+          const xr = x + R, xl = x - R - 1;
+          if (xr < Wb) acc += g[row + xr];
+          if (xl >= 0) acc -= g[row + xl];
+          const cnt = Math.min(xr, Wb - 1) - Math.max(xl + 1, 0) + 1;
+          tmpH[row + x] = acc / cnt;
+        }
+      }
+      // Vertical pass
+      for (let x = 0; x < Wb; x++) {
+        let acc = 0;
+        for (let y = 0; y < Math.min(R, Hb); y++) acc += tmpH[y * Wb + x];
+        for (let y = 0; y < Hb; y++) {
+          const yr = y + R, yl = y - R - 1;
+          if (yr < Hb) acc += tmpH[yr * Wb + x];
+          if (yl >= 0) acc -= tmpH[yl * Wb + x];
+          const cnt = Math.min(yr, Hb - 1) - Math.max(yl + 1, 0) + 1;
+          mean[y * Wb + x] = acc / cnt;
+        }
+      }
+      // Threshold: pixel darker than (local mean - bias) => black
+      const bias = 10;
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        const bw = g[p] < mean[p] - bias ? 0 : 255;
         d[i] = d[i + 1] = d[i + 2] = bw;
       }
       break;
     }
     case "enhanced": {
-      // Auto levels per channel + slight sharpen via contrast
+      // CamScanner "Auto/Enhance": white balance + per-channel auto-levels (1% clip)
+      // + brightness lift + contrast S-curve. Keeps color, brightens paper.
+      const Ne = out.width * out.height;
+
+      // Grey-world white balance (capped)
+      let sR = 0, sG = 0, sB = 0;
+      for (let i = 0; i < d.length; i += 4) { sR += d[i]; sG += d[i + 1]; sB += d[i + 2]; }
+      const eaR = sR / Ne, eaG = sG / Ne, eaB = sB / Ne;
+      const eaAll = (eaR + eaG + eaB) / 3;
+      const wbR = Math.min(Math.max(eaAll / (eaR || 1), 0.9), 1.18);
+      const wbG = Math.min(Math.max(eaAll / (eaG || 1), 0.9), 1.18);
+      const wbB = Math.min(Math.max(eaAll / (eaB || 1), 0.9), 1.18);
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = Math.min(255, d[i]     * wbR);
+        d[i + 1] = Math.min(255, d[i + 1] * wbG);
+        d[i + 2] = Math.min(255, d[i + 2] * wbB);
+      }
+
+      // Per-channel auto-levels (1st/99th percentile)
       for (let ch = 0; ch < 3; ch++) {
-        let min = 255, max = 0;
+        const hist = new Uint32Array(256);
+        for (let i = ch; i < d.length; i += 4) hist[d[i] | 0]++;
+        const clip = Math.max(1, Math.floor(Ne * 0.01));
+        let lo = 0, hi = 255, acc = 0;
+        for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc > clip) { lo = v; break; } }
+        acc = 0;
+        for (let v = 255; v >= 0; v--) { acc += hist[v]; if (acc > clip) { hi = v; break; } }
+        const range = Math.max(1, hi - lo);
         for (let i = ch; i < d.length; i += 4) {
-          if (d[i] < min) min = d[i];
-          if (d[i] > max) max = d[i];
+          const v = ((d[i] - lo) / range) * 255;
+          d[i] = v < 0 ? 0 : v > 255 ? 255 : v;
         }
-        const range = max - min || 1;
-        for (let i = ch; i < d.length; i += 4) {
-          d[i] = Math.round(((d[i] - min) / range) * 255);
-        }
+      }
+
+      // Gentle contrast S-curve + brightness lift via LUT
+      const lut = new Uint8ClampedArray(256);
+      for (let v = 0; v < 256; v++) {
+        let n = v / 255;
+        n = n + (n - 0.5) * 0.18;
+        n = n + (1 - n) * 0.06;
+        lut[v] = Math.round(Math.min(1, Math.max(0, n)) * 255);
+      }
+      for (let i = 0; i < d.length; i += 4) {
+        d[i]     = lut[d[i]];
+        d[i + 1] = lut[d[i + 1]];
+        d[i + 2] = lut[d[i + 2]];
       }
       break;
     }
