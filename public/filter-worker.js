@@ -107,7 +107,7 @@ self.onmessage = function (e) {
         return n < 0 ? 0 : n > 1 ? 1 : n;
       };
 
-      const TARGET = 235; // paper white target after normalization
+      const TARGET = 212; // paper white target (-10% brightness)
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
           const p = y * W + x;
