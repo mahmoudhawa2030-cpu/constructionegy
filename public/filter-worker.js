@@ -127,9 +127,9 @@ self.onmessage = function (e) {
           g = Math.min(1, g * ratio);
           b = Math.min(1, b * ratio);
 
-          // Saturation boost so blue stamps/ink stay vivid (stronger on darker ink)
+          // Saturation boost: flat 120% so blue stamps/ink stay clear & vivid
           const gray = 0.299 * r + 0.587 * g + 0.114 * b;
-          const sat = 1.18 + (1 - gray) * 0.22; // 1.18–1.40
+          const sat = 1.20; // 120%
           r = Math.min(1, Math.max(0, gray + (r - gray) * sat));
           g = Math.min(1, Math.max(0, gray + (g - gray) * sat));
           b = Math.min(1, Math.max(0, gray + (b - gray) * sat));
