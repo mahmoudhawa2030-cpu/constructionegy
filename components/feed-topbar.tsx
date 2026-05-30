@@ -120,9 +120,8 @@ export function FeedTopbar() {
           </div>
           <div className="mt-0.5 text-[11px] text-white/65">B2B Wholesale Platform · 50,000+ Products</div>
         </div>
-        <button
-          type="button"
-          onClick={() => router.push("/profile")}
+        <Link
+          href="/pricing"
           className="flex items-center gap-1 rounded-md px-2.5 py-1 active:opacity-80"
           style={{ background: "linear-gradient(135deg,#FFCA28,#FF8F00)" }}
         >
@@ -130,7 +129,7 @@ export function FeedTopbar() {
             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
           </svg>
           <span className="text-[11px] font-bold text-[var(--bina-on-accent)]">GOLD VIP</span>
-        </button>
+        </Link>
       </div>
 
       {/* Search row */}
