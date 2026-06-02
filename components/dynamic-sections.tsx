@@ -78,7 +78,7 @@ export function ListingCategorySection({ section, categories = [], categoryListi
                 <span className="text-[10px] font-bold uppercase text-[var(--bina-primary)]">
                   {categoryLabel}
                 </span>
-                <span className="line-clamp-2 min-h-[32px] text-[12px] font-medium leading-snug text-[var(--bina-text)]">
+                <span className="line-clamp-2 min-h-[32px] text-[12px] font-medium leading-snug text-black">
                   {listing.title}
                 </span>
                 <span className="font-bina-display text-[14px] font-bold text-[var(--bina-primary)]">
