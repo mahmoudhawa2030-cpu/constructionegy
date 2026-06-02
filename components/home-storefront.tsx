@@ -58,6 +58,7 @@ type Props = {
   latestRfqHref?: string | null;
   sections?: SectionConfig[];
   content?: HomepageContent;
+  categoryListings?: Record<string, StorefrontListing[]>;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -113,6 +114,7 @@ export function HomeStorefront({
   latestRfqHref,
   sections,
   content,
+  categoryListings = {},
 }: Props) {
   const t = useTranslations("storefront");
   const getText = useBilingualText();
@@ -190,7 +192,8 @@ export function HomeStorefront({
           <ListingCategorySection 
             key={section.id} 
             section={section} 
-            categories={categories} 
+            categories={categories}
+            categoryListings={categoryListings}
           />
         );
 

@@ -131,3 +131,46 @@ export async function fetchStorefrontData(
 
   return { categories, flashDeals, trending, suppliers, recentOrders };
 }
+
+/**
+ * Fetch listings grouped by category slug for listing_category sections.
+ * Returns a map: { [slug]: StorefrontListing[] }
+ */
+export async function fetchCategoryListings(
+  client: SupabaseClient<Database>,
+  categorySlugs: { slug: string; limit: number }[],
+): Promise<Record<string, StorefrontListing[]>> {
+  if (categorySlugs.length === 0) return {};
+
+  const result: Record<string, StorefrontListing[]> = {};
+
+  // Fetch all needed listings in parallel
+  const queries = categorySlugs.map(({ slug, limit }) =>
+    client
+      .from("listings")
+      .select("id, title, price, price_unit, category, location, images, view_count, created_at, user_id")
+      .eq("status", "active")
+      .eq("category", slug)
+      .order("created_at", { ascending: false })
+      .limit(limit)
+      .then(({ data }) => ({ slug, data }))
+  );
+
+  const results = await Promise.all(queries);
+
+  for (const { slug, data } of results) {
+    result[slug] = (data ?? []).map((l) => ({
+      id: l.id,
+      title: l.title,
+      price: l.price,
+      price_unit: l.price_unit ?? "EGP",
+      category: l.category,
+      location: l.location,
+      images: l.images ?? [],
+      view_count: l.view_count ?? 0,
+      created_at: l.created_at,
+    }));
+  }
+
+  return result;
+}

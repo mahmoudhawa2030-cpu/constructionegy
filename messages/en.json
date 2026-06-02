@@ -52,6 +52,10 @@
     "rfqSidebarTitle": "Need a custom quote?",
     "rfqSidebarLead": "Post your Request for Quotation and verified suppliers will respond within 24 hours."
   },
+  "listingCategory": {
+    "viewAll": "View all",
+    "noListings": "No listings in this category yet"
+  },
   "adminWebHomepage": {
     "title": "Web home page",
     "lead": "Manage every section that appears on the web home page: slider, categories, flash deals, trending, promo banners and featured suppliers.",

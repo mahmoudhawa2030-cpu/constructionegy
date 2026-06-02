@@ -1,8 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useBilingualText } from "@/lib/bilingual-text";
 import type { SectionConfig } from "@/lib/homepage/types";
+import type { StorefrontListing } from "./home-storefront";
 import { MobileSlider } from "./mobile-slider";
 
 interface Props {
@@ -11,38 +14,81 @@ interface Props {
   flashDeals?: any[];
   trending?: any[];
   suppliers?: any[];
+  categoryListings?: Record<string, StorefrontListing[]>;
 }
 
-export function ListingCategorySection({ section, categories = [] }: Props) {
+export function ListingCategorySection({ section, categories = [], categoryListings = {} }: Props) {
   const getText = useBilingualText();
-  const { categorySlug = '', limit = 10 } = section.customData || {};
-  
-  // Filter categories by slug if specified
-  const filteredCategories = categorySlug 
-    ? categories.filter(cat => cat.slug === categorySlug).slice(0, limit)
-    : categories.slice(0, limit);
+  const t = useTranslations("listingCategory");
+  const { categorySlug = '', rows = 2 } = section.customData || {};
 
-  if (filteredCategories.length === 0) return null;
+  const listings = categorySlug ? (categoryListings[categorySlug] ?? []) : [];
+  const maxItems = rows * 2; // 2 columns
+  const visibleListings = listings.slice(0, maxItems);
+
+  if (!categorySlug) return null;
 
   return (
     <div className="bg-white px-3 py-3">
-      <h3 className="mb-3 text-[15px] font-bold text-[var(--bina-text)]">
-        {getText(section.title)}
-      </h3>
-      <div className="grid grid-cols-2 gap-2">
-        {filteredCategories.map((cat: any) => (
-          <Link
-            key={cat.slug}
-            href={`/gallery?category=${encodeURIComponent(cat.slug)}`}
-            className="rounded-lg border border-[#ebebeb] p-3 text-center"
-          >
-            <div className="text-[20px] mb-1">{cat.icon_emoji ?? "📦"}</div>
-            <div className="text-[12px] font-medium text-[var(--bina-text)]">
-              {cat.label_ar}
-            </div>
-          </Link>
-        ))}
+      <div className="mb-2.5 flex items-center justify-between">
+        <h3 className="text-[15px] font-bold text-[var(--bina-text)]">
+          {getText(section.title)}
+        </h3>
+        <Link
+          href={`/gallery?category=${encodeURIComponent(categorySlug)}`}
+          className="text-[12px] font-medium text-[var(--bina-primary)]"
+        >
+          {t("viewAll")}
+        </Link>
       </div>
+
+      {visibleListings.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-[#e0e0e0] p-6 text-center">
+          <p className="text-[12px] text-[#999]">{t("noListings")}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          {visibleListings.map((listing) => (
+            <Link
+              key={listing.id}
+              href={`/listings/${listing.id}`}
+              className="overflow-hidden rounded-xl border border-[#ebebeb] bg-white transition-shadow hover:shadow-md"
+            >
+              <div className="relative aspect-[5/4] w-full overflow-hidden bg-[#f5f5f5]">
+                {listing.images[0] ? (
+                  <Image
+                    alt={listing.title}
+                    className="object-cover"
+                    fill
+                    sizes="50vw"
+                    src={listing.images[0]}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-[20px] text-[#ccc]">
+                    📦
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col gap-0.5 p-2">
+                <span className="line-clamp-2 min-h-[32px] text-[12px] font-medium leading-snug text-[var(--bina-text)]">
+                  {listing.title}
+                </span>
+                <span className="font-bina-display text-[14px] font-bold text-[var(--bina-primary)]">
+                  {listing.price.toLocaleString()}{" "}
+                  <span className="text-[10px] font-normal text-[#999]">
+                    {listing.price_unit}
+                  </span>
+                </span>
+                {listing.location ? (
+                  <span className="line-clamp-1 text-[10px] text-[#999]">
+                    {listing.location}
+                  </span>
+                ) : null}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

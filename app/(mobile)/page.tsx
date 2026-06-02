@@ -1,7 +1,7 @@
 import { FeedTopbar } from "@/components/feed-topbar";
 import { HomeStorefront } from "@/components/home-storefront";
 import { PullToRefreshScroll } from "@/components/pull-to-refresh-scroll";
-import { fetchStorefrontData } from "@/lib/homepage/storefront-data";
+import { fetchStorefrontData, fetchCategoryListings } from "@/lib/homepage/storefront-data";
 import { getMergedHomepageConfig } from "@/lib/homepage/actions";
 import type { HomepageContent, SectionConfig } from "@/lib/homepage/types";
 import { createClient } from "@/lib/supabase/server";
@@ -30,6 +30,16 @@ export default async function HomePage() {
     getMergedHomepageConfig(),
   ]);
 
+  // Collect listing_category sections to fetch their listings
+  const categorySlugs = homepageConfig.sections
+    .filter((s) => s.type === "listing_category" && s.enabled && s.customData?.categorySlug)
+    .map((s) => ({
+      slug: s.customData.categorySlug as string,
+      limit: (s.customData.rows || 2) * 2, // 2 columns × N rows
+    }));
+
+  const categoryListings = await fetchCategoryListings(supabase, categorySlugs);
+
   const latestRfqHref = latestRfqRes.data?.id ? `/rfq/${latestRfqRes.data.id}` : null;
   const displayName = profileRes.data?.full_name?.split(" ")[0] ?? null;
 
@@ -48,6 +58,7 @@ export default async function HomePage() {
           latestRfqHref={latestRfqHref}
           sections={homepageConfig.sections}
           content={homepageConfig.content}
+          categoryListings={categoryListings}
         />
       </PullToRefreshScroll>
     </div>

@@ -129,7 +129,7 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
   const getDefaultCustomData = (type: SectionType): any => {
     switch (type) {
       case 'listing_category':
-        return { categorySlug: '', limit: 10 };
+        return { categorySlug: '', rows: 2 };
       case 'data_chart':
         return { chartType: 'bar', dataSource: 'sales', title: { ar: 'مخطط البيانات', en: 'Data Chart' } };
       case 'custom_content':
@@ -216,18 +216,18 @@ export function MobileHomepageEditor({ initialConfig }: Props) {
             </div>
             <div>
               <label className="block text-xs font-medium text-[var(--admin-text)] mb-1">
-                Limit
+                Number of Rows (2 listings per row)
               </label>
               <input
                 type="number"
-                value={section.customData?.limit || 10}
+                value={section.customData?.rows || 2}
                 onChange={(e) => updateSectionCustomData(sectionId, {
                   ...section.customData,
-                  limit: parseInt(e.target.value) || 10
+                  rows: parseInt(e.target.value) || 2
                 })}
                 className="w-full rounded-sm border border-[var(--admin-cell-border)] bg-white px-3 py-2 text-sm"
                 min="1"
-                max="50"
+                max="10"
               />
             </div>
           </div>
