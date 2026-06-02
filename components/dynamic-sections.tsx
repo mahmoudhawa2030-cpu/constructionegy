@@ -59,7 +59,7 @@ export function ListingCategorySection({ section, categories = [], categoryListi
               href={`/listings/${listing.id}`}
               className="overflow-hidden rounded-xl border border-[#ebebeb] bg-white transition-shadow hover:shadow-md"
             >
-              <div className="relative aspect-[5/4] w-full overflow-hidden bg-[#f5f5f5]">
+              <div className="relative aspect-[25/26] w-full overflow-hidden bg-[#f5f5f5]">
                 {listing.images[0] ? (
                   <Image
                     alt={listing.title}

@@ -86,7 +86,7 @@ export async function ListingCard({ listing, categoryLabelMap, viewerUserId, fav
         className="block overflow-hidden rounded-2xl border border-bina-border bg-bina-card transition-shadow hover:shadow-md hover:shadow-bina-or/10"
         href={`/listings/${listing.id}`}
       >
-        <span className="relative block aspect-[5/4] w-full overflow-hidden bg-bina-steel3">
+        <span className="relative block aspect-[25/26] w-full overflow-hidden bg-bina-steel3">
           {thumb ? (
             <Image
               alt=""
