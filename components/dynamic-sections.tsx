@@ -36,8 +36,8 @@ export function ListingCategorySection({ section, categories = [], categoryListi
   return (
     <div className="bg-white px-3 py-3">
       <div className="mb-2.5 flex items-center justify-between">
-        <h3 className="text-[15px] font-bold text-[var(--bina-text)]">
-          {getText(section.title)}
+        <h3 className="text-[15px] font-bold text-black">
+          {categoryLabel}
         </h3>
         <Link
           href={`/gallery?category=${encodeURIComponent(categorySlug)}`}
