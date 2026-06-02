@@ -26,6 +26,11 @@ export function ListingCategorySection({ section, categories = [], categoryListi
   const maxItems = rows * 2; // 2 columns
   const visibleListings = listings.slice(0, maxItems);
 
+  const matchedCategory = categories.find((c) => c.slug === categorySlug);
+  const categoryLabel = matchedCategory
+    ? getText({ ar: matchedCategory.label_ar, en: matchedCategory.label_en ?? matchedCategory.label_ar })
+    : categorySlug;
+
   if (!categorySlug) return null;
 
   return (
@@ -70,6 +75,9 @@ export function ListingCategorySection({ section, categories = [], categoryListi
                 )}
               </div>
               <div className="flex flex-col gap-0.5 p-2">
+                <span className="text-[10px] font-bold uppercase text-[var(--bina-primary)]">
+                  {categoryLabel}
+                </span>
                 <span className="line-clamp-2 min-h-[32px] text-[12px] font-medium leading-snug text-[var(--bina-text)]">
                   {listing.title}
                 </span>
