@@ -539,7 +539,9 @@
     "checkEmail": "Check your email or your Supabase project settings.",
     "emailAlreadyRegistered": "This email is already registered.",
     "emailAlreadyRegisteredHint": "Would you like to log in instead?",
-    "emailAlreadyRegisteredLogin": "Log in"
+    "emailAlreadyRegisteredLogin": "Log in",
+    "phone": "Phone number",
+    "phonePlaceholder": "+20 10 0000 0000"
   },
   "accountSuspended": {
     "title": "Your account is suspended",

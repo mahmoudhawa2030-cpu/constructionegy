@@ -541,7 +541,9 @@
     "checkEmail": "تحقق من بريدك أو إعدادات المشروع في Supabase.",
     "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل.",
     "emailAlreadyRegisteredHint": "هل تريد تسجيل الدخول بدلاً من ذلك؟",
-    "emailAlreadyRegisteredLogin": "تسجيل الدخول"
+    "emailAlreadyRegisteredLogin": "تسجيل الدخول",
+    "phone": "رقم الهاتف",
+    "phonePlaceholder": "+20 10 0000 0000"
   },
   "accountSuspended": {
     "title": "تم تعليق حسابك",

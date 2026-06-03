@@ -25,6 +25,7 @@ export default function SignupPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"details" | "otp">("details");
@@ -60,6 +61,9 @@ export default function SignupPage() {
       const { error: revokeError } = await revokeOtherSessions(supabase);
       if (revokeError) {
         console.error("[auth] revoke other sessions:", revokeError);
+      }
+      if (phone.trim()) {
+        await supabase.from("profiles").update({ phone_number: phone.trim() }).eq("id", data.session.user.id);
       }
       router.refresh();
       router.push("/profile");
@@ -106,6 +110,9 @@ export default function SignupPage() {
       const { error: revokeError } = await revokeOtherSessions(supabase);
       if (revokeError) {
         console.error("[auth] revoke other sessions:", revokeError);
+      }
+      if (phone.trim()) {
+        await supabase.from("profiles").update({ phone_number: phone.trim() }).eq("id", data.session.user.id);
       }
       router.refresh();
       router.push("/profile");
@@ -235,6 +242,20 @@ export default function SignupPage() {
               required
               type="email"
               value={email}
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="text-zinc-700 dark:text-zinc-300">{t("phone")}</span>
+            <input
+              autoComplete="tel"
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-100"
+              dir="ltr"
+              name="phone"
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder={t("phonePlaceholder")}
+              required
+              type="tel"
+              value={phone}
             />
           </label>
           <label className="flex flex-col gap-1.5 text-sm">
