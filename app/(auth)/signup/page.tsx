@@ -30,12 +30,14 @@ export default function SignupPage() {
   const [step, setStep] = useState<"details" | "otp">("details");
   const [pendingEmail, setPendingEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [duplicateEmail, setDuplicateEmail] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setDuplicateEmail(false);
     setMessage(null);
     setLoading(true);
     const supabase = createClient();
@@ -64,6 +66,11 @@ export default function SignupPage() {
       return;
     }
     if (data.user) {
+      // Supabase returns a user with empty identities when the email is already registered
+      if (data.user.identities && data.user.identities.length === 0) {
+        setDuplicateEmail(true);
+        return;
+      }
       setPendingEmail(email);
       setPassword("");
       setOtp("");
@@ -241,7 +248,17 @@ export default function SignupPage() {
               value={password}
             />
           </label>
-          {error ? (
+          {duplicateEmail ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-300" role="alert">
+              <p className="font-medium">{t("emailAlreadyRegistered")}</p>
+              <p className="mt-1">
+                {t("emailAlreadyRegisteredHint")}{" "}
+                <Link className="font-semibold underline underline-offset-2" href={`/login?email=${encodeURIComponent(email)}`}>
+                  {t("emailAlreadyRegisteredLogin")}
+                </Link>
+              </p>
+            </div>
+          ) : error ? (
             <p className="text-sm text-red-600 dark:text-red-400" role="alert">
               {error}
             </p>

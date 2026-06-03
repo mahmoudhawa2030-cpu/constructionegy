@@ -538,7 +538,10 @@
     "resendDone": "أُعيد إرسال الرمز إلى بريدك.",
     "backToDetails": "← العودة لتعديل البيانات",
     "verifyFailed": "لم يكتمل تسجيل الدخول. حاول مرة أخرى.",
-    "checkEmail": "تحقق من بريدك أو إعدادات المشروع في Supabase."
+    "checkEmail": "تحقق من بريدك أو إعدادات المشروع في Supabase.",
+    "emailAlreadyRegistered": "هذا البريد الإلكتروني مسجل بالفعل.",
+    "emailAlreadyRegisteredHint": "هل تريد تسجيل الدخول بدلاً من ذلك؟",
+    "emailAlreadyRegisteredLogin": "تسجيل الدخول"
   },
   "accountSuspended": {
     "title": "تم تعليق حسابك",
