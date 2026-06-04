@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -12,6 +13,7 @@ import { ListingMobileActionBar } from "@/components/listing-mobile-action-bar";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { labelForCategorySlug } from "@/lib/listings/categories";
+import { getSiteUrl } from "@/lib/seo/site-url";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -32,6 +34,55 @@ function timeAgoKey(iso: string): { key: string; count: number } {
   if (mo < 12) return { key: "monthsAgo", count: mo };
   const yr = Math.floor(mo / 12);
   return { key: "yearsAgo", count: yr };
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const [{ data: listing }, categoryLabelMap] = await Promise.all([
+    supabase
+      .from("listings")
+      .select("title, description, images, category, location, status")
+      .eq("id", id)
+      .maybeSingle(),
+    getCategoryLabelMap(),
+  ]);
+
+  if (!listing) {
+    return { title: "Not found" };
+  }
+
+  const categoryLabel = labelForCategorySlug(listing.category, categoryLabelMap);
+  const title = `${listing.title} — ${categoryLabel}`;
+  const rawDescription =
+    listing.description?.trim() ||
+    [listing.title, categoryLabel, listing.location].filter(Boolean).join(" · ");
+  const description = rawDescription.slice(0, 155);
+  const canonical = `${getSiteUrl()}/listings/${id}`;
+  const image = listing.images?.[0];
+  const indexable = listing.status === "active";
+
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    robots: indexable
+      ? { index: true, follow: true }
+      : { index: false, follow: true },
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: canonical,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: image ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
 }
 
 export default async function ListingDetailPage({ params }: PageProps) {
@@ -150,8 +201,36 @@ export default async function ListingDetailPage({ params }: PageProps) {
       ? ({ new: "جديد", used: "مستعمل" } as const)
       : ({ new: "New", used: "Used" } as const);
 
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: listing.title,
+    description: listing.description || `${listing.title} — ${categoryLabel}`,
+    image: listing.images && listing.images.length > 0 ? listing.images : undefined,
+    category: categoryLabel,
+    itemCondition:
+      listing.condition === "new"
+        ? "https://schema.org/NewCondition"
+        : "https://schema.org/UsedCondition",
+    offers: {
+      "@type": "Offer",
+      price: Number(listing.price),
+      priceCurrency: "EGP",
+      availability:
+        listing.status === "active"
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      url: shareUrl || undefined,
+      seller: { "@type": "Person", name: sellerName },
+    },
+  };
+
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        type="application/ld+json"
+      />
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
       {/* OLX-style mobile layout */}
@@ -207,11 +286,11 @@ export default async function ListingDetailPage({ params }: PageProps) {
           {/* Price + heart/share */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <h1 className="text-2xl font-bold leading-tight tabular-nums">
-                {listing.price_unit} {priceFmt}
-              </h1>
-              <p className="mt-1 text-sm leading-snug text-zinc-700 line-clamp-2">
+              <h1 className="text-xl font-bold leading-tight text-zinc-900 line-clamp-2">
                 {listing.title}
+              </h1>
+              <p className="mt-1 text-2xl font-bold leading-tight tabular-nums text-zinc-900">
+                {listing.price_unit} {priceFmt}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2" dir="ltr">

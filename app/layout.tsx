@@ -6,6 +6,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { getSiteUrl } from "@/lib/seo/site-url";
 
 import "./globals.css";
 
@@ -29,6 +30,7 @@ const barlowCondensed = Barlow_Condensed({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
   return {
+    metadataBase: new URL(getSiteUrl()),
     title: t("title"),
     description: t("description"),
   };
