@@ -143,6 +143,35 @@ export function EditCategoryForm({ row }: { row: CategoryRow }) {
             <span className="text-[10px] text-[var(--admin-text-secondary)]">{t("labelEnHint")}</span>
           </label>
         </div>
+        <details className="border-t border-[var(--admin-shell-border)] pt-2">
+          <summary className={`${adminUi.label} cursor-pointer text-xs`}>{t("seoSection")}</summary>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <label className="flex flex-col gap-0.5 text-xs">
+              <span className={adminUi.label}>{t("seoTitleAr")}</span>
+              <input className={adminUi.input} defaultValue={row.seo_title_ar ?? ""} name="seo_title_ar" type="text" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-xs">
+              <span className={adminUi.label}>{t("seoTitleEn")}</span>
+              <input className={adminUi.input} defaultValue={row.seo_title_en ?? ""} dir="ltr" name="seo_title_en" type="text" />
+            </label>
+            <label className="flex flex-col gap-0.5 text-xs">
+              <span className={adminUi.label}>{t("seoDescAr")}</span>
+              <textarea className={adminUi.input} defaultValue={row.seo_description_ar ?? ""} name="seo_description_ar" rows={2} />
+            </label>
+            <label className="flex flex-col gap-0.5 text-xs">
+              <span className={adminUi.label}>{t("seoDescEn")}</span>
+              <textarea className={adminUi.input} defaultValue={row.seo_description_en ?? ""} dir="ltr" name="seo_description_en" rows={2} />
+            </label>
+            <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
+              <span className={adminUi.label}>{t("introAr")}</span>
+              <textarea className={adminUi.input} defaultValue={row.intro_ar ?? ""} name="intro_ar" rows={3} />
+            </label>
+            <label className="flex flex-col gap-0.5 text-xs sm:col-span-2">
+              <span className={adminUi.label}>{t("introEn")}</span>
+              <textarea className={adminUi.input} defaultValue={row.intro_en ?? ""} dir="ltr" name="intro_en" rows={3} />
+            </label>
+          </div>
+        </details>
       </form>
       {state?.ok === false ? (
         <p className="mt-1 truncate text-xs text-red-600 dark:text-red-400" title={state.message}>

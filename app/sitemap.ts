@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const supabase = await createClient();
 
-    const [listingsRes, categoriesRes] = await Promise.all([
+    const [listingsRes, categoriesRes, postsRes] = await Promise.all([
       supabase
         .from("listings")
         .select("id, created_at")
@@ -26,6 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .order("created_at", { ascending: false })
         .limit(45000),
       supabase.from("categories").select("slug").eq("is_active", true),
+      supabase
+        .from("seo_posts")
+        .select("category_slug, slug, updated_at")
+        .eq("status", "published")
+        .limit(45000),
     ]);
 
     const listingEntries: MetadataRoute.Sitemap = (listingsRes.data ?? []).map((l) => ({
@@ -36,13 +41,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }));
 
     const categoryEntries: MetadataRoute.Sitemap = (categoriesRes.data ?? []).map((c) => ({
-      url: `${base}/gallery?category=${encodeURIComponent(c.slug)}`,
+      url: `${base}/${c.slug}`,
       lastModified: now,
       changeFrequency: "daily",
-      priority: 0.6,
+      priority: 0.8,
     }));
 
-    return [...staticEntries, ...categoryEntries, ...listingEntries];
+    const postEntries: MetadataRoute.Sitemap = (postsRes.data ?? []).map((p) => ({
+      url: `${base}/${p.category_slug}/${p.slug}`,
+      lastModified: p.updated_at ? new Date(p.updated_at) : now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }));
+
+    return [...staticEntries, ...categoryEntries, ...postEntries, ...listingEntries];
   } catch (err) {
     console.error("[sitemap] failed to build dynamic entries", err);
     return staticEntries;

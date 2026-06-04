@@ -342,3 +342,61 @@ body {
   border-color: #a67c2c;
   background: linear-gradient(180deg, #3d3426 0%, #2d271c 100%);
 }
+
+/* ── Blog post content typography (TipTap HTML output) ── */
+.prose-blog {
+  color: var(--bina-text);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+.prose-blog h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.prose-blog h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.prose-blog p {
+  margin-bottom: 1.1rem;
+}
+.prose-blog ul,
+.prose-blog ol {
+  margin: 1rem 0 1.1rem;
+  padding-inline-start: 1.5rem;
+}
+.prose-blog ul {
+  list-style: disc;
+}
+.prose-blog ol {
+  list-style: decimal;
+}
+.prose-blog li {
+  margin-bottom: 0.4rem;
+}
+.prose-blog a {
+  color: var(--bina-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-blog blockquote {
+  margin: 1.25rem 0;
+  padding-inline-start: 1rem;
+  border-inline-start: 3px solid var(--bina-border);
+  color: var(--bina-muted);
+  font-style: italic;
+}
+.prose-blog img {
+  margin: 1.5rem 0;
+  border-radius: 0.75rem;
+  max-width: 100%;
+  height: auto;
+}
+.prose-blog strong {
+  font-weight: 700;
+}

@@ -21,6 +21,7 @@ const NAV_ITEMS: {
     | "users"
     | "chats"
     | "categories"
+    | "blog"
     | "subscriptionServices"
     | "rfqModeration"
     | "businessVerifications"
@@ -33,6 +34,7 @@ const NAV_ITEMS: {
   { href: "/admin/users", labelKey: "users" },
   { href: "/admin/messages", labelKey: "chats" },
   { href: "/admin/categories", labelKey: "categories" },
+  { href: "/admin/blog", labelKey: "blog" },
   { href: "/admin/subscription-services", labelKey: "subscriptionServices" },
   { href: "/admin/rfq", labelKey: "rfqModeration" },
   { href: "/admin/verifications", labelKey: "businessVerifications" },

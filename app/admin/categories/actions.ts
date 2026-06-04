@@ -116,6 +116,11 @@ export async function updateCategoryFromForm(
   let sortNum = Number.parseInt(raw.sort_order, 10);
   if (Number.isNaN(sortNum)) sortNum = 0;
 
+  const optText = (key: string, max: number): string | null => {
+    const s = String(formData.get(key) ?? "").trim();
+    return s.length === 0 ? null : s.slice(0, max);
+  };
+
   const { error } = await supabase
     .from("categories")
     .update({
@@ -125,6 +130,12 @@ export async function updateCategoryFromForm(
       sort_order: sortNum,
       is_active: raw.is_active,
       requires_subscription: raw.requires_subscription,
+      seo_title_ar: optText("seo_title_ar", 70),
+      seo_title_en: optText("seo_title_en", 70),
+      seo_description_ar: optText("seo_description_ar", 200),
+      seo_description_en: optText("seo_description_en", 200),
+      intro_ar: optText("intro_ar", 2000),
+      intro_en: optText("intro_en", 2000),
     })
     .eq("id", id);
 
@@ -138,6 +149,7 @@ export async function updateCategoryFromForm(
   revalidatePath("/admin/categories");
   revalidatePath("/gallery");
   revalidatePath("/listings/new");
+  revalidatePath(`/${slugParsed.data}`);
   revalidatePath("/");
   return { ok: true, message: "تم حفظ التصنيف." };
 }

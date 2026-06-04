@@ -81,10 +81,16 @@ export type Database = {
           created_at: string
           homepage_desktop_icon_key: string | null
           id: string
+          intro_ar: string | null
+          intro_en: string | null
           is_active: boolean
           label_ar: string
           label_en: string | null
           requires_subscription: boolean
+          seo_description_ar: string | null
+          seo_description_en: string | null
+          seo_title_ar: string | null
+          seo_title_en: string | null
           slug: string
           sort_order: number
           updated_at: string
@@ -93,10 +99,16 @@ export type Database = {
           created_at?: string
           homepage_desktop_icon_key?: string | null
           id?: string
+          intro_ar?: string | null
+          intro_en?: string | null
           is_active?: boolean
           label_ar: string
           label_en?: string | null
           requires_subscription?: boolean
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug: string
           sort_order?: number
           updated_at?: string
@@ -105,15 +117,86 @@ export type Database = {
           created_at?: string
           homepage_desktop_icon_key?: string | null
           id?: string
+          intro_ar?: string | null
+          intro_en?: string | null
           is_active?: boolean
           label_ar?: string
           label_en?: string | null
           requires_subscription?: boolean
+          seo_description_ar?: string | null
+          seo_description_en?: string | null
+          seo_title_ar?: string | null
+          seo_title_en?: string | null
           slug?: string
           sort_order?: number
           updated_at?: string
         }
         Relationships: []
+      }
+      seo_posts: {
+        Row: {
+          author_id: string | null
+          category_slug: string
+          content: string
+          cover_image: string | null
+          cover_image_alt: string | null
+          created_at: string
+          id: string
+          meta_description: string
+          meta_title: string
+          publish_at: string | null
+          seed_keyword: string
+          seo_score: number
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          category_slug: string
+          content?: string
+          cover_image?: string | null
+          cover_image_alt?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string
+          meta_title?: string
+          publish_at?: string | null
+          seed_keyword?: string
+          seo_score?: number
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          category_slug?: string
+          content?: string
+          cover_image?: string | null
+          cover_image_alt?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string
+          meta_title?: string
+          publish_at?: string | null
+          seed_keyword?: string
+          seo_score?: number
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_posts_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+        ]
       }
       chats: {
         Row: {
