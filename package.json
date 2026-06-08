@@ -69,6 +69,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "server-only": "^0.0.1",
+    "supabase": "^2.105.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

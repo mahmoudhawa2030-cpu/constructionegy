@@ -133,71 +133,6 @@ export type Database = {
         }
         Relationships: []
       }
-      seo_posts: {
-        Row: {
-          author_id: string | null
-          category_slug: string
-          content: string
-          cover_image: string | null
-          cover_image_alt: string | null
-          created_at: string
-          id: string
-          meta_description: string
-          meta_title: string
-          publish_at: string | null
-          seed_keyword: string
-          seo_score: number
-          slug: string
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          author_id?: string | null
-          category_slug: string
-          content?: string
-          cover_image?: string | null
-          cover_image_alt?: string | null
-          created_at?: string
-          id?: string
-          meta_description?: string
-          meta_title?: string
-          publish_at?: string | null
-          seed_keyword?: string
-          seo_score?: number
-          slug: string
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          author_id?: string | null
-          category_slug?: string
-          content?: string
-          cover_image?: string | null
-          cover_image_alt?: string | null
-          created_at?: string
-          id?: string
-          meta_description?: string
-          meta_title?: string
-          publish_at?: string | null
-          seed_keyword?: string
-          seo_score?: number
-          slug?: string
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "seo_posts_category_slug_fkey"
-            columns: ["category_slug"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["slug"]
-          },
-        ]
-      }
       chats: {
         Row: {
           created_at: string
@@ -244,11 +179,101 @@ export type Database = {
           },
         ]
       }
+      comment_notifications: {
+        Row: {
+          actor_name: string
+          actor_user_id: string
+          comment_id: string
+          created_at: string
+          id: string
+          post_id: string
+          read: boolean
+          recipient_user_id: string
+          type: string
+        }
+        Insert: {
+          actor_name: string
+          actor_user_id: string
+          comment_id: string
+          created_at?: string
+          id?: string
+          post_id: string
+          read?: boolean
+          recipient_user_id: string
+          type: string
+        }
+        Update: {
+          actor_name?: string
+          actor_user_id?: string
+          comment_id?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          read?: boolean
+          recipient_user_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comment_notifications_actor_user_id_fkey"
+            columns: ["actor_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "feed_post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "feed_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comment_notifications_recipient_user_id_fkey"
+            columns: ["recipient_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          buyer_id: string | null
+          created_at: string | null
+          id: string
+          supplier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          buyer_id?: string | null
+          created_at?: string | null
+          id?: string
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          buyer_id?: string | null
+          created_at?: string | null
+          id?: string
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       feed_post_comments: {
         Row: {
           body: string
           created_at: string
           id: string
+          parent_id: string | null
           post_id: string
           user_id: string
         }
@@ -256,6 +281,7 @@ export type Database = {
           body: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           post_id: string
           user_id: string
         }
@@ -263,10 +289,18 @@ export type Database = {
           body?: string
           created_at?: string
           id?: string
+          parent_id?: string | null
           post_id?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feed_post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "feed_post_comments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feed_post_comments_post_id_fkey"
             columns: ["post_id"]
@@ -547,10 +581,24 @@ export type Database = {
             referencedColumns: ["slug"]
           },
           {
+            foreignKeyName: "homepage_section_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "homepage_section_items_section_id_fkey"
             columns: ["section_id"]
             isOneToOne: false
             referencedRelation: "homepage_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homepage_section_items_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -791,27 +839,27 @@ export type Database = {
       }
       mobile_homepage_config: {
         Row: {
+          content: Json
+          created_at: string
           id: string
           key: string
-          sections: unknown
-          content: unknown
-          created_at: string
+          sections: Json
           updated_at: string
         }
         Insert: {
+          content?: Json
+          created_at?: string
           id?: string
           key: string
-          sections?: unknown
-          content?: unknown
-          created_at?: string
+          sections?: Json
           updated_at?: string
         }
         Update: {
+          content?: Json
+          created_at?: string
           id?: string
           key?: string
-          sections?: unknown
-          content?: unknown
-          created_at?: string
+          sections?: Json
           updated_at?: string
         }
         Relationships: []
@@ -871,6 +919,42 @@ export type Database = {
           {
             foreignKeyName: "orders_seller_id_fkey"
             columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profile_views: {
+        Row: {
+          id: number
+          subject_id: string
+          viewed_at: string
+          viewer_id: string
+        }
+        Insert: {
+          id?: number
+          subject_id: string
+          viewed_at?: string
+          viewer_id: string
+        }
+        Update: {
+          id?: number
+          subject_id?: string
+          viewed_at?: string
+          viewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_views_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_views_viewer_id_fkey"
+            columns: ["viewer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1260,6 +1344,71 @@ export type Database = {
           },
         ]
       }
+      seo_posts: {
+        Row: {
+          author_id: string | null
+          category_slug: string
+          content: string
+          cover_image: string | null
+          cover_image_alt: string | null
+          created_at: string
+          id: string
+          meta_description: string
+          meta_title: string
+          publish_at: string | null
+          seed_keyword: string
+          seo_score: number
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          category_slug: string
+          content?: string
+          cover_image?: string | null
+          cover_image_alt?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string
+          meta_title?: string
+          publish_at?: string | null
+          seed_keyword?: string
+          seo_score?: number
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          category_slug?: string
+          content?: string
+          cover_image?: string | null
+          cover_image_alt?: string | null
+          created_at?: string
+          id?: string
+          meta_description?: string
+          meta_title?: string
+          publish_at?: string | null
+          seed_keyword?: string
+          seo_score?: number
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_posts_category_slug_fkey"
+            columns: ["category_slug"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       subscription_services: {
         Row: {
           created_at: string
@@ -1377,6 +1526,18 @@ export type Database = {
         Args: { p_post_id: string }
         Returns: number
       }
+      get_profile_viewers: {
+        Args: { p_limit?: number; p_offset?: number }
+        Returns: {
+          avatar_url: string
+          business_verification_status: string
+          expert_verification_status: string
+          full_name: string
+          user_type: string
+          viewed_at: string
+          viewer_id: string
+        }[]
+      }
       inbox_latest_message_rows: {
         Args: { p_chat_ids: string[] }
         Returns: {
@@ -1397,6 +1558,8 @@ export type Database = {
         Args: { p_category: string; p_listing_id: string }
         Returns: boolean
       }
+      publish_due_seo_posts: { Args: never; Returns: undefined }
+      record_profile_view: { Args: { p_subject_id: string }; Returns: boolean }
       subscription_service_requires_payment: {
         Args: { p_feature: string }
         Returns: boolean
@@ -1405,22 +1568,6 @@ export type Database = {
       user_has_active_subscription: {
         Args: { p_feature: string; p_user_id: string }
         Returns: boolean
-      }
-      record_profile_view: {
-        Args: { p_subject_id: string }
-        Returns: boolean
-      }
-      get_profile_viewers: {
-        Args: { p_limit: number; p_offset: number }
-        Returns: {
-          viewer_id: string
-          viewed_at: string
-          full_name: string | null
-          avatar_url: string | null
-          user_type: string | null
-          business_verification_status: string | null
-          expert_verification_status: string | null
-        }[]
       }
     }
     Enums: {
