@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { ListingCard } from "@/components/listing-card";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
+import { isReservedSlug } from "@/lib/seo/slugs";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,11 @@ export default async function WebGalleryPage({ searchParams }: PageProps) {
 
   const rawQ = raw.q;
   const searchQuery = typeof rawQ === "string" ? rawQ.trim() : Array.isArray(rawQ) ? rawQ[0].trim() : null;
+
+  // SEO: consolidate old ?category= URLs into clean /{slug} paths.
+  if (categorySlug && !isReservedSlug(categorySlug)) {
+    permanentRedirect(`/${categorySlug}`);
+  }
 
   const supabase = await createClient();
   let query = supabase

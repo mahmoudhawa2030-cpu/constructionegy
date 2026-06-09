@@ -1393,6 +1393,15 @@
     "listings": "Listings",
     "noListings": "No active listings in this category yet."
   },
+  "blog": {
+    "title": "Construction Blog",
+    "subtitle": "Guides, insights, and technical articles for contractors and procurement teams in Egypt.",
+    "allArticles": "All articles",
+    "readMore": "Read article",
+    "empty": "No articles published yet.",
+    "postedIn": "Posted in",
+    "words": "words"
+  },
   "adminBlog": {
     "title": "Blog",
     "allPosts": "All posts",
