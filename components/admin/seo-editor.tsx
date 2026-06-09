@@ -317,14 +317,33 @@ function KeywordSeeder({keywords,setKeywords,dailyRate,setDailyRate,onStartQueue
   </div>;
 }
 
-function SchemaPanel({post,siteUrl}:{post:any;siteUrl:string}){
+function SchemaPanel({post,siteUrl,locale}:{post:any;siteUrl:string;locale:"ar"|"en"}){
   const [orgName,setOrgName]=useState("Construction Egy");const [activeType,setActiveType]=useState("article");const [copied,setCopied]=useState("");
+  const [generatingFaq,setGeneratingFaq]=useState(false);
+  const [faqError,setFaqError]=useState("");
   const url=`${siteUrl}/${post?.slug||""}`;
-  const schemas:Record<string,any>={
+  const [schemas,setSchemas]=useState<Record<string,any>>({
     article:{"@context":"https://schema.org","@type":"BlogPosting",headline:post?.metaTitle||"",description:post?.metaDescription||"",url,datePublished:post?.createdAt||new Date().toISOString(),author:{"@type":"Organization",name:orgName},wordCount:post?.wordCount||0,articleSection:post?.category||"Blog",mainEntityOfPage:{"@type":"WebPage","@id":url}},
     breadcrumb:{"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[{"@type":"ListItem",position:1,name:"Home",item:siteUrl},{"@type":"ListItem",position:2,name:post?.category||"Blog",item:`${siteUrl}/${post?.category||"blog"}`},{"@type":"ListItem",position:3,name:post?.metaTitle||""}]},
+    faq:null,
+    howto:null,
+  });
+  const generateFaqWithAI=async()=>{
+    if(!post?.seedKeyword?.trim()){setFaqError("Add a seed keyword first.");return;}
+    setGeneratingFaq(true);setFaqError("");
+    try{
+      const res=await fetch("/api/generate-schema",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({seedKeyword:post.seedKeyword,locale})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||"Failed");
+      setSchemas(s=>({...s,faq:data.schema}));setActiveType("faq");
+    }catch(e:any){setFaqError(e.message);}
+    finally{setGeneratingFaq(false);}
   };
-  const TYPES=[{id:"article",label:"Article",icon:"📄",desc:"BlogPosting schema"},{id:"breadcrumb",label:"Breadcrumb",icon:"🧭",desc:"Navigation path"}];
+  const generateHowTo=()=>{
+    const howto={"@context":"https://schema.org","@type":"HowTo",name:post?.metaTitle||"",description:post?.metaDescription||"",totalTime:"PT30M",tool:[{"@type":"HowToTool",name:"Construction Equipment"}],step:[{"@type":"HowToStep",name:"Assess Requirements",text:`Evaluate your ${post?.seedKeyword||"project"} requirements, site conditions, and budget constraints before proceeding.`},{"@type":"HowToStep",name:"Gather Materials",text:`Source quality ${post?.seedKeyword||"materials"} from certified Egyptian suppliers. Compare specifications and pricing.`},{"@type":"HowToStep",name:"Execute Plan",text:`Implement your ${post?.seedKeyword||"construction plan"} following safety standards and local building codes in Egypt.`},{"@type":"HowToStep",name:"Quality Check",text:"Inspect all work against project specifications. Document completion and obtain necessary approvals."}]};
+    setSchemas(s=>({...s,howto}));setActiveType("howto");
+  };
+  const TYPES=[{id:"article",label:"Article",icon:"📄",desc:"BlogPosting schema"},{id:"breadcrumb",label:"Breadcrumb",icon:"🧭",desc:"Navigation path"},{id:"faq",label:"FAQ",icon:"❓",desc:"FAQPage — 5 Q&A pairs"},{id:"howto",label:"HowTo",icon:"🔨",desc:"HowTo — 4 steps"}];
   const copy=(type:string)=>{navigator.clipboard.writeText(`<script type="application/ld+json">\n${JSON.stringify(schemas[type],null,2)}\n<\/script>`).then(()=>{setCopied(type);setTimeout(()=>setCopied(""),2000);});};
   return <div style={{height:"100%",display:"flex",flexDirection:"column",overflow:"hidden",background:"#090d1a"}}>
     <div style={{padding:"14px 20px",borderBottom:"1px solid #1a2436",background:"#0c1120",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
@@ -338,14 +357,22 @@ function SchemaPanel({post,siteUrl}:{post:any;siteUrl:string}){
         </div>)}
       </div>
       <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{padding:"10px 16px",borderBottom:"1px solid #1a2436",display:"flex",alignItems:"center",gap:10}}>
+        <div style={{padding:"10px 16px",borderBottom:"1px solid #1a2436",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
           <div style={{flex:1}}><div style={{color:"#e8ecf8",fontSize:13,fontWeight:700}}>{TYPES.find(t=>t.id===activeType)?.icon} {TYPES.find(t=>t.id===activeType)?.label} Schema</div></div>
-          <button onClick={()=>copy(activeType)} style={{padding:"6px 16px",borderRadius:5,border:"none",background:copied===activeType?"rgba(34,197,94,0.15)":"rgba(79,127,255,0.15)",color:copied===activeType?"#22c55e":"#4f7fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>{copied===activeType?"✓ Copied!":"📋 Copy Schema"}</button>
+          {activeType==="faq"&&!schemas.faq&&<button onClick={generateFaqWithAI} disabled={generatingFaq} style={{padding:"6px 14px",borderRadius:5,border:"none",background:generatingFaq?"#1e2435":"linear-gradient(135deg,#4f7fff,#7c3aed)",color:generatingFaq?"#3a4060":"#fff",fontSize:12,fontWeight:700,cursor:generatingFaq?"default":"pointer"}}>{generatingFaq?"⟳ Generating...":"🤖 Generate FAQ"}</button>}
+          {activeType==="howto"&&!schemas.howto&&<button onClick={generateHowTo} style={{padding:"6px 14px",borderRadius:5,border:"none",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>⚙️ Build HowTo</button>}
+          {faqError&&<span style={{color:"#ef4444",fontSize:11}}>{faqError}</span>}
+          {schemas[activeType]&&<button onClick={()=>copy(activeType)} style={{padding:"6px 16px",borderRadius:5,border:"none",background:copied===activeType?"rgba(34,197,94,0.15)":"rgba(79,127,255,0.15)",color:copied===activeType?"#22c55e":"#4f7fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>{copied===activeType?"✓ Copied!":"📋 Copy Schema"}</button>}
         </div>
         <div style={{flex:1,margin:"12px 16px 16px",overflow:"hidden",borderRadius:7,border:"1px solid #1e2740",display:"flex",flexDirection:"column"}}>
-          <div style={{padding:"8px 12px",background:"#0d1221",borderBottom:"1px solid #1e2740"}}><span style={{fontSize:11,color:"#4a5370",fontFamily:"monospace"}}>&lt;script type="application/ld+json"&gt;</span></div>
-          <pre style={{flex:1,margin:0,padding:"14px 16px",overflowY:"auto",background:"#080d1a",fontSize:11,lineHeight:1.6,color:"#7dd3fc",fontFamily:"'Fira Code','Courier New',monospace"}}>{JSON.stringify(schemas[activeType],null,2)}</pre>
-          <div style={{padding:"6px 12px",background:"#0d1221",borderTop:"1px solid #1e2740"}}><span style={{fontSize:11,color:"#4a5370",fontFamily:"monospace"}}>&lt;/script&gt;</span></div>
+          {schemas[activeType]?<>
+            <div style={{padding:"8px 12px",background:"#0d1221",borderBottom:"1px solid #1e2740"}}><span style={{fontSize:11,color:"#4a5370",fontFamily:"monospace"}}>&lt;script type="application/ld+json"&gt;</span></div>
+            <pre style={{flex:1,margin:0,padding:"14px 16px",overflowY:"auto",background:"#080d1a",fontSize:11,lineHeight:1.6,color:"#7dd3fc",fontFamily:"'Fira Code','Courier New',monospace"}}>{JSON.stringify(schemas[activeType],null,2)}</pre>
+            <div style={{padding:"6px 12px",background:"#0d1221",borderTop:"1px solid #1e2740"}}><span style={{fontSize:11,color:"#4a5370",fontFamily:"monospace"}}>&lt;/script&gt;</span></div>
+          </>:<div style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12,color:"#2a3060"}}>
+            <div style={{fontSize:40}}>{activeType==="faq"?"❓":"🔨"}</div>
+            <div style={{fontSize:13}}>{activeType==="faq"?"Click \"Generate FAQ\" to create AI-powered Q&A schema":"Click \"Build HowTo\" to generate from your post data"}</div>
+          </div>}
         </div>
       </div>
     </div>
@@ -390,7 +417,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
     if (!keyword.trim()) { setError("Enter a seed keyword."); return null; }
     setError("");
     const cat = categories.find(c => c.id === postCat);
-    const res = await fetch("/api/generate-article", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ seedKeyword:keyword, category:cat?.label||postCat, locale }) });
+    const res = await fetch("/api/generate-article", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ seedKeyword:keyword, category:cat?.label||postCat, locale, externalSource:extSource, recentPosts:prevPosts.slice(-6).map(p=>({slug:p.slug,title:p.title})) }) });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error||"Generation failed"); }
     return res.json() as Promise<{content:string;metaTitle:string;metaDescription:string;slug:string}>;
   };
@@ -488,7 +515,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
           </div>)}
       </div>}
 
-      {tab==="schema"&&<div style={{flex:1,overflow:"hidden"}}><SchemaPanel post={{title:metaTitle,metaTitle,metaDescription:metaDesc,slug,seedKeyword:seedKw,wordCount:analysis.wordCount,category:postCat,createdAt:new Date().toISOString()}} siteUrl={siteUrl}/></div>}
+      {tab==="schema"&&<div style={{flex:1,overflow:"hidden"}}><SchemaPanel post={{title:metaTitle,metaTitle,metaDescription:metaDesc,slug,seedKeyword:seedKw,wordCount:analysis.wordCount,category:postCat,createdAt:new Date().toISOString()}} siteUrl={siteUrl} locale={locale}/></div>}
 
       {tab==="editor"&&<div style={{flex:1,display:"flex",overflow:"hidden"}}>
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>

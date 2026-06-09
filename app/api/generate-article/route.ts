@@ -1,62 +1,40 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 type GenerateBody = {
   seedKeyword?: string;
   category?: string;
   locale?: "ar" | "en";
+  externalSource?: string;
+  recentPosts?: Array<{ slug: string; title: string }>;
 };
 
-type GeneratedArticle = {
-  content: string;
-  metaTitle: string;
-  metaDescription: string;
-};
-
-function buildPrompt(seedKeyword: string, category: string, locale: "ar" | "en"): string {
-  const lang = locale === "ar" ? "Arabic" : "English";
-  return `You are an expert SEO content writer for a B2B construction marketplace in Egypt.
-Write a comprehensive, original blog article in ${lang} about the seed keyword: "${seedKeyword}"${
-    category ? ` (category: ${category})` : ""
-  }.
-
-Strict requirements:
-- At least 1500 words.
-- Use the exact seed keyword within the first 100 words (in the introduction/hook).
-- Model the article around clear B2B search intent (buyers, contractors, suppliers).
-- Use semantic HTML headings (<h2>, <h3>), paragraphs (<p>), and bullet lists (<ul><li>).
-- Include at least ONE external link to an authoritative source using a real, well-known domain (e.g. an industry standards body or reputable reference), as an <a href="..."> tag.
-- Include at least ONE internal link suggestion as <a href="/${category || "category"}">...</a>.
-- Do NOT include <html>, <head>, or <body> tags. Output only the article body HTML.
-
-Return ONLY valid minified JSON (no markdown fences) with exactly these keys:
-{"content":"<the full HTML article>","metaTitle":"<= 60 chars, includes the keyword","metaDescription":"<= 160 chars, includes the keyword"}`;
+async function callClaude(
+  client: Anthropic,
+  model: string,
+  prompt: string,
+  maxTokens: number,
+): Promise<string> {
+  const msg = await client.messages.create({
+    model,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: prompt }],
+  });
+  const block = msg.content[0];
+  if (block.type !== "text") throw new Error("Unexpected content type from Claude");
+  return block.text.trim();
 }
 
-function extractJson(raw: string): GeneratedArticle | null {
-  let text = raw.trim();
-  // Strip markdown fences if the model added them.
-  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start === -1 || end === -1 || end <= start) return null;
-  try {
-    const parsed = JSON.parse(text.slice(start, end + 1));
-    if (
-      typeof parsed.content === "string" &&
-      typeof parsed.metaTitle === "string" &&
-      typeof parsed.metaDescription === "string"
-    ) {
-      return parsed as GeneratedArticle;
-    }
-    return null;
-  } catch {
-    return null;
-  }
+function slugify(t: string): string {
+  return t
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
 }
 
 export async function POST(req: NextRequest) {
@@ -64,28 +42,18 @@ export async function POST(req: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("is_admin")
     .eq("id", user.id)
     .maybeSingle();
+  if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  if (!profile?.is_admin) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "GEMINI_API_KEY is not configured on the server." },
-      { status: 500 },
-    );
-  }
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey)
+    return NextResponse.json({ error: "ANTHROPIC_API_KEY is not configured" }, { status: 500 });
 
   let body: GenerateBody;
   try {
@@ -97,30 +65,84 @@ export async function POST(req: NextRequest) {
   const seedKeyword = (body.seedKeyword ?? "").trim();
   const category = (body.category ?? "").trim();
   const locale: "ar" | "en" = body.locale === "ar" ? "ar" : "en";
+  const externalSource = (body.externalSource ?? "").trim();
+  const recentPosts = body.recentPosts ?? [];
 
-  if (!seedKeyword) {
+  if (!seedKeyword)
     return NextResponse.json({ error: "seedKeyword is required" }, { status: 400 });
-  }
+
+  const lang = locale === "ar" ? "Arabic" : "English";
+  const intLinks =
+    recentPosts
+      .slice(0, 6)
+      .map((p) => `<a href="/${p.slug}">${p.title}</a>`)
+      .join(", ") || `<a href="/${category || "blog"}">Related ${category || "blog"} articles</a>`;
+  const extNote = externalSource
+    ? `Use this URL as one of your external links: ${externalSource}. Also add 1–2 other real authoritative sources.`
+    : "Include 2–3 external links to real authoritative construction or engineering websites (e.g., ASTM, ISO, CIOB, Buildipedia, ENR).";
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-    });
+    const client = new Anthropic({ apiKey });
 
-    const result = await model.generateContent(buildPrompt(seedKeyword, category, locale));
-    const raw = result.response.text();
-    const article = extractJson(raw);
+    // ── Call 1: Article body — Sonnet for depth and quality ────────────────
+    const content = await callClaude(
+      client,
+      "claude-3-5-sonnet-20241022",
+      `You are an expert SEO content writer for a B2B construction marketplace in Egypt.
+Write a comprehensive blog article in ${lang} about: "${seedKeyword}" (category: ${category}).
 
-    if (!article) {
-      return NextResponse.json(
-        { error: "The model returned an unparseable response. Try again." },
-        { status: 502 },
-      );
-    }
+STRICT RULES — follow all 13:
+1. Length: exactly 1600–2000 words.
+2. Use the exact keyword "${seedKeyword}" within the first 80 words.
+3. Add one <h2> heading every 250–300 words.
+4. Mention the keyword naturally 5–8 times total throughout the article.
+5. ${extNote}
+6. Include 1–2 internal links using these anchor tags: ${intLinks}
+7. Target B2B audience: contractors, project managers, procurement officers in Egypt.
+8. Include at least 3 real data points or statistics relevant to construction in Egypt/MENA.
+9. End with a strong CTA paragraph inviting readers to contact or explore services.
+10. Use semantic HTML only: <h2>, <h3>, <p>, <ul><li>, <ol><li>, <strong>, <a href>.
+11. Do NOT include <html>, <head>, <body>, or any document-level wrapper tags.
+12. Do NOT use markdown syntax. Output pure HTML only.
+13. No placeholder text — every sentence must be specific, researched, and valuable.
 
-    return NextResponse.json(article);
+Output ONLY the raw HTML article body. No JSON wrapper. No explanation. No preamble.`,
+      8000,
+    );
+
+    // ── Call 2: Meta title — Haiku for speed ──────────────────────────────
+    const rawTitle = await callClaude(
+      client,
+      "claude-3-5-haiku-20241022",
+      `Write ONE SEO meta title in ${lang} for an article about "${seedKeyword}".
+Rules:
+- Exactly 52–59 characters total (count every character including spaces carefully).
+- Must contain the exact phrase "${seedKeyword}".
+- Include one power word: Best, Top, Complete, Ultimate, Essential, Proven, or Expert.
+- No surrounding quotes, no trailing punctuation.
+- Output ONLY the title text. Nothing else.`,
+      120,
+    );
+    const metaTitle = rawTitle.replace(/^["'`]|["'`]$/g, "").trim().slice(0, 60);
+
+    // ── Call 3: Meta description — Haiku for speed ────────────────────────
+    const rawDesc = await callClaude(
+      client,
+      "claude-3-5-haiku-20241022",
+      `Write ONE SEO meta description in ${lang} for a page titled: "${metaTitle}".
+Rules:
+- Exactly 130–155 characters total (count carefully).
+- Include the exact phrase "${seedKeyword}".
+- Include one CTA word: Discover, Learn, Explore, Get, Find, or See.
+- Write in active voice only.
+- Output ONLY the description text. Nothing else.`,
+      200,
+    );
+    const metaDescription = rawDesc.replace(/^["'`]|["'`]$/g, "").trim().slice(0, 160);
+
+    const slug = slugify(metaTitle || seedKeyword);
+
+    return NextResponse.json({ content, metaTitle, metaDescription, slug });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: `Generation failed: ${message}` }, { status: 502 });
