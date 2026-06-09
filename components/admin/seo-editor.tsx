@@ -44,8 +44,8 @@ function useSeoAnalyzer(content: string, kw: string, metaTitle: string, metaDesc
     const text=(content||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
     const words=text.split(" ").filter(Boolean); const wc=words.length;
     const first10=words.slice(0,Math.max(1,Math.floor(wc*0.1))).join(" ").toLowerCase();
-    const full=text.toLowerCase(); const mt=(metaTitle||"").toLowerCase(); const md=(metaDesc||"").toLowerCase(); const sl=(slug||"").toLowerCase();
-    const mtLen=(metaTitle||"").length; const mdLen=(metaDesc||"").length;
+    const full=text.toLowerCase(); const mt=(metaTitle||"").toLowerCase().trim(); const md=(metaDesc||"").toLowerCase(); const sl=(slug||"").toLowerCase();
+    const mdLen=(metaDesc||"").length;
     const extLinks=((content||"").match(/href=["'](https?:\/\/(?!localhost)[^"']+)["']/g)||[]);
     const intLinks=((content||"").match(/href=["'](\/[^"']*|#[^"']*)["']/g)||[]);
     const totalInt=intLinks.length+posts.filter(p=>(content||"").includes(p.slug)).length;
@@ -56,37 +56,49 @@ function useSeoAnalyzer(content: string, kw: string, metaTitle: string, metaDesc
     const kwInSub=k?((content||"").match(/<h[2-6][^>]*>[^<]*<\/h[2-6]>/gi)||[]).some(h=>h.toLowerCase().includes(k)):false;
     const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>10);
     const longRatio=sentences.length>0?sentences.filter(s=>s.trim().split(" ").length>25).length/sentences.length:0;
+    const hasShort=sentences.some(s=>s.trim().split(/\s+/).filter(Boolean).length<=20);
     const passRatio=sentences.length>0?((text.match(/\b(is|are|was|were|be|been|being)\s+\w+ed\b/g)||[]).length)/sentences.length:0;
     const paragraphs=(content||"").split(/<\/p>|<\/h[2-6]>/i).filter(Boolean).length;
     const mtLen2=(metaTitle||"").length;
+    // Title-specific pre-processing.
+    const kwUrl=k.replace(/\s+/g,"-");
+    const titleStartsKw=k?mt.startsWith(k):false;
+    const titleHasKw=k?mt.includes(k):false;
+    const powerWords=/\b(best|top|ultimate|complete|proven|essential|powerful|effective|expert|professional|guide|tips|how|why|what|free|new|easy|fast|secret|simple)\b/i;
+    const titleSentiment=powerWords.test(metaTitle||"")||/[!?]/.test(metaTitle||"");
+    const capsCount=(metaTitle||"").split(/\s+/).filter(w=>w.length>3&&/[A-Z]/.test(w)&&w===w.toUpperCase()).length;
+    const transitionWords=/\b(however|therefore|furthermore|additionally|moreover|consequently|meanwhile|although|because|since|while|despite|thus|hence|accordingly)\b/i;
     const basic:Check[] = [
-      {id:"kw_title",pass:k?mt.includes(k):false,warn:false,text:(k?mt.includes(k):false)?"Hurray! Focus Keyword in the SEO Title.":"Focus Keyword not found in the SEO Title.",weight:10},
-      {id:"kw_desc",pass:k?md.includes(k):false,warn:false,text:(k?md.includes(k):false)?"Focus Keyword in Meta Description.":"Focus Keyword missing from Meta Description.",weight:8},
-      {id:"kw_url",pass:k?sl.includes(k.replace(/\s+/g,"-"))||sl.includes(k.replace(/\s+/g,"")):false,warn:false,text:(k?sl.includes(k.replace(/\s+/g,"-")):false)?"Focus Keyword used in the URL.":"Focus Keyword not found in URL/Slug.",weight:8},
-      {id:"kw_first10",pass:k?first10.includes(k):false,warn:false,text:(k?first10.includes(k):false)?"Focus Keyword in first 10% of content.":"Focus Keyword not in first 10% of content.",weight:10},
-      {id:"kw_content",pass:k?full.includes(k):false,warn:false,text:(k?full.includes(k):false)?"Focus Keyword found in content.":"Focus Keyword not found in content.",weight:8},
-      {id:"word_count",pass:wc>=1500,warn:wc>=600,text:wc>=1500?`Content is ${wc} words. Excellent!`:wc>=600?`Content is ${wc} words. Aim for 1500+.`:`Only ${wc} words. Write at least 1500.`,weight:12},
+      {id:"kw_title",pass:titleHasKw,warn:false,text:titleHasKw?"Hurray! You're using Focus Keyword in the SEO Title.":"Focus Keyword not found in the SEO Title.",weight:10},
+      {id:"kw_desc",pass:k?md.includes(k):false,warn:false,text:(k?md.includes(k):false)?"Focus Keyword used inside SEO Meta Description.":"Focus Keyword missing from Meta Description.",weight:8},
+      {id:"kw_url",pass:k?sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,"")):false,warn:false,text:(k?(sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,""))):false)?"Focus Keyword used in the URL.":"Focus Keyword not found in the URL/Slug.",weight:8},
+      {id:"kw_first10",pass:k?first10.includes(k):false,warn:false,text:(k?first10.includes(k):false)?"Focus Keyword appears in the first 10% of the content.":"Focus Keyword does not appear in the first 10% of content.",weight:10},
+      {id:"kw_content",pass:k?full.includes(k):false,warn:false,text:(k?full.includes(k):false)?"Focus Keyword found in the content.":"Focus Keyword not found anywhere in the content.",weight:8},
+      {id:"word_count",pass:wc>=1500,warn:wc>=600,text:wc>=1500?`Content is ${wc} words long. Excellent!`:wc>=600?`Content is ${wc} words long. Good job! Aim for 1500+.`:`Content is only ${wc} words. Write at least 1500 words.`,weight:12},
     ];
     const additional:Check[] = [
-      {id:"ext_links",pass:extLinks.length>=2,warn:extLinks.length===1,text:extLinks.length>=2?`${extLinks.length} external links. Great!`:extLinks.length===1?"Only 1 external link. Add at least 2.":"No external links. Add authoritative sources.",weight:8},
-      {id:"int_links",pass:totalInt>=1,warn:false,text:totalInt>=1?`${totalInt} internal link(s). Good.`:"No internal links. Link to related posts.",weight:8},
-      {id:"images",pass:imgs.length>=1,warn:false,text:imgs.length>=1?`${imgs.length} image(s) found.`:"No images. Add relevant images.",weight:6},
-      {id:"img_alt",pass:imgs.length>0&&imgsMissAlt.length===0,warn:imgs.length===0,text:imgs.length===0?"Add images with alt text.":imgsMissAlt.length===0?"All images have alt text. ✓":`${imgsMissAlt.length} image(s) missing alt text.`,weight:7},
-      {id:"kw_sub",pass:kwInSub,warn:subHCount>0&&!kwInSub,text:kwInSub?"Focus Keyword in a subheading. ✓":subHCount>0?"Add keyword to an H2/H3.":"No subheadings. Add H2/H3 with keyword.",weight:6},
-      {id:"kw_density",pass:kwMentions>=3&&kwMentions<=12,warn:kwMentions>=1&&kwMentions<3,text:kwMentions>=3&&kwMentions<=12?`Good density — used ${kwMentions}x.`:kwMentions>=13?`Too many (${kwMentions}x).`:kwMentions>=1?`Used only ${kwMentions}x. Aim 3–12.`:"Keyword not in content.",weight:6},
-      {id:"subH_count",pass:subHCount>=3,warn:subHCount>=1,text:subHCount>=3?`${subHCount} subheadings. Well structured!`:subHCount>=1?`Only ${subHCount} subheadings.`:"No subheadings found.",weight:5},
+      {id:"ext_links",pass:extLinks.length>=2,warn:extLinks.length===1,text:extLinks.length>=2?`${extLinks.length} external links found. Great!`:extLinks.length===1?"Only 1 external link found. Add at least 2.":"No external links found.",weight:8},
+      {id:"int_links",pass:totalInt>=1,warn:false,text:totalInt>=1?`${totalInt} internal link(s) found.`:"No internal links. Link to related posts on your site.",weight:8},
+      {id:"images",pass:imgs.length>=1,warn:false,text:imgs.length>=1?`${imgs.length} image(s) found.`:"No images found. Add relevant images.",weight:6},
+      {id:"img_alt",pass:imgs.length>0&&imgsMissAlt.length===0,warn:imgs.length===0,text:imgs.length===0?"No images to check for alt text.":imgsMissAlt.length===0?"All images have descriptive alt text.":`${imgsMissAlt.length} image(s) are missing alt text.`,weight:7},
+      {id:"kw_subheading",pass:kwInSub,warn:subHCount>0&&!kwInSub,text:kwInSub?"Focus Keyword found in a subheading.":subHCount>0?"Focus Keyword not found in any subheading.":"No subheadings found.",weight:6},
+      {id:"kw_density",pass:kwMentions>=3&&kwMentions<=12,warn:kwMentions>=13||(kwMentions>=1&&kwMentions<3),text:kwMentions>=3&&kwMentions<=12?`Keyword density is good — used ${kwMentions} times.`:kwMentions>=13?"Keyword used too often, may look like stuffing.":kwMentions>=1?`Keyword used only ${kwMentions} times. Aim for 3–12.`:"Focus Keyword not found in content.",weight:6},
+      {id:"subheadings_count",pass:subHCount>=3,warn:subHCount>=1,text:subHCount>=3?`${subHCount} subheadings found. Well structured!`:subHCount>=1?`Only ${subHCount} subheading(s) found.`:"No subheadings found.",weight:5},
     ];
     const titleR:Check[] = [
-      {id:"title_len",pass:mtLen2>=50&&mtLen2<=60,warn:mtLen2>=40&&mtLen2<50,text:mtLen2>=50&&mtLen2<=60?`Title length perfect (${mtLen2} chars).`:mtLen2>60?`Too long (${mtLen2}). Keep under 60.`:`Aim 50–60 chars (${mtLen2} now).`,weight:6},
-      {id:"title_sentiment",pass:/\b(best|top|ultimate|complete|proven|essential|powerful|effective|expert|guide|tips|how|why|free|easy|fast)\b/i.test(metaTitle||""),warn:false,text:/\b(best|top|ultimate)\b/i.test(metaTitle||"")?"Title has power words. ✓":"Add a power word (Best, Top, Ultimate) to boost CTR.",weight:3},
-      {id:"title_number",pass:/\d/.test(metaTitle||""),warn:false,text:/\d/.test(metaTitle||"")?"Title has a number — great for CTR!":"Consider adding a number (e.g. 7 Ways…).",weight:2},
+      {id:"title_len",pass:mtLen2>=50&&mtLen2<=60,warn:mtLen2>=40&&mtLen2<50,text:mtLen2>=50&&mtLen2<=60?`SEO title length is perfect (${mtLen2} chars).`:mtLen2>60?`SEO title is too long (${mtLen2} chars), keep under 60.`:mtLen2>=40?`SEO title is a bit short (${mtLen2} chars).`:`SEO title is too short (${mtLen2} chars).`,weight:6},
+      {id:"title_kw_start",pass:titleStartsKw,warn:titleHasKw&&!titleStartsKw,text:titleStartsKw?"Focus Keyword appears at the start of the SEO title.":titleHasKw?"Consider starting the SEO title with the Focus Keyword.":"Focus Keyword not found in the SEO title.",weight:4},
+      {id:"title_sentiment",pass:titleSentiment,warn:false,text:titleSentiment?"Title has positive sentiment or power words.":"Add a power word (Best, Top, Ultimate, How, Why) to boost CTR.",weight:3},
+      {id:"title_number",pass:/\d/.test(metaTitle||""),warn:false,text:/\d/.test(metaTitle||"")?"Title includes a number — great for CTR!":"Consider adding a number (e.g. '7 Ways…').",weight:2},
+      {id:"title_caps",pass:capsCount<3,warn:false,text:capsCount<3?"Title capitalization looks good.":"Avoid writing titles in ALL CAPS.",weight:2},
     ];
     const readR:Check[] = [
-      {id:"paragraphs",pass:paragraphs>=5,warn:paragraphs>=2,text:paragraphs>=5?`${paragraphs} paragraphs. Good!`:paragraphs>=2?`${paragraphs} paragraphs. Add more.`:"Break into more paragraphs.",weight:4},
-      {id:"long_sent",pass:longRatio<0.3,warn:longRatio<0.5,text:longRatio<0.3?"Sentence length well balanced. ✓":longRatio<0.5?"Some sentences too long.":"Too many long sentences.",weight:4},
-      {id:"transition",pass:/\b(however|therefore|furthermore|additionally|moreover|consequently|although|because|since|while|despite|thus)\b/i.test(text),warn:false,text:/\b(however|therefore|furthermore)\b/i.test(text)?"Good transition words. ✓":"Add transition words (However, Therefore…).",weight:4},
-      {id:"passive",pass:passRatio<0.15,warn:passRatio<0.3,text:passRatio<0.15?"Passive voice minimal. ✓":passRatio<0.3?"Some passive voice detected.":"Heavy passive voice. Rewrite actively.",weight:3},
-      {id:"desc_len",pass:mdLen>=120&&mdLen<=160,warn:mdLen>=80&&mdLen<120,text:mdLen>=120&&mdLen<=160?`Meta description perfect (${mdLen} chars).`:mdLen>160?`Too long (${mdLen}). Keep under 160.`:`Aim 120–160 chars (${mdLen} now).`,weight:5},
+      {id:"paragraphs",pass:paragraphs>=5,warn:paragraphs>=2,text:paragraphs>=5?`Content has ${paragraphs} paragraphs. Good structure!`:paragraphs>=2?`Content has ${paragraphs} paragraphs. Add more for readability.`:"Content has too few paragraphs.",weight:4},
+      {id:"short_sentences",pass:hasShort,warn:false,text:hasShort?"Good use of short sentences.":"Use shorter sentences (under 20 words).",weight:3},
+      {id:"long_sentences",pass:longRatio<0.3,warn:longRatio<0.5,text:longRatio<0.3?"Sentence length is well balanced.":longRatio<0.5?"Some sentences are too long.":"Too many long sentences.",weight:4},
+      {id:"transition_words",pass:transitionWords.test(text),warn:false,text:transitionWords.test(text)?"Good use of transition words.":"Add transition words (However, Therefore, Moreover…).",weight:4},
+      {id:"passive_voice",pass:passRatio<0.15,warn:passRatio<0.3,text:passRatio<0.15?"Passive voice use is minimal.":passRatio<0.3?"Some passive voice detected.":"Heavy passive voice use.",weight:3},
+      {id:"desc_len",pass:mdLen>=120&&mdLen<=160,warn:mdLen>=80&&mdLen<120,text:mdLen>=120&&mdLen<=160?`Meta description length is perfect (${mdLen} chars).`:mdLen>160?`Meta description is too long (${mdLen} chars), keep under 160.`:mdLen>=80?`Meta description is a bit short (${mdLen} chars).`:`Meta description is too short (${mdLen} chars).`,weight:5},
     ];
     const all=[...basic,...additional,...titleR,...readR];
     const maxScore=all.reduce((s,c)=>s+c.weight,0);
