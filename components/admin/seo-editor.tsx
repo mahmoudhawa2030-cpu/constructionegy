@@ -477,7 +477,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
       try {
         const r=await generateArticle(kw.kw,cur);
         if (r) {
-          const p:Post={id:Date.now()+i,seedKeyword:kw.kw,title:r.metaTitle,slug:r.slug,content:r.content,metaTitle:r.metaTitle,metaDescription:r.metaDescription,category:kw.category,seoScore:75+Math.floor(Math.random()*20),wordCount:r.content.split(" ").length,status:"published",createdAt:new Date().toISOString()};
+          const p:Post={id:Date.now()+i,seedKeyword:kw.kw,title:r.metaTitle,slug:r.slug,content:r.content,metaTitle:r.metaTitle,metaDescription:r.metaDescription,category:kw.category,seoScore:72+Math.floor(Math.random()*20),wordCount:r.content.split(" ").length,status:"published",createdAt:new Date().toISOString()};
           cur=[...cur,p]; setPosts([...cur]);
           setKeywords(p2=>p2.map(k=>k.id===kw.id?{...k,status:"done",seoScore:p.seoScore}:k));
         }
