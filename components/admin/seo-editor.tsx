@@ -497,7 +497,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
     router.refresh();
   };
 
-  const newPost=()=>{setEditingId(undefined);setSeedKw("");setContent("");setMetaTitle("");setMetaDesc("");setSlug("");setFocusKw("");setError("");};
+  const newPost=()=>{setEditingId(undefined);setSeedKw("");setContent("");setMetaTitle("");setMetaDesc("");setSlug("");setFocusKw("");setPostCat(categories[0]?.id||"uncategorized");setError("");};
   const loadPost=(p:Post)=>{setEditingId(String(p.id));setSeedKw(p.seedKeyword||"");setContent(p.content);setMetaTitle(p.metaTitle);setMetaDesc(p.metaDescription);setSlug(p.slug);setFocusKw(p.seedKeyword||"");setPostCat(p.category||"uncategorized");setTab("editor");};
   const insertImage=(img:{url:string;alt:string})=>{setContent(prev=>prev+`<figure style="margin:24px 0;"><img src="${img.url}" alt="${img.alt}" style="width:100%;border-radius:8px;max-height:400px;object-fit:cover;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">${img.alt}</figcaption></figure>`);setShowImageModal(false);};
 
