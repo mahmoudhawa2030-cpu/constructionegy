@@ -39,6 +39,11 @@ function generateDemoFaqSchema(seedKeyword: string, locale: string) {
   };
 }
 
+// Auto-detect Arabic text (Unicode range: 0600-06FF for Arabic script)
+function containsArabic(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const {
@@ -64,7 +69,9 @@ export async function POST(req: NextRequest) {
   if (!seedKeyword)
     return NextResponse.json({ error: "seedKeyword is required" }, { status: 400 });
 
-  const lang = body.locale === "ar" ? "Arabic" : "English";
+  // Auto-detect Arabic from keyword
+  const detectedLocale = containsArabic(seedKeyword) ? "ar" : (body.locale === "ar" ? "ar" : "en");
+  const lang = detectedLocale === "ar" ? "Arabic" : "English";
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   const useDemo = !apiKey;

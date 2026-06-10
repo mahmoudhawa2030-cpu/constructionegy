@@ -37,6 +37,11 @@ function slugify(t: string): string {
     .slice(0, 80);
 }
 
+// Auto-detect Arabic text (Unicode range: 0600-06FF for Arabic script)
+function containsArabic(text: string): boolean {
+  return /[\u0600-\u06FF]/.test(text);
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // DEMO MODE: Generates realistic content when Anthropic API is unavailable
 // ─────────────────────────────────────────────────────────────────────────
@@ -170,7 +175,9 @@ export async function POST(req: NextRequest) {
 
   const seedKeyword = (body.seedKeyword ?? "").trim();
   const category = (body.category ?? "").trim();
-  const locale: "ar" | "en" = body.locale === "ar" ? "ar" : "en";
+  // Auto-detect Arabic from keyword if locale not explicitly set
+  const detectedLocale = containsArabic(seedKeyword) ? "ar" : (body.locale === "ar" ? "ar" : "en");
+  const locale: "ar" | "en" = detectedLocale;
 
   if (!seedKeyword)
     return NextResponse.json({ error: "seedKeyword is required" }, { status: 400 });
