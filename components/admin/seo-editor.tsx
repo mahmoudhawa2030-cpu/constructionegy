@@ -133,10 +133,12 @@ function ScoreCircle({score,size=88}:{score:number;size?:number}){
 
 function CheckItem({check}:{check:Check}){
   const g=check.pass,w=!check.pass&&check.warn,e=!check.pass&&!check.warn;
-  return <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"7px 0",borderBottom:"1px solid #111827"}}>
+  const bg=g?"rgba(34,197,94,0.06)":w?"rgba(245,158,11,0.06)":"rgba(239,68,68,0.06)";
+  const bd=g?"rgba(34,197,94,0.15)":w?"rgba(245,158,11,0.18)":"rgba(239,68,68,0.18)";
+  return <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"7px 9px",marginBottom:4,borderRadius:6,background:bg,border:`1px solid ${bd}`}}>
     <div style={{flexShrink:0,marginTop:1}}>
       {g&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#22c55e"/><path d="M6 10.5l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-      {w&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="none" stroke="#f59e0b" strokeWidth="2"/><path d="M6.5 10.5l2.5 2.5 4.5-4.5" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+      {w&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="none" stroke="#f59e0b" strokeWidth="2"/><path d="M6.5 10.5l2.5 2.5 4.5-4.5" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2"/></svg>}
       {e&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="none" stroke="#ef4444" strokeWidth="2"/><path d="M7 7l6 6M13 7l-6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/></svg>}
     </div>
     <p style={{margin:0,fontSize:"12.5px",lineHeight:"1.45",color:g?"#c8d8c0":w?"#d4c090":"#c8c0c0",flex:1}}>{check.text}</p>
@@ -145,7 +147,7 @@ function CheckItem({check}:{check:Check}){
 
 function SectionBadge({status,checks}:{status:string;checks:Check[]}){
   const errors=checks.filter(c=>!c.pass&&!c.warn).length,warns=checks.filter(c=>!c.pass&&c.warn).length;
-  if(status==="good") return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:20,background:"#166534",color:"#4ade80",fontSize:11,fontWeight:700}}>✓ All Good</span>;
+  if(status==="good") return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:20,background:"#166534",color:"#4ade80",fontSize:11,fontWeight:700}}><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#4ade80"/><path d="M6 10.5l3 3 5-5" stroke="#166534" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>All Good</span>;
   if(errors>0) return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:20,background:"rgba(239,68,68,0.15)",color:"#fca5a5",fontSize:11,fontWeight:700}}>✕ {errors} Error{errors>1?"s":""}</span>;
   return <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:20,background:"rgba(245,158,11,0.15)",color:"#fcd34d",fontSize:11,fontWeight:700}}>~ {warns} Warning{warns>1?"s":""}</span>;
 }
@@ -611,7 +613,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
             <div style={{flex:"2 1 100%"}}><label style={{...lbl,marginBottom:4}}>Meta Description <span style={{color:metaDesc.length>=120&&metaDesc.length<=160?"#22c55e":metaDesc.length>160?"#ef4444":"#f59e0b"}}>{metaDesc.length}/160</span></label><textarea value={metaDesc} onChange={e=>setMetaDesc(e.target.value)} rows={2} placeholder="Compelling meta description..." style={{width:"100%",padding:"7px 10px",background:"#111827",border:`1px solid ${metaDesc.length>160?"#ef4444":"#2a3045"}`,borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
           </div>
           {(metaTitle||metaDesc)&&<div style={{margin:"8px 16px",padding:"12px 16px",background:"#fff",borderRadius:7,boxShadow:"0 2px 16px rgba(0,0,0,0.3)"}}>
-            <div style={{fontSize:11,color:"#5f6368",fontFamily:"Arial",marginBottom:2}}>yoursite.com › {slug||"post-url"}</div>
+            <div style={{fontSize:11,color:"#5f6368",fontFamily:"Arial",marginBottom:2}}>yoursite.com › blog › {slug||"post-url"}</div>
             <div style={{fontSize:17,color:"#1a0dab",fontFamily:"Arial",lineHeight:"1.3",marginBottom:3}}>{metaTitle||"Post Title"}</div>
             <div style={{fontSize:13,color:"#4d5156",fontFamily:"Arial",lineHeight:"1.4"}}>{metaDesc||"Meta description..."}</div>
           </div>}
