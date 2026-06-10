@@ -266,14 +266,34 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
   </div>;
 }
 
+type StockImage = { url:string; thumb:string; alt:string; credit:string };
+
+// fetchImages: build `count` keyless stock-image URLs at 1200×630 (full) / 400×250 (thumb).
+// Seed variations: [query, "{query} construction", "{query} professional"].
+// Uses LoremFlickr (Flickr CC images by tag) — no API key required.
+async function fetchImages(query:string,count:number):Promise<StockImage[]>{
+  const q=(query||"").trim()||"construction";
+  const variations=[q,`${q} construction`,`${q} professional`];
+  return Array.from({length:count},(_,i)=>{
+    const seed=variations[i%3];
+    const tags=encodeURIComponent(seed.replace(/\s+/g,","));
+    return {
+      url:`https://loremflickr.com/1200/630/${tags}?lock=${i+1}`,
+      thumb:`https://loremflickr.com/400/250/${tags}?lock=${i+1}`,
+      alt:`${q} - professional construction image`,
+      credit:"Flickr (CC) via LoremFlickr",
+    };
+  });
+}
+
 function ImageModal({keyword,onInsert,onClose}:{keyword:string;onInsert:(img:{url:string;alt:string})=>void;onClose:()=>void}){
-  const [images,setImages]=useState<{url:string;thumb:string;alt:string}[]>([]);
+  const [images,setImages]=useState<StockImage[]>([]);
   const [loading,setLoading]=useState(true);
   const [q,setQ]=useState(keyword||"");
   const load=async(query:string)=>{
     setLoading(true);
-    const imgs=Array.from({length:9},(_,i)=>{const seed=encodeURIComponent(`${query} ${["construction","professional","building"][i%3]}`);return{url:`https://source.unsplash.com/featured/1200x630/?${seed}&sig=${i}`,thumb:`https://source.unsplash.com/featured/400x250/?${seed}&sig=${i}`,alt:`${query} - construction image ${i+1}`};});
-    setImages(imgs);setLoading(false);
+    try{setImages(await fetchImages(query,9));}
+    finally{setLoading(false);}
   };
   useEffect(()=>{load(keyword);},[keyword]);
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -288,10 +308,10 @@ function ImageModal({keyword,onInsert,onClose}:{keyword:string;onInsert:(img:{ur
         {loading?<div style={{textAlign:"center",padding:"40px",color:"#5a6380"}}><div style={{fontSize:"32px",marginBottom:12}}>⏳</div>Loading images...</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
           {images.map((img,i)=><div key={i} onClick={()=>onInsert(img)} style={{borderRadius:8,overflow:"hidden",cursor:"pointer",border:"2px solid transparent",transition:"all 0.2s"}} onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.borderColor="#4f7fff"} onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.borderColor="transparent"}>
             <img src={img.thumb} alt={img.alt} loading="lazy" style={{width:"100%",height:"120px",objectFit:"cover",display:"block"}}/>
-            <div style={{padding:"6px 8px",background:"#111827",fontSize:"10px",color:"#4a5370"}}>Click to insert • Unsplash</div>
+            <div style={{padding:"6px 8px",background:"#111827",fontSize:"10px",color:"#4a5370",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Click to insert • {img.credit}</div>
           </div>)}
         </div>}
-        <div style={{marginTop:12,padding:10,background:"rgba(79,127,255,0.05)",borderRadius:6,border:"1px solid rgba(79,127,255,0.1)"}}><div style={{color:"#4a5370",fontSize:"11px"}}>💡 Images from <strong style={{color:"#4f7fff"}}>Unsplash</strong> — free. Alt text auto-set to your keyword for SEO.</div></div>
+        <div style={{marginTop:12,padding:10,background:"rgba(79,127,255,0.05)",borderRadius:6,border:"1px solid rgba(79,127,255,0.1)"}}><div style={{color:"#4a5370",fontSize:"11px"}}>💡 Free <strong style={{color:"#4f7fff"}}>Flickr (CC)</strong> images — no API key needed. Alt text auto-set to your keyword for SEO.</div></div>
       </div>
     </div>
   </div>;
