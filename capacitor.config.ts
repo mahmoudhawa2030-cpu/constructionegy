@@ -22,8 +22,8 @@ function allowNavigationFor(url: string): string[] {
 }
 
 const config: CapacitorConfig = {
-  appId: "com.constructionegy.app",
-  appName: "construction-egy",
+  appId: "com.souqelmemar.app",
+  appName: "سوق المعمار مقاولات ومناقصات",
   webDir: "public/cap-web",
   server: serverUrl
     ? {
