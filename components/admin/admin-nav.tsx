@@ -27,7 +27,8 @@ const NAV_ITEMS: {
     | "businessVerifications"
     | "homepage"
     | "veteransCorner"
-    | "expertVerifications";
+    | "expertVerifications"
+    | "tracking";
 }[] = [
   { href: "/admin", labelKey: "overview" },
   { href: "/admin/listings", labelKey: "listings" },
@@ -41,6 +42,7 @@ const NAV_ITEMS: {
   { href: "/admin/expert-verifications", labelKey: "expertVerifications" },
   { href: "/admin/homepage", labelKey: "homepage" },
   { href: "/admin/veterans-corner", labelKey: "veteransCorner" },
+  { href: "/admin/tracking", labelKey: "tracking" },
 ];
 
 function isActive(pathname: string, href: string): boolean {

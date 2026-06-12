@@ -7,6 +7,7 @@ import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { getSiteUrl } from "@/lib/seo/site-url";
+import { getTrackingScripts } from "@/lib/tracking/get-tracking-scripts";
 
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
+  const tracking = await getTrackingScripts();
 
   return (
     <html
@@ -60,6 +62,9 @@ export default async function RootLayout({
       lang={locale}
       suppressHydrationWarning
     >
+      {tracking.header ? (
+        <head dangerouslySetInnerHTML={{ __html: tracking.header }} />
+      ) : null}
       <body className="flex h-full flex-col font-sans">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppThemeProvider>
@@ -68,6 +73,9 @@ export default async function RootLayout({
             {children}
           </AppThemeProvider>
         </NextIntlClientProvider>
+        {tracking.footer ? (
+          <div dangerouslySetInnerHTML={{ __html: tracking.footer }} />
+        ) : null}
       </body>
     </html>
   );

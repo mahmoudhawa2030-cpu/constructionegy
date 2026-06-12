@@ -1211,7 +1211,23 @@
     "overviewRfqModeration": "RFQ moderation — drafts, items, bids",
     "homepage": "Homepage (guest)",
     "mobileHomepage": "Homepage (mobile)",
-    "veteransCorner": "Veterans Corner"
+    "veteransCorner": "Veterans Corner",
+    "tracking": "Tracking Scripts"
+  },
+  "adminTracking": {
+    "pageTitle": "Tracking & Analytics Scripts",
+    "lead": "Paste Facebook Pixel, Google Analytics, Google Tag Manager, and any other tracking scripts. Header scripts are injected inside <head>; Footer scripts are injected at the end of <body>.",
+    "headerLabel": "Header scripts (inside <head>)",
+    "headerHint": "e.g. Facebook Pixel, Google Analytics, Google Tag Manager",
+    "headerPlaceholder": "Paste Facebook Pixel, Google Analytics or GTM <head> snippet here...",
+    "footerLabel": "Footer scripts (end of <body>)",
+    "footerHint": "Scripts that must load at the bottom of the page",
+    "footerPlaceholder": "Paste any scripts that belong at the bottom of the page...",
+    "save": "Save Scripts",
+    "saving": "Saving...",
+    "saved": "Scripts saved successfully.",
+    "error": "An error occurred while saving.",
+    "backAdmin": "← Back to Admin"
   },
   "adminVeteransCorner": {
     "pageTitle": "Veterans Corner (feed)",

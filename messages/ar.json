@@ -1212,7 +1212,23 @@
     "site": "الموقع",
     "overviewRfqModeration": "مراجعة RFQ — المسودات والبنود والعروض",
     "homepage": "الصفحة الرئيسية (زائر)",
-    "veteransCorner": "ركن الخبراء"
+    "veteransCorner": "ركن الخبراء",
+    "tracking": "أكواد التتبع"
+  },
+  "adminTracking": {
+    "pageTitle": "أكواد التتبع والتحليلات",
+    "lead": "الصق أكواد فيسبوك بيكسل وGoogle Analytics وGoogle Tag Manager وأي أكواد تتبع أخرى. تُحقن أكواد الـ Header داخل <head>، وأكواد الـ Footer في نهاية <body>.",
+    "headerLabel": "أكواد Header (داخل <head>)",
+    "headerHint": "مثال: Facebook Pixel، Google Analytics، Google Tag Manager",
+    "headerPlaceholder": "الصق هنا كود فيسبوك بيكسل أو Google Analytics أو GTM...",
+    "footerLabel": "أكواد Footer (نهاية <body>)",
+    "footerHint": "أكواد تحتاج أن تكون في نهاية الصفحة",
+    "footerPlaceholder": "الصق هنا أي أكواد تحتاج أن تكون في نهاية الصفحة...",
+    "save": "حفظ الأكواد",
+    "saving": "جاري الحفظ...",
+    "saved": "تم حفظ الأكواد بنجاح.",
+    "error": "حدث خطأ أثناء الحفظ.",
+    "backAdmin": "← العودة إلى لوحة الإدارة"
   },
   "adminVeteransCorner": {
     "pageTitle": "ركن الخبراء (التغذية)",
