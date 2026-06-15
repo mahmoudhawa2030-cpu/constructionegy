@@ -3,7 +3,7 @@
  * Used for Supabase auth `redirect_to` (e.g. password recovery) so links match where the user submitted the form.
  * Matches the Capacitor fallback when no env is set on the server.
  */
-export const DEFAULT_PUBLIC_APP_URL = "https://constructionegy.vercel.app";
+export const DEFAULT_PUBLIC_APP_URL = "https://souqelmemar.com";
 
 function normalizeOrigin(raw: string | undefined | null): string | null {
   const t = raw?.trim().replace(/\/$/, "");
