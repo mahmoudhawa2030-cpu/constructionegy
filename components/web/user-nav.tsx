@@ -26,7 +26,7 @@ export function UserNav({ hasUser, userId, userName, userAvatar, unreadMessageCo
           {t("signIn")}
         </Link>
         <Link
-          href="/register"
+          href="/signup"
           className="rounded-md bg-[var(--bina-primary)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--bina-primary-dark)]"
         >
           {t("joinFree")}
