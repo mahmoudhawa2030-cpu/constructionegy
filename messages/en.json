@@ -1752,5 +1752,43 @@
       "assurance": "Trade assurance included"
     },
     "maybeLater": "Maybe later"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: June 2025",
+    "intro": "This Privacy Policy describes how Souq Al-Memar ('we' or 'the App') collects, uses, and protects your information when you use our application and website.",
+    "collectTitle": "Information We Collect",
+    "collectItems": [
+      "Account information: name, email address, and password when you register.",
+      "Profile data: profile photo, professional specialty, and contact information you provide.",
+      "Location data: when permission is granted, to show nearby suppliers and projects.",
+      "Camera and photos: when uploading project images or a profile photo.",
+      "Usage data: pages you visit and features you use to improve your experience.",
+      "Push notifications: device token to send notifications about your requests and messages."
+    ],
+    "useTitle": "How We Use Your Information",
+    "useItems": [
+      "To operate, improve, and personalise the service for you.",
+      "To communicate with you about your requests, updates, and offers.",
+      "To show relevant suppliers, tenders, and projects near your location.",
+      "To ensure platform security and prevent fraud."
+    ],
+    "shareTitle": "Sharing of Information",
+    "shareText": "We do not sell your personal data to third parties. We may share information with service providers necessary to operate the app (such as hosting services) under strict data-protection agreements.",
+    "storageTitle": "Data Storage & Security",
+    "storageText": "Your data is stored on our secure servers. We use HTTPS encryption for all communications and apply industry-standard security measures to protect your information.",
+    "rightsTitle": "Your Rights",
+    "rightsItems": [
+      "Access and correct your personal data.",
+      "Request deletion of your account and data.",
+      "Opt out of marketing notifications at any time.",
+      "Disable location permission from your device settings."
+    ],
+    "childrenTitle": "Children's Privacy",
+    "childrenText": "Our app is intended for users aged 18 and over. We do not knowingly collect information from children under 13.",
+    "contactTitle": "Contact Us",
+    "contactText": "If you have any questions about this Privacy Policy, please contact us at:",
+    "contactEmail": "admin@souqelmemar.com",
+    "contactSite": "https://souqelmemar.com"
   }
 }
