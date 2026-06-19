@@ -1484,6 +1484,36 @@ export type Database = {
           },
         ]
       }
+      deletion_requests: {
+        Row: {
+          id: string
+          user_id: string | null
+          email: string
+          reason: string | null
+          status: string
+          created_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          email: string
+          reason?: string | null
+          status?: string
+          created_at?: string
+          resolved_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          email?: string
+          reason?: string | null
+          status?: string
+          created_at?: string
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
       user_push_tokens: {
         Row: {
           id: string
