@@ -597,7 +597,8 @@
     "avatarUploadAria": "Upload profile picture",
     "avatarUploading": "Uploading...",
     "avatarUploadError": "Upload failed. Please try again.",
-    "avatarHint": "JPEG/PNG/WebP up to 2 MB"
+    "avatarHint": "JPEG/PNG/WebP up to 2 MB",
+    "deleteAccount": "Delete Account"
   },
   "subscriptionRequired": {
     "title": "Subscription required",
@@ -1752,6 +1753,20 @@
       "assurance": "Trade assurance included"
     },
     "maybeLater": "Maybe later"
+  },
+  "deleteAccount": {
+    "title": "Delete Account",
+    "subtitle": "Request account and data deletion",
+    "warningTitle": "Warning: This action cannot be undone",
+    "warningText": "Once your request is processed, your account and all associated data will be permanently deleted, including your listings, messages, and profile.",
+    "reasonLabel": "Reason for deletion (optional)",
+    "reasonPlaceholder": "Tell us why you want to delete your account...",
+    "submitButton": "Submit Deletion Request",
+    "successTitle": "Request Received",
+    "successText": "Your request will be reviewed and processed within 7 business days. You will receive an email confirmation when the process is complete.",
+    "loginRequired": "You must be logged in to submit an account deletion request.",
+    "loginButton": "Log in",
+    "alreadyRequested": "You already have a pending deletion request."
   },
   "privacy": {
     "title": "Privacy Policy",

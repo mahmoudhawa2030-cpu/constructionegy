@@ -599,7 +599,8 @@
     "avatarUploadAria": "رفع صورة شخصية",
     "avatarUploading": "جاري الرفع...",
     "avatarUploadError": "لم يتم الرفع. حاول مرة أخرى.",
-    "avatarHint": "JPEG/PNG/WebP حتى 2 ميجا"
+    "avatarHint": "JPEG/PNG/WebP حتى 2 ميجا",
+    "deleteAccount": "حذف الحساب"
   },
   "subscriptionRequired": {
     "title": "يتطلب اشتراكاً",
@@ -1753,6 +1754,20 @@
       "assurance": "ضمان تجاري مضمون"
     },
     "maybeLater": "ربما لاحقاً"
+  },
+  "deleteAccount": {
+    "title": "حذف الحساب",
+    "subtitle": "طلب حذف الحساب والبيانات",
+    "warningTitle": "تحذير: هذا الإجراء لا يمكن التراجع عنه",
+    "warningText": "عند معالجة طلبك، سيتم حذف حسابك وجميع بياناتك بشكل نهائي بما في ذلك إعلاناتك ورسائلك وملف تعريفك الشخصي.",
+    "reasonLabel": "سبب الحذف (اختياري)",
+    "reasonPlaceholder": "أخبرنا لماذا تريد حذف حسابك...",
+    "submitButton": "إرسال طلب الحذف",
+    "successTitle": "تم استلام طلبك",
+    "successText": "سيتم مراجعة طلبك ومعالجته خلال 7 أيام عمل. ستتلقى إشعارًا على بريدك الإلكتروني عند اكتمال العملية.",
+    "loginRequired": "يجب تسجيل الدخول لتقديم طلب حذف الحساب.",
+    "loginButton": "تسجيل الدخول",
+    "alreadyRequested": "لديك طلب حذف قيد المعالجة بالفعل."
   },
   "privacy": {
     "title": "سياسة الخصوصية",

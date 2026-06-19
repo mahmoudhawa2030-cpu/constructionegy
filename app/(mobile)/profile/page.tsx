@@ -206,6 +206,14 @@ export default async function ProfilePage() {
             {t("adminPanel")}
           </Link>
         ) : null}
+        {user ? (
+          <Link
+            className="inline-flex w-full justify-center rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-center text-sm font-medium text-red-700 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
+            href="/delete-account"
+          >
+            {t("deleteAccount")}
+          </Link>
+        ) : null}
       </div>
       </div>
 

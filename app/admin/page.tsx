@@ -84,6 +84,11 @@ export default async function AdminDashboardPage() {
                     {tAdmin("overviewRfqModeration")}
                   </Link>
                 </li>
+                <li>
+                  <Link className={adminUi.objectLink} href="/admin/deletion-requests">
+                    طلبات حذف الحساب
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
