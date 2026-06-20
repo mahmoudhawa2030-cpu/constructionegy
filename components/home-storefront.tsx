@@ -234,7 +234,7 @@ export function HomeStorefront({
                   {getText(homepageContent.hero.browseDealsText)}
                 </Link>
                 <Link
-                  href="/rfq/new"
+                  href="/rfq?new=1"
                   className="rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-[12px] font-semibold text-white active:opacity-80"
                 >
                   {getText(homepageContent.hero.postRfqText)}
@@ -408,7 +408,7 @@ export function HomeStorefront({
                 <div className="mt-1 text-[12px] text-white/70">{getText(homepageContent.rfq.subtitle)}</div>
               </div>
               <Link
-                href={latestRfqHref ?? "/rfq/new"}
+                href={latestRfqHref ?? "/rfq?new=1"}
                 className="flex w-full items-center justify-center gap-1.5 bg-[var(--bina-primary)] px-4 py-3.5 text-[14px] font-bold text-white active:opacity-90"
               >
                 {getText(homepageContent.rfq.cta)}
