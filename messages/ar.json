@@ -543,7 +543,8 @@
     "emailAlreadyRegisteredHint": "هل تريد تسجيل الدخول بدلاً من ذلك؟",
     "emailAlreadyRegisteredLogin": "تسجيل الدخول",
     "phone": "رقم الهاتف",
-    "phonePlaceholder": "+20 10 0000 0000"
+    "phonePlaceholder": "+20 10 0000 0000",
+    "phoneAlreadyRegistered": "رقم الهاتف مسجّل بالفعل. استخدم رقمًا آخر أو سجّل الدخول بحسابك القائم."
   },
   "accountSuspended": {
     "title": "تم تعليق حسابك",
@@ -600,7 +601,8 @@
     "avatarUploading": "جاري الرفع...",
     "avatarUploadError": "لم يتم الرفع. حاول مرة أخرى.",
     "avatarHint": "JPEG/PNG/WebP حتى 2 ميجا",
-    "deleteAccount": "حذف الحساب"
+    "deleteAccount": "حذف الحساب",
+    "phoneDuplicate": "رقم الهاتف مسجّل لدى مستخدم آخر. الرجاء استخدام رقم مختلف."
   },
   "subscriptionRequired": {
     "title": "يتطلب اشتراكاً",

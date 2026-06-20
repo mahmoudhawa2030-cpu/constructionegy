@@ -54,6 +54,23 @@ export async function updateProfile(
 
   const body = parsed.data;
 
+  if (body.phone_number) {
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("phone_number", body.phone_number)
+      .neq("id", user.id)
+      .limit(1)
+      .maybeSingle();
+    if (existing) {
+      return {
+        ok: false,
+        message: "رقم الهاتف مسجّل لدى مستخدم آخر. الرجاء استخدام رقم مختلف.",
+        fieldErrors: { phone_number: "رقم الهاتف مسجّل بالفعل" },
+      };
+    }
+  }
+
   const { error } = await supabase.from("profiles").upsert(
     {
       id: user.id,
@@ -68,6 +85,13 @@ export async function updateProfile(
   );
 
   if (error) {
+    if (error.code === "23505" && error.message.includes("phone_number")) {
+      return {
+        ok: false,
+        message: "رقم الهاتف مسجّل لدى مستخدم آخر. الرجاء استخدام رقم مختلف.",
+        fieldErrors: { phone_number: "رقم الهاتف مسجّل بالفعل" },
+      };
+    }
     return { ok: false, message: error.message };
   }
 

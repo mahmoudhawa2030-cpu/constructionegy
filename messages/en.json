@@ -541,7 +541,8 @@
     "emailAlreadyRegisteredHint": "Would you like to log in instead?",
     "emailAlreadyRegisteredLogin": "Log in",
     "phone": "Phone number",
-    "phonePlaceholder": "+20 10 0000 0000"
+    "phonePlaceholder": "+20 10 0000 0000",
+    "phoneAlreadyRegistered": "This phone number is already registered. Use a different number or log in to your existing account."
   },
   "accountSuspended": {
     "title": "Your account is suspended",
@@ -598,7 +599,8 @@
     "avatarUploading": "Uploading...",
     "avatarUploadError": "Upload failed. Please try again.",
     "avatarHint": "JPEG/PNG/WebP up to 2 MB",
-    "deleteAccount": "Delete Account"
+    "deleteAccount": "Delete Account",
+    "phoneDuplicate": "This phone number is already registered to another account. Please use a different number."
   },
   "subscriptionRequired": {
     "title": "Subscription required",

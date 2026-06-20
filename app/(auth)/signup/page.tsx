@@ -8,6 +8,7 @@ import { useId, useState } from "react";
 import { EmailOtpCells } from "@/components/email-otp-cells";
 import { PasswordInput } from "@/components/password-input";
 import { getEmailOtpLength } from "@/lib/auth/email-otp-length";
+import { isPhoneTaken } from "@/lib/auth/check-phone";
 import { formatAuthErrorMessage } from "@/lib/supabase/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
 import { revokeOtherSessions } from "@/lib/supabase/revoke-other-sessions";
@@ -32,6 +33,7 @@ export default function SignupPage() {
   const [pendingEmail, setPendingEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [duplicateEmail, setDuplicateEmail] = useState(false);
+  const [duplicatePhone, setDuplicatePhone] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -39,8 +41,17 @@ export default function SignupPage() {
     e.preventDefault();
     setError(null);
     setDuplicateEmail(false);
+    setDuplicatePhone(false);
     setMessage(null);
     setLoading(true);
+    if (phone.trim()) {
+      const taken = await isPhoneTaken(phone.trim());
+      if (taken) {
+        setDuplicatePhone(true);
+        setLoading(false);
+        return;
+      }
+    }
     const supabase = createClient();
     const { data, error: signUpError } = await supabase.auth.signUp({
       email,
@@ -269,7 +280,11 @@ export default function SignupPage() {
               value={password}
             />
           </label>
-          {duplicateEmail ? (
+          {duplicatePhone ? (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-300" role="alert">
+              <p className="font-medium">{t("phoneAlreadyRegistered")}</p>
+            </div>
+          ) : duplicateEmail ? (
             <div className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-600 dark:bg-amber-950/40 dark:text-amber-300" role="alert">
               <p className="font-medium">{t("emailAlreadyRegistered")}</p>
               <p className="mt-1">
