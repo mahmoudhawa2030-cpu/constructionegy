@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { AdminNav } from "@/components/admin/admin-nav";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -39,14 +38,11 @@ export default async function AdminLayout({
       <div aria-hidden="true" className={adminUi.brandBar} />
       <header className={adminUi.header}>
         <div className={adminUi.headerInner}>
-          <div className="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
-            <div className="flex min-w-0 flex-col gap-0.5">
-              <span className={adminUi.headerTitle}>{t("panel")}</span>
-              <span className="hidden text-xs font-medium text-[var(--admin-text-secondary)] sm:block">
-                {t("shellSubtitle")}
-              </span>
-            </div>
-            <AdminNav />
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className={adminUi.headerTitle}>{t("panel")}</span>
+            <span className="hidden text-xs font-medium text-[var(--admin-text-secondary)] sm:block">
+              {t("shellSubtitle")}
+            </span>
           </div>
           <div className={adminUi.headerTools}>
             <LocaleSwitcher />
