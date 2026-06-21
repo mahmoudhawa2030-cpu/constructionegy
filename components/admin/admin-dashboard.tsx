@@ -384,29 +384,6 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
           </div>
         </div>
 
-        {/* ribbon tabs */}
-        <div style={{ background: C.ribbon1, display: "flex", alignItems: "flex-end", gap: 2, padding: "0 10px", borderBottom: `1px solid ${C.ribbonBorder}` }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                border: "none",
-                background: activeTab === tab.id ? "#fff" : "transparent",
-                padding: "7px 14px 8px",
-                fontSize: 12.5,
-                color: activeTab === tab.id ? C.accentDark : C.inkDim,
-                borderRadius: "3px 3px 0 0",
-                fontWeight: activeTab === tab.id ? 700 : 500,
-                boxShadow: activeTab === tab.id ? `inset 0 -2px 0 ${C.accent}` : "none",
-                cursor: "pointer",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
 
         {/* ribbon */}
         <div style={{ background: `linear-gradient(${C.ribbon1},${C.ribbon2})`, display: "flex", alignItems: "stretch", padding: "6px 10px 4px", overflowX: "auto" }}>
