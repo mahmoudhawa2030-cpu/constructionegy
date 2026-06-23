@@ -1746,7 +1746,22 @@
     "rfqTitleLabel": "RFQ Section",
     "rfqTitle": "Title",
     "rfqSubtitle": "Subtitle",
-    "rfqCta": "CTA Button"
+    "rfqCta": "CTA Button",
+    "searchSections": "Search sections...",
+    "filterAll": "All",
+    "filterVisible": "Visible",
+    "filterHidden": "Hidden",
+    "selectedCount": "selected",
+    "bulkEnable": "Enable",
+    "bulkDisable": "Disable",
+    "bulkClear": "Clear",
+    "noResults": "No sections match your search.",
+    "visibleOnHomepage": "Visible on homepage",
+    "hiddenFromUsers": "Hidden — not shown to users",
+    "addNewSection": "Add new section",
+    "unsavedChanges": "Unsaved changes",
+    "discard": "Discard",
+    "saveChanges": "Save changes"
   },
   "mobileSections": {
     "stories": "Categories Ring",

@@ -1747,7 +1747,22 @@
     "rfqTitleLabel": "قسم طلب العروض",
     "rfqTitle": "العنوان",
     "rfqSubtitle": "النص التوضيحي",
-    "rfqCta": "زر الدعوة للعمل"
+    "rfqCta": "زر الدعوة للعمل",
+    "searchSections": "ابحث عن قسم...",
+    "filterAll": "الكل",
+    "filterVisible": "مرئي",
+    "filterHidden": "مخفي",
+    "selectedCount": "محدد",
+    "bulkEnable": "تفعيل",
+    "bulkDisable": "تعطيل",
+    "bulkClear": "إلغاء التحديد",
+    "noResults": "لا توجد أقسام تطابق بحثك.",
+    "visibleOnHomepage": "ظاهر في الصفحة الرئيسية",
+    "hiddenFromUsers": "مخفي — لا يظهر للمستخدمين",
+    "addNewSection": "إضافة قسم جديد",
+    "unsavedChanges": "تغييرات غير محفوظة",
+    "discard": "تجاهل",
+    "saveChanges": "حفظ التغييرات"
   },
   "mobileSections": {
     "stories": "حلقة الفئات",
