@@ -36,14 +36,14 @@ export function isReservedSlug(slug: string): boolean {
   return RESERVED_SLUGS.has(slug.trim().toLowerCase());
 }
 
-/** Convert arbitrary text to a URL-safe post slug (hyphenated, ascii). */
+/** Convert arbitrary text to a URL-safe post slug (hyphenated; Latin + Arabic + digits). */
 export function slugify(input: string): string {
   return input
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
+    .normalize("NFKC")
     .trim()
-    .replace(/[^a-z0-9]+/g, "-")
+    .toLowerCase()
+    // Keep letters (incl. Arabic) and numbers; collapse everything else to "-"
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 }

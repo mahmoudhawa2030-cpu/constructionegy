@@ -15,7 +15,14 @@ function postPublicPath(p: { category?: string; slug: string }) {
 }
 type Cat = { id: string; label: string; color: string; icon: string };
 
-const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const toSlug = (s: string) =>
+  s
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 const todayStr = () => new Date().toISOString().split("T")[0];
 const addDays = (d: string, n: number) => { const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().split("T")[0]; };
@@ -918,7 +925,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
           {error&&<div style={{margin:"8px 16px",padding:"9px 12px",background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.25)",borderRadius:5,color:"#ef4444",fontSize:12}}>⚠️ {error} <button onClick={()=>setError("")} style={{float:"right",background:"none",border:"none",color:"#ef4444",cursor:"pointer"}}>✕</button></div>}
           <div style={{padding:"10px 16px",background:"#090e1c",borderBottom:"1px solid #131e30",display:"flex",gap:10,flexWrap:"wrap"}}>
             <div style={{flex:"1 1 260px"}}><label style={{...lbl,marginBottom:4}}>Meta Title <span style={{color:metaTitle.length>=50&&metaTitle.length<=60?"#22c55e":metaTitle.length>60?"#ef4444":"#f59e0b"}}>{metaTitle.length}/60</span></label><input value={metaTitle} onChange={e=>setMetaTitle(e.target.value)} placeholder="Optimized post title..." style={{width:"100%",padding:"7px 10px",background:"#111827",border:`1px solid ${metaTitle.length>60?"#ef4444":"#2a3045"}`,borderRadius:5,color:"#e8ecf8",fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
-            <div style={{flex:"0 1 160px"}}><label style={lbl}>URL Slug</label><input value={slug} onChange={e=>setSlug(toSlug(e.target.value))} placeholder="post-url-slug" style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#4f9fff",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"monospace"}}/></div>
+            <div style={{flex:"0 1 200px"}}><label style={lbl}>URL Slug</label><input value={slug} onChange={e=>setSlug(toSlug(e.target.value))} placeholder="ايجار-سقالات" dir="auto" style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#4f9fff",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"monospace"}}/></div>
             <div style={{flex:"2 1 100%"}}><label style={{...lbl,marginBottom:4}}>Meta Description <span style={{color:metaDesc.length>=120&&metaDesc.length<=160?"#22c55e":metaDesc.length>160?"#ef4444":"#f59e0b"}}>{metaDesc.length}/160</span></label><textarea value={metaDesc} onChange={e=>setMetaDesc(e.target.value)} rows={2} placeholder="Compelling meta description..." style={{width:"100%",padding:"7px 10px",background:"#111827",border:`1px solid ${metaDesc.length>160?"#ef4444":"#2a3045"}`,borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
           </div>
           {/* Cover image upload */}
