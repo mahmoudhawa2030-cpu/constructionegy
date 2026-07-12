@@ -1,11 +1,32 @@
-import { getSiteSeoSettings, defaultSiteSeoSettings } from "@/lib/seo/site-settings";
+import type { MetadataRoute } from "next";
+
 import { getSiteUrl } from "@/lib/seo/site-url";
 
-export default async function robots() {
+/** Build-safe robots.txt (no DB / cookies). */
+export default function robots(): MetadataRoute.Robots {
   const base = getSiteUrl();
-  const { robotsTxt } = await getSiteSeoSettings(base).catch(() => defaultSiteSeoSettings(base));
-
-  return new Response(robotsTxt, {
-    headers: { "Content-Type": "text/plain" },
-  });
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/api",
+          "/login",
+          "/signup",
+          "/profile",
+          "/messages",
+          "/bookings",
+          "/favorites",
+          "/notifications",
+          "/auth",
+          "/protected",
+          "/account-suspended",
+        ],
+      },
+    ],
+    sitemap: `${base}/sitemap.xml`,
+    host: base,
+  };
 }
