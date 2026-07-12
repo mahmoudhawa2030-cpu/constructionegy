@@ -311,17 +311,147 @@ function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal,onA
 
 function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
   const ref=useRef<HTMLDivElement>(null);
-  useEffect(()=>{if(ref.current&&ref.current.innerHTML!==content)ref.current.innerHTML=content;},[content]);
-  const exec=(cmd:string,val?:string)=>{document.execCommand(cmd,false,val);ref.current?.focus();onChange(ref.current?.innerHTML||"");};
-  const btns=[{l:"B",cmd:"bold"},{l:"I",cmd:"italic"},{l:"U",cmd:"underline"},{l:"H2",cmd:"formatBlock",val:"h2"},{l:"H3",cmd:"formatBlock",val:"h3"},{l:"¶",cmd:"formatBlock",val:"p"},{l:"• List",cmd:"insertUnorderedList"},{l:"1. List",cmd:"insertOrderedList"},{l:'""',cmd:"formatBlock",val:"blockquote"}];
-  return <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-    <div style={{display:"flex",flexWrap:"wrap",gap:"3px",padding:"7px 10px",background:"#131929",borderBottom:"1px solid #1e2740"}}>
-      {btns.map(b=><button key={b.l} onMouseDown={e=>{e.preventDefault();exec(b.cmd,b.val);}} style={{padding:"3px 9px",fontSize:"11px",fontWeight:600,background:"#1e2740",color:"#8a93b0",border:"1px solid #252f45",borderRadius:"3px",cursor:"pointer"}}>{b.l}</button>)}
-      <button onMouseDown={e=>{e.preventDefault();const u=prompt("Enter URL:");if(u)exec("createLink",u);}} style={{padding:"3px 9px",fontSize:"11px",fontWeight:600,background:"#1e2740",color:"#4f7fff",border:"1px solid #2a3a6f",borderRadius:"3px",cursor:"pointer"}}>🔗 Link</button>
-      <button onMouseDown={e=>{e.preventDefault();onInsertImage();}} style={{padding:"3px 9px",fontSize:"11px",fontWeight:600,background:"#1e2740",color:"#a855f7",border:"1px solid #4a2a7f",borderRadius:"3px",cursor:"pointer"}}>🖼 Images</button>
+  const [htmlMode,setHtmlMode]=useState(false);
+  const [htmlDraft,setHtmlDraft]=useState(content||"");
+
+  useEffect(()=>{
+    if(!htmlMode && ref.current && ref.current.innerHTML!==content){
+      ref.current.innerHTML=content;
+    }
+  },[content,htmlMode]);
+
+  useEffect(()=>{
+    if(htmlMode) setHtmlDraft(content||"");
+  },[htmlMode]);
+
+  const exec=(cmd:string,val?:string)=>{
+    document.execCommand(cmd,false,val);
+    ref.current?.focus();
+    onChange(ref.current?.innerHTML||"");
+  };
+
+  const switchToHtml=()=>{
+    const current=ref.current?.innerHTML ?? content ?? "";
+    setHtmlDraft(current);
+    setHtmlMode(true);
+  };
+
+  const switchToVisual=()=>{
+    onChange(htmlDraft);
+    setHtmlMode(false);
+  };
+
+  const btns=[
+    {l:"B",cmd:"bold"},
+    {l:"I",cmd:"italic"},
+    {l:"U",cmd:"underline"},
+    {l:"H2",cmd:"formatBlock",val:"h2"},
+    {l:"H3",cmd:"formatBlock",val:"h3"},
+    {l:"¶",cmd:"formatBlock",val:"p"},
+    {l:"• List",cmd:"insertUnorderedList"},
+    {l:"1. List",cmd:"insertOrderedList"},
+    {l:'""',cmd:"formatBlock",val:"blockquote"},
+  ];
+
+  const toolBtn=(active?:boolean):React.CSSProperties=>({
+    padding:"3px 9px",
+    fontSize:"11px",
+    fontWeight:600,
+    background:active?"rgba(79,127,255,0.2)":"#1e2740",
+    color:active?"#4f7fff":"#8a93b0",
+    border:active?"1px solid #4f7fff":"1px solid #252f45",
+    borderRadius:"3px",
+    cursor:"pointer",
+  });
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:"3px",padding:"7px 10px",background:"#131929",borderBottom:"1px solid #1e2740",alignItems:"center"}}>
+        {!htmlMode && btns.map(b=>(
+          <button
+            key={b.l}
+            type="button"
+            onMouseDown={e=>{e.preventDefault();exec(b.cmd,b.val);}}
+            style={toolBtn()}
+          >{b.l}</button>
+        ))}
+        {!htmlMode && (
+          <>
+            <button
+              type="button"
+              onMouseDown={e=>{e.preventDefault();const u=prompt("Enter URL:");if(u)exec("createLink",u);}}
+              style={{...toolBtn(),color:"#4f7fff",border:"1px solid #2a3a6f"}}
+            >🔗 Link</button>
+            <button
+              type="button"
+              onMouseDown={e=>{e.preventDefault();onInsertImage();}}
+              style={{...toolBtn(),color:"#a855f7",border:"1px solid #4a2a7f"}}
+            >🖼 Images</button>
+          </>
+        )}
+        <div style={{marginInlineStart:"auto",display:"flex",gap:4}}>
+          <button
+            type="button"
+            onClick={()=>{ if(htmlMode) switchToVisual(); }}
+            style={toolBtn(!htmlMode)}
+            title="Visual editor"
+          >Visual</button>
+          <button
+            type="button"
+            onClick={()=>{ if(!htmlMode) switchToHtml(); }}
+            style={toolBtn(htmlMode)}
+            title="Edit / paste raw HTML"
+          >{"</> HTML"}</button>
+        </div>
+      </div>
+
+      {htmlMode ? (
+        <textarea
+          value={htmlDraft}
+          onChange={e=>{
+            setHtmlDraft(e.target.value);
+            onChange(e.target.value);
+          }}
+          spellCheck={false}
+          dir="auto"
+          placeholder="Paste full HTML here (like WordPress Text/HTML mode)..."
+          style={{
+            flex:1,
+            minHeight:"360px",
+            padding:"16px 18px",
+            outline:"none",
+            resize:"none",
+            border:"none",
+            background:"#0a0f1a",
+            color:"#a5f3fc",
+            fontSize:"13px",
+            lineHeight:1.55,
+            fontFamily:"ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            boxSizing:"border-box",
+          }}
+        />
+      ) : (
+        <div
+          ref={ref}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={()=>onChange(ref.current?.innerHTML||"")}
+          data-placeholder="Start writing or click 'Generate with AI'..."
+          style={{
+            flex:1,
+            padding:"20px 24px",
+            outline:"none",
+            overflowY:"auto",
+            color:"#d4d9f0",
+            fontSize:"15px",
+            lineHeight:"1.85",
+            fontFamily:"'Georgia',serif",
+            minHeight:"360px",
+          }}
+        />
+      )}
     </div>
-    <div ref={ref} contentEditable suppressContentEditableWarning onInput={()=>onChange(ref.current?.innerHTML||"")} data-placeholder="Start writing or click 'Generate with AI'..." style={{flex:1,padding:"20px 24px",outline:"none",overflowY:"auto",color:"#d4d9f0",fontSize:"15px",lineHeight:"1.85",fontFamily:"'Georgia',serif",minHeight:"360px"}}/>
-  </div>;
+  );
 }
 
 type StockImage = { url:string; thumb:string; alt:string; credit:string };
