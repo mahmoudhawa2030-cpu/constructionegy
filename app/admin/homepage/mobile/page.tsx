@@ -13,14 +13,13 @@ export default async function AdminMobileHomepagePage() {
 
   return (
     <div className={adminUi.page}>
-      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className={adminUi.pageTitle}>{t("title")}</h1>
           <p className={adminUi.pageLead}>{t("lead")}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Link className={adminUi.btnSecondary + " px-3 py-1.5"} href="/" target="_blank">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link className={`${adminUi.btnSecondary} px-3 py-1.5`} href="/" target="_blank">
             {t("previewMobileHome")}
           </Link>
           <Link className={adminUi.linkBack} href="/admin">
@@ -33,7 +32,6 @@ export default async function AdminMobileHomepagePage() {
         <p className="text-sm">{t("infoNote")}</p>
       </div>
 
-      {/* Editor Component */}
       <MobileHomepageEditor initialConfig={config} />
     </div>
   );

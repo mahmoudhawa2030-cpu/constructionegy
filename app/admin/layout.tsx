@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/components/locale-switcher";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { requireAdmin } from "@/lib/auth/admin";
 import { adminUi } from "@/lib/admin-ui";
 import { createClient } from "@/lib/supabase/server";
@@ -57,7 +58,12 @@ export default async function AdminLayout({
           </div>
         </div>
       </header>
-      <main className={adminUi.main}>{children}</main>
+      <div className="flex flex-1 min-h-0">
+        <AdminSidebar />
+        <main className="flex-1 min-w-0 overflow-y-auto px-4 py-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

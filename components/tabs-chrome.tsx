@@ -10,6 +10,7 @@ import { MobileChromeMenuProvider, useMobileChromeMenu } from "@/components/mobi
 import { MessageNotificationsProvider, useMessageNotifications } from "@/components/message-notifications-provider";
 import { CommentNotificationsProvider } from "@/components/comment-notifications-provider";
 import { MobileTabBar } from "@/components/mobile-tab-bar";
+import { NewsTickerClient } from "@/components/news-ticker-client";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -122,6 +123,7 @@ function TabsChromeShellInner({ hasUser, children }: { hasUser: boolean; childre
           {hasUser ? <SignOutButton compact /> : null}
         </div>
       </header>
+      <NewsTickerClient surface="mobile" />
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-[calc(4.5rem+env(safe-area-inset-bottom))] pt-0 md:pt-0">
         {children}
       </div>

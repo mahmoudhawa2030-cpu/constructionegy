@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/admin";
+import { submitIndexNow } from "@/lib/seo/indexnow";
+import { getSiteUrl } from "@/lib/seo/site-url";
 import { isReservedSlug, slugify } from "@/lib/seo/slugs";
+import type { Json } from "@/lib/supabase/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 export type SavePostInput = {
@@ -20,6 +23,12 @@ export type SavePostInput = {
   seoScore: number;
   status: "draft" | "published";
   publishAt: string | null;
+  faqSchema?: Record<string, unknown> | null;
+  howtoSchema?: Record<string, unknown> | null;
+  noindex?: boolean;
+  ogTitle?: string | null;
+  ogDescription?: string | null;
+  ogImage?: string | null;
 };
 
 export type SaveResult = { ok: true; id: string } | { ok: false; error: string };
@@ -54,12 +63,21 @@ export async function savePost(input: SavePostInput): Promise<SaveResult> {
       input.status === "published" && !input.publishAt
         ? new Date().toISOString()
         : input.publishAt,
+    faq_schema: (input.faqSchema ?? null) as Json,
+    howto_schema: (input.howtoSchema ?? null) as Json,
+    noindex: input.noindex ?? false,
+    og_title: input.ogTitle?.trim() || null,
+    og_description: input.ogDescription?.trim() || null,
+    og_image: input.ogImage?.trim() || null,
   };
 
   if (input.id) {
     const { error } = await supabase.from("seo_posts").update(row).eq("id", input.id);
     if (error) return { ok: false, error: error.message };
     revalidatePaths(categorySlug, slug);
+    if (input.status === "published" && !input.noindex) {
+      void submitIndexNow(`${getSiteUrl()}/${categorySlug}/${slug}`);
+    }
     return { ok: true, id: input.id };
   }
 
@@ -70,6 +88,9 @@ export async function savePost(input: SavePostInput): Promise<SaveResult> {
     .single();
   if (error) return { ok: false, error: error.message };
   revalidatePaths(categorySlug, slug);
+  if (input.status === "published" && !input.noindex) {
+    void submitIndexNow(`${getSiteUrl()}/${categorySlug}/${slug}`);
+  }
   return { ok: true, id: data.id };
 }
 

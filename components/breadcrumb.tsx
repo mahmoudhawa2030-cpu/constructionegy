@@ -8,13 +8,35 @@ export type BreadcrumbItem = {
 
 type Props = {
   items: BreadcrumbItem[];
+  baseUrl?: string;
 };
 
-export function Breadcrumb({ items }: Props) {
+function buildBreadcrumbSchema(items: BreadcrumbItem[], baseUrl: string) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.label,
+      item: item.href ? `${baseUrl}${item.href}` : undefined,
+    })),
+  };
+}
+
+export function Breadcrumb({ items, baseUrl }: Props) {
   if (items.length === 0) return null;
+
+  const schema = baseUrl ? buildBreadcrumbSchema(items, baseUrl) : null;
 
   return (
     <nav aria-label="مسار التنقل" className="text-sm">
+      {schema ? (
+        <script
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          type="application/ld+json"
+        />
+      ) : null}
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-zinc-600 dark:text-zinc-400">
         {items.map((item, index) => {
           const isLast = index === items.length - 1;

@@ -35,6 +35,11 @@ services:
       - FIREBASE_SERVICE_ACCOUNT_JSON=${FIREBASE_SERVICE_ACCOUNT_JSON:-}
       - PUSH_NOTIFY_SECRET=${PUSH_NOTIFY_SECRET:-}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-}
+      # xAI Grok — SEO editor (generate article / schema / rewrite)
+      - XAI_API_KEY=${XAI_API_KEY:-}
+      - XAI_MODEL=${XAI_MODEL:-}
+      - XAI_MODEL_ARTICLE=${XAI_MODEL_ARTICLE:-}
+      - XAI_MODEL_FAST=${XAI_MODEL_FAST:-}
     depends_on:
       - redis
     restart: unless-stopped

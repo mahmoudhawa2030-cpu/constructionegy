@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { NewsTickerClient } from "@/components/news-ticker-client";
 import { WebHeader } from "@/components/web/web-header";
 import { WebFooter } from "@/components/web/web-footer";
 import { getUnreadIncomingTotal } from "@/lib/messages/unread";
@@ -44,6 +45,7 @@ export default async function WebLayout({
         unreadMessageCount={unreadMsg}
         categories={categories}
       />
+      <NewsTickerClient surface="web" />
       <main className="flex-1">
         {children}
       </main>

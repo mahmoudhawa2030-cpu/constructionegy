@@ -4,13 +4,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingCard } from "@/components/listing-card";
+import { JsonLd } from "@/components/seo/json-ld";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import {
   getCategoryBySlug,
   getPublishedPostsByCategory,
   type CategoryRow,
 } from "@/lib/blog/queries";
+import { buildBreadcrumbListJsonLd } from "@/lib/seo/json-ld";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import { isReservedSlug } from "@/lib/seo/slugs";
 import { createClient } from "@/lib/supabase/server";
@@ -108,21 +111,28 @@ export default async function CategoryLandingPage({ params }: PageProps) {
     },
   };
 
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+    { name: locale === "ar" ? "الرئيسية" : "Home", url: base },
+    { name: t("marketplace"), url: `${base}/gallery` },
+    { name: label, url: `${base}/${categorySlug}` },
+  ]);
+
   return (
     <>
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        type="application/ld+json"
-      />
+      <JsonLd data={jsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="mb-6">
-          <nav className="mb-2 text-xs text-bina-muted">
-            <Link className="hover:underline" href="/gallery">
-              {t("marketplace")}
-            </Link>{" "}
-            <span aria-hidden>/</span> <span className="text-bina-text">{label}</span>
-          </nav>
+          <div className="mb-2">
+            <Breadcrumb
+              baseUrl={base}
+              items={[
+                { label: t("marketplace"), href: "/gallery" },
+                { label },
+              ]}
+            />
+          </div>
           <h1 className="text-2xl font-bold text-bina-text sm:text-3xl">{label}</h1>
           {intro ? (
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-bina-muted sm:text-base">

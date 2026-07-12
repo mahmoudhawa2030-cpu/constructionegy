@@ -6,6 +6,9 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { SiteSchemaScripts } from "@/components/seo/site-schema";
+import { getSiteSeoSettings } from "@/lib/seo/site-settings";
+import { buildPageMetadata } from "@/lib/seo/meta";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import { getTrackingScripts } from "@/lib/tracking/get-tracking-scripts";
 
@@ -30,11 +33,10 @@ const barlowCondensed = Barlow_Condensed({
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("meta");
-  return {
-    metadataBase: new URL(getSiteUrl()),
+  return buildPageMetadata({
     title: t("title"),
     description: t("description"),
-  };
+  });
 }
 
 export const viewport: Viewport = {
@@ -54,6 +56,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   const dir = locale === "ar" ? "rtl" : "ltr";
   const tracking = await getTrackingScripts();
+  const siteSeo = await getSiteSeoSettings(getSiteUrl());
 
   return (
     <html
@@ -66,6 +69,7 @@ export default async function RootLayout({
         <head dangerouslySetInnerHTML={{ __html: tracking.header }} />
       ) : null}
       <body className="flex h-full flex-col font-sans">
+        <SiteSchemaScripts organization={siteSeo.organizationSchema} website={siteSeo.websiteSchema} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppThemeProvider>
             <CapacitorBridge />

@@ -400,3 +400,23 @@ body {
 .prose-blog strong {
   font-weight: 700;
 }
+
+/* News ticker marquee */
+@keyframes news-ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.news-ticker-track {
+  animation-name: news-ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-ticker-track {
+    animation: none !important;
+  }
+}

@@ -4,7 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 
+import { JsonLd } from "@/components/seo/json-ld";
 import { getCategoryBySlug, getPublishedPost, type CategoryRow } from "@/lib/blog/queries";
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbListJsonLd,
+} from "@/lib/seo/json-ld";
+import { getSiteSeoSettings } from "@/lib/seo/site-settings";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import { isReservedSlug } from "@/lib/seo/slugs";
 
@@ -14,6 +20,12 @@ type PageProps = { params: Promise<{ categorySlug: string; postSlug: string }> }
 
 function categoryLabel(locale: string, cat: CategoryRow): string {
   return locale === "ar" ? cat.label_ar : cat.label_en || cat.label_ar;
+}
+
+function wordCountFromHtml(html: string): number {
+  const text = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  if (!text) return 0;
+  return text.split(" ").filter(Boolean).length;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -26,24 +38,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const canonical = `${getSiteUrl()}/${categorySlug}/${postSlug}`;
   const title = post.meta_title || post.title;
   const description = (post.meta_description || post.title).slice(0, 160);
-  const image = post.cover_image ?? undefined;
+  const ogTitle = (post.og_title?.trim() || title).slice(0, 70);
+  const ogDescription = (post.og_description?.trim() || description).slice(0, 200);
+  const image = post.og_image?.trim() || post.cover_image || undefined;
 
   return {
     title,
     description,
     alternates: { canonical },
-    robots: { index: true, follow: true },
+    robots: post.noindex ? { index: false, follow: true } : { index: true, follow: true },
     openGraph: {
       type: "article",
-      title,
-      description,
+      title: ogTitle,
+      description: ogDescription,
       url: canonical,
-      images: image ? [{ url: image }] : undefined,
+      images: image ? [{ url: image, alt: post.cover_image_alt || title }] : undefined,
     },
     twitter: {
       card: image ? "summary_large_image" : "summary",
-      title,
-      description,
+      title: ogTitle,
+      description: ogDescription,
       images: image ? [image] : undefined,
     },
   };
@@ -69,38 +83,38 @@ export default async function BlogPostPage({ params }: PageProps) {
   const base = getSiteUrl();
   const canonical = `${base}/${categorySlug}/${postSlug}`;
   const publishedDate = post.publish_at ?? post.created_at;
+  const siteSeo = await getSiteSeoSettings(base);
+  const publisherName = siteSeo.organizationSchema.name || "construction-egy";
+  const publisherLogo = siteSeo.organizationSchema.logo;
 
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
+  const articleJsonLd = buildArticleJsonLd({
     headline: post.title,
     description: post.meta_description || post.title,
-    image: post.cover_image ? [post.cover_image] : undefined,
+    url: canonical,
+    image: post.cover_image,
     datePublished: publishedDate,
     dateModified: post.updated_at,
     articleSection: label,
-    mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
-  };
+    keywords: post.seed_keyword || undefined,
+    authorName: publisherName,
+    publisherName,
+    publisherLogo,
+    inLanguage: locale === "ar" ? "ar" : "en",
+    wordCount: wordCountFromHtml(post.content),
+  });
 
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: label, item: `${base}/${categorySlug}` },
-      { "@type": "ListItem", position: 2, name: post.title, item: canonical },
-    ],
-  };
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+    { name: locale === "ar" ? "الرئيسية" : "Home", url: base },
+    { name: label, url: `${base}/${categorySlug}` },
+    { name: post.title, url: canonical },
+  ]);
 
   return (
     <>
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-        type="application/ld+json"
-      />
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-        type="application/ld+json"
-      />
+      <JsonLd data={articleJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
+      {post.faq_schema ? <JsonLd data={post.faq_schema} /> : null}
+      {post.howto_schema ? <JsonLd data={post.howto_schema} /> : null}
       <article className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:py-12">
         <nav className="mb-4 text-xs text-bina-muted">
           <Link className="hover:underline" href={`/${categorySlug}`}>
@@ -137,6 +151,24 @@ export default async function BlogPostPage({ params }: PageProps) {
           className="prose-blog mt-8"
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
+
+        {post.faq_schema && Array.isArray((post.faq_schema as any).mainEntity) ? (
+          <section className="mt-10 border-t border-bina-border pt-6">
+            <h2 className="text-xl font-bold text-bina-text">
+              {locale === "ar" ? "الأسئلة الشائعة" : "Frequently Asked Questions"}
+            </h2>
+            <div className="mt-4 space-y-3">
+              {((post.faq_schema as any).mainEntity as Array<{ name: string; acceptedAnswer: { text: string } }>).map(
+                (qa, i) => (
+                  <details key={i} className="group rounded-lg border border-bina-border p-4">
+                    <summary className="cursor-pointer font-semibold text-bina-text">{qa.name}</summary>
+                    <p className="mt-2 text-sm text-bina-muted">{qa.acceptedAnswer?.text}</p>
+                  </details>
+                ),
+              )}
+            </div>
+          </section>
+        ) : null}
       </article>
     </>
   );

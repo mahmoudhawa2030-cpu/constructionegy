@@ -331,6 +331,9 @@ export function AdminDashboard({ data }: { data: DashboardData }) {
     { href: "/admin/veterans-corner", label: t("linkVeterans"), icon: ICON.star },
     { href: "/admin/media", label: t("linkMedia"), icon: ICON.image },
     { href: "/listings/new", label: t("linkAddListing"), icon: ICON.plus },
+    { href: "/admin/redirects", label: t("linkRedirects"), icon: ICON.export },
+    { href: "/admin/not-found-log", label: t("linkNotFound"), icon: ICON.trash },
+    { href: "/admin/seo", label: t("linkSeoSettings"), icon: ICON.cog },
   ];
 
   const kpis = [

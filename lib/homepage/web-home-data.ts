@@ -159,6 +159,55 @@ export async function getWebHomeData(
   return result;
 }
 
+/** A homepage section whose slug matches `web_cat_{categorySlug}`. */
+export type CategoryListingSection = SectionRow & {
+  categorySlug: string;
+  listings: {
+    id: string;
+    title: string;
+    price: number;
+    price_unit: string | null;
+    images: string[] | null;
+    location: string | null;
+    view_count: number | null;
+  }[];
+};
+
+/** Fetch all enabled category-listing sections (slug prefix `web_cat_`) and their live listings. */
+export async function getCategoryListingSections(
+  client: SupabaseClient<Database>,
+): Promise<CategoryListingSection[]> {
+  const { data: sections } = await client
+    .from("homepage_sections")
+    .select("*")
+    .like("slug", "web_cat_%")
+    .order("sort_order", { ascending: true });
+
+  if (!sections || sections.length === 0) return [];
+
+  const categorySlugs = sections.map((s) => s.slug.replace(/^web_cat_/, ""));
+
+  const { data: listings } = await client
+    .from("listings")
+    .select("id, title, price, price_unit, images, location, view_count, category")
+    .in("category", categorySlugs)
+    .eq("status", "active")
+    .order("created_at", { ascending: false })
+    .limit(categorySlugs.length * 8);
+
+  const listingsByCategory = new Map<string, CategoryListingSection["listings"]>();
+  for (const l of listings ?? []) {
+    const arr = listingsByCategory.get(l.category) ?? [];
+    if (arr.length < 8) arr.push(l);
+    listingsByCategory.set(l.category, arr);
+  }
+
+  return sections.map((s) => {
+    const catSlug = s.slug.replace(/^web_cat_/, "");
+    return { ...s, categorySlug: catSlug, listings: listingsByCategory.get(catSlug) ?? [] };
+  });
+}
+
 function emptyData(): WebHomeData {
   return {
     web_hero_slider: null,

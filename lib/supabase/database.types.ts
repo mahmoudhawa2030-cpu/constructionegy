@@ -1352,9 +1352,15 @@ export type Database = {
           cover_image: string | null
           cover_image_alt: string | null
           created_at: string
+          faq_schema: Json | null
+          howto_schema: Json | null
           id: string
           meta_description: string
           meta_title: string
+          noindex: boolean
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
           publish_at: string | null
           seed_keyword: string
           seo_score: number
@@ -1370,9 +1376,15 @@ export type Database = {
           cover_image?: string | null
           cover_image_alt?: string | null
           created_at?: string
+          faq_schema?: Json | null
+          howto_schema?: Json | null
           id?: string
           meta_description?: string
           meta_title?: string
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
           publish_at?: string | null
           seed_keyword?: string
           seo_score?: number
@@ -1388,9 +1400,15 @@ export type Database = {
           cover_image?: string | null
           cover_image_alt?: string | null
           created_at?: string
+          faq_schema?: Json | null
+          howto_schema?: Json | null
           id?: string
           meta_description?: string
           meta_title?: string
+          noindex?: boolean
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
           publish_at?: string | null
           seed_keyword?: string
           seo_score?: number
@@ -1538,6 +1556,69 @@ export type Database = {
         }
         Relationships: []
       }
+      redirects: {
+        Row: {
+          id: string
+          source_path: string
+          destination_path: string
+          status_code: number
+          is_active: boolean
+          hit_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_path: string
+          destination_path: string
+          status_code?: number
+          is_active?: boolean
+          hit_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          source_path?: string
+          destination_path?: string
+          status_code?: number
+          is_active?: boolean
+          hit_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      not_found_log: {
+        Row: {
+          id: string
+          path: string
+          referrer: string | null
+          hit_count: number
+          first_seen_at: string
+          last_seen_at: string
+          ignored: boolean
+        }
+        Insert: {
+          id?: string
+          path: string
+          referrer?: string | null
+          hit_count?: number
+          first_seen_at?: string
+          last_seen_at?: string
+          ignored?: boolean
+        }
+        Update: {
+          id?: string
+          path?: string
+          referrer?: string | null
+          hit_count?: number
+          first_seen_at?: string
+          last_seen_at?: string
+          ignored?: boolean
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1546,6 +1627,14 @@ export type Database = {
       feature_usable_under_enforcement: {
         Args: { p_feature: string; p_user_id: string }
         Returns: boolean
+      }
+      resolve_redirect: {
+        Args: { p_path: string }
+        Returns: { destination_path: string; status_code: number }[]
+      }
+      log_not_found: {
+        Args: { p_path: string; p_referrer?: string | null }
+        Returns: undefined
       }
       feed_post_recount: { Args: { p_post_id: string }; Returns: undefined }
       feed_posts_get_comment_count: {

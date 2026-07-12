@@ -5,14 +5,22 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { ListingCard } from "@/components/listing-card";
 import { ListingFavoriteHeart } from "@/components/listing-favorite-heart";
 import { ListingShareButton } from "@/components/listing-share-button";
 import { ListingImageGalleryMobile } from "@/components/listing-image-gallery-mobile";
 import { ListingMobileActionBar } from "@/components/listing-mobile-action-bar";
+import { ListingSeoScore } from "@/components/listing-seo-score";
 import { ListingViewTracker } from "@/components/listing-view-tracker";
+import { JsonLd } from "@/components/seo/json-ld";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { labelForCategorySlug } from "@/lib/listings/categories";
+import {
+  buildBreadcrumbListJsonLd,
+  buildProductJsonLd,
+} from "@/lib/seo/json-ld";
+import { scoreListing } from "@/lib/seo/listing-score";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import { createClient } from "@/lib/supabase/server";
 
@@ -167,6 +175,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
   }).format(Number(listing.price));
 
   const categoryLabel = labelForCategorySlug(listing.category, categoryLabelMap);
+  const seoScore = scoreListing(listing, locale === "ar" ? "ar" : "en");
   const isOwner = Boolean(user?.id === listing.user_id);
   const hasImages = Boolean(listing.images && listing.images.length > 0);
 
@@ -201,40 +210,59 @@ export default async function ListingDetailPage({ params }: PageProps) {
       ? ({ new: "جديد", used: "مستعمل" } as const)
       : ({ new: "New", used: "Used" } as const);
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
+  const listingUrl = `${getSiteUrl()}/listings/${listing.id}`;
+  const productJsonLd = buildProductJsonLd({
     name: listing.title,
     description: listing.description || `${listing.title} — ${categoryLabel}`,
-    image: listing.images && listing.images.length > 0 ? listing.images : undefined,
+    images: listing.images,
     category: categoryLabel,
-    itemCondition:
-      listing.condition === "new"
-        ? "https://schema.org/NewCondition"
-        : "https://schema.org/UsedCondition",
-    offers: {
-      "@type": "Offer",
-      price: Number(listing.price),
-      priceCurrency: "EGP",
-      availability:
-        listing.status === "active"
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
-      url: shareUrl || undefined,
-      seller: { "@type": "Person", name: sellerName },
+    condition: listing.condition,
+    price: Number(listing.price),
+    priceCurrency: "EGP",
+    availability: listing.status === "active" ? "InStock" : "OutOfStock",
+    url: shareUrl || listingUrl,
+    sellerName,
+    sku: listing.id,
+  });
+  const breadcrumbJsonLd = buildBreadcrumbListJsonLd([
+    { name: locale === "ar" ? "الرئيسية" : "Home", url: getSiteUrl() },
+    {
+      name: locale === "ar" ? "المعرض" : "Gallery",
+      url: `${getSiteUrl()}/gallery`,
     },
-  };
+    {
+      name: categoryLabel,
+      url: `${getSiteUrl()}/gallery?category=${encodeURIComponent(listing.category)}`,
+    },
+    { name: listing.title, url: listingUrl },
+  ]);
 
   return (
     <>
-      <script
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-        type="application/ld+json"
-      />
+      <JsonLd data={productJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       <ListingViewTracker listingId={listing.id} skip={isOwner} />
 
       {/* OLX-style mobile layout */}
       <div className="bg-white text-zinc-900">
+        {isOwner ? (
+          <div className="px-4 pt-3">
+            <ListingSeoScore score={seoScore} />
+          </div>
+        ) : null}
+        <div className="px-4 py-2">
+          <Breadcrumb
+            baseUrl={getSiteUrl()}
+            items={[
+              { label: locale === "ar" ? "المعرض" : "Gallery", href: "/gallery" },
+              {
+                label: categoryLabel,
+                href: `/gallery?category=${encodeURIComponent(listing.category)}`,
+              },
+              { label: listing.title },
+            ]}
+          />
+        </div>
         {/* Edge-to-edge gallery */}
         {hasImages ? (
           <ListingImageGalleryMobile

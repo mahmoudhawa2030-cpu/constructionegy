@@ -1,29 +1,11 @@
-import type { MetadataRoute } from "next";
-
+import { getSiteSeoSettings, defaultSiteSeoSettings } from "@/lib/seo/site-settings";
 import { getSiteUrl } from "@/lib/seo/site-url";
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots() {
   const base = getSiteUrl();
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: [
-        "/admin",
-        "/api",
-        "/profile",
-        "/messages",
-        "/bookings",
-        "/favorites",
-        "/notifications",
-        "/login",
-        "/signup",
-        "/auth",
-        "/protected",
-        "/account-suspended",
-      ],
-    },
-    sitemap: `${base}/sitemap.xml`,
-    host: base,
-  };
+  const { robotsTxt } = await getSiteSeoSettings(base).catch(() => defaultSiteSeoSettings(base));
+
+  return new Response(robotsTxt, {
+    headers: { "Content-Type": "text/plain" },
+  });
 }

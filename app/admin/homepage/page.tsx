@@ -2,11 +2,13 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { AdminWebHomepageEditor } from "@/components/admin-web-homepage-editor";
+import { CatListingsSectionsPanel } from "@/components/admin/cat-listings-sections-panel";
 import { adminUi } from "@/lib/admin-ui";
 import { getActiveCategoriesForSelect } from "@/lib/categories/queries";
 import {
   WEB_HOME_SECTION_SLUGS,
   getWebHomeData,
+  getCategoryListingSections,
   type WebHomeSectionSlug,
 } from "@/lib/homepage/web-home-data";
 import { createClient } from "@/lib/supabase/server";
@@ -18,8 +20,9 @@ export default async function AdminHomepagePage() {
   const supabase = await createClient();
 
   // Fetch sections + items + picker data in parallel
-  const [webHomeData, listingsRes, suppliersRes, categoryOptions] = await Promise.all([
+  const [webHomeData, catListingSections, listingsRes, suppliersRes, categoryOptions] = await Promise.all([
     getWebHomeData(supabase),
+    getCategoryListingSections(supabase),
     supabase
       .from("listings")
       .select("id, title, price")
@@ -93,6 +96,22 @@ export default async function AdminHomepagePage() {
           );
         })}
       </div>
+
+      {/* Category listing sections */}
+      <CatListingsSectionsPanel
+        sections={catListingSections.map((s) => ({
+          id: s.id,
+          slug: s.slug,
+          categorySlug: s.categorySlug,
+          title_ar: s.title_ar,
+          title_en: s.title_en,
+          subtitle_ar: s.subtitle_ar,
+          subtitle_en: s.subtitle_en,
+          sort_order: s.sort_order,
+          enabled: s.enabled,
+        }))}
+        categoryOptions={categoryOptions}
+      />
 
       {/* Legacy: link to old desktop categories tool */}
       <div className={`${adminUi.widget} mt-4`}>

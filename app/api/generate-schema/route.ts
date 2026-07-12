@@ -1,6 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
+import { callGrok, resolveXaiApiKey, grokFastModel } from "@/lib/ai/grok";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 60;
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     .maybeSingle();
   if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  let body: { seedKeyword?: string; locale?: string };
+  let body: { seedKeyword?: string; locale?: string; xaiApiKey?: string };
   try {
     body = await req.json();
   } catch {
@@ -39,19 +39,20 @@ export async function POST(req: NextRequest) {
   const detectedLocale = containsArabic(seedKeyword) ? "ar" : (body.locale === "ar" ? "ar" : "en");
   const lang = detectedLocale === "ar" ? "Arabic" : "English";
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey)
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY is not configured" }, { status: 500 });
+  const xaiApiKey = await resolveXaiApiKey(body.xaiApiKey);
+  if (!xaiApiKey)
+    return NextResponse.json(
+      { error: "Grok API key missing. Paste it in the SEO editor or set XAI_API_KEY." },
+      { status: 500 },
+    );
 
   try {
-    const client = new Anthropic({ apiKey });
-    const msg = await client.messages.create({
-      model: "claude-3-5-haiku-20241022",
-      max_tokens: 1800,
-      messages: [
-        {
-          role: "user",
-          content: `Generate a JSON-LD FAQPage schema for the topic: "${seedKeyword}" in ${lang}.
+    const text = await callGrok({
+      apiKey: xaiApiKey,
+      model: grokFastModel(),
+      maxTokens: 1800,
+      temperature: 0.4,
+      prompt: `Generate a JSON-LD FAQPage schema for the topic: "${seedKeyword}" in ${lang}.
 
 Output ONLY valid JSON — no markdown, no code fences, no explanation.
 
@@ -76,14 +77,9 @@ Rules:
 - Questions must be real B2B construction questions people search on Google in Egypt/MENA.
 - Answers: 2–4 sentences, specific, actionable, no filler.
 - Output ONLY the raw JSON object.`,
-        },
-      ],
     });
 
-    const block = msg.content[0];
-    if (block.type !== "text") throw new Error("Unexpected response type");
-
-    let raw = block.text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+    let raw = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
     if (start === -1 || end === -1) throw new Error("No JSON found in response");

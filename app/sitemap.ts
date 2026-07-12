@@ -9,12 +9,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = getSiteUrl();
   const now = new Date();
 
+  // Primary public URLs only (canonical = /listings/*, not /web/* duplicates).
   const staticEntries: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: now, changeFrequency: "daily", priority: 1 },
-    { url: `${base}/web`, lastModified: now, changeFrequency: "daily", priority: 1 },
     { url: `${base}/gallery`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${base}/blog`, lastModified: now, changeFrequency: "daily", priority: 0.8 },
-    { url: `${base}/pricing`, lastModified: now, changeFrequency: "monthly", priority: 0.5 },
+    { url: `${base}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {
@@ -23,38 +23,50 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const [listingsRes, categoriesRes, postsRes] = await Promise.all([
       supabase
         .from("listings")
-        .select("id, created_at")
+        .select("id, created_at, images, title")
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(45000),
-      supabase.from("categories").select("slug").eq("is_active", true),
+      supabase
+        .from("categories")
+        .select("slug, updated_at")
+        .eq("is_active", true),
       supabase
         .from("seo_posts")
-        .select("category_slug, slug, updated_at")
+        .select("category_slug, slug, updated_at, cover_image, title, noindex")
         .eq("status", "published")
         .limit(45000),
     ]);
 
-    const listingEntries: MetadataRoute.Sitemap = (listingsRes.data ?? []).map((l) => ({
-      url: `${base}/listings/${l.id}`,
-      lastModified: l.created_at ? new Date(l.created_at) : now,
-      changeFrequency: "daily",
-      priority: 0.7,
-    }));
+    const listingEntries: MetadataRoute.Sitemap = (listingsRes.data ?? []).map((l) => {
+      const lastMod = l.created_at ? new Date(l.created_at) : now;
+      const firstImage = l.images?.[0];
+      return {
+        url: `${base}/listings/${l.id}`,
+        lastModified: lastMod,
+        changeFrequency: "daily" as const,
+        priority: 0.7,
+        // Direct CDN/storage URLs — not /_next/image (unstable for crawlers).
+        images: firstImage ? [firstImage] : undefined,
+      };
+    });
 
     const categoryEntries: MetadataRoute.Sitemap = (categoriesRes.data ?? []).map((c) => ({
       url: `${base}/${c.slug}`,
-      lastModified: now,
-      changeFrequency: "daily",
+      lastModified: c.updated_at ? new Date(c.updated_at) : now,
+      changeFrequency: "daily" as const,
       priority: 0.8,
     }));
 
-    const postEntries: MetadataRoute.Sitemap = (postsRes.data ?? []).map((p) => ({
-      url: `${base}/${p.category_slug}/${p.slug}`,
-      lastModified: p.updated_at ? new Date(p.updated_at) : now,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    }));
+    const postEntries: MetadataRoute.Sitemap = (postsRes.data ?? [])
+      .filter((p) => !p.noindex)
+      .map((p) => ({
+        url: `${base}/${p.category_slug}/${p.slug}`,
+        lastModified: p.updated_at ? new Date(p.updated_at) : now,
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+        images: p.cover_image ? [p.cover_image] : undefined,
+      }));
 
     return [...staticEntries, ...categoryEntries, ...postEntries, ...listingEntries];
   } catch (err) {

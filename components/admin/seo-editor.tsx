@@ -5,10 +5,14 @@ import { useRouter } from "next/navigation";
 import { savePost, type SavePostInput } from "@/app/admin/blog/actions";
 
 export type SeoEditorCategory = { slug: string; label: string };
-export type SeoEditorInitial = { id?: string; categorySlug: string; seedKeyword: string; title: string; slug: string; content: string; metaTitle: string; metaDescription: string; coverImage: string | null; coverImageAlt: string | null; status: "draft" | "published"; publishAt: string | null; };
+export type SeoEditorInitial = { id?: string; categorySlug: string; seedKeyword: string; title: string; slug: string; content: string; metaTitle: string; metaDescription: string; coverImage: string | null; coverImageAlt: string | null; status: "draft" | "published"; publishAt: string | null; faqSchema?: Record<string, unknown> | null; howtoSchema?: Record<string, unknown> | null; noindex?: boolean; ogTitle?: string | null; ogDescription?: string | null; ogImage?: string | null; };
 type Props = { initial: SeoEditorInitial; categories: SeoEditorCategory[]; siteUrl: string; locale: "ar" | "en" };
 type KwItem = { id: number; kw: string; status: "pending"|"generating"|"done"|"failed"; scheduledDate: string; category: string; seoScore: number };
 type Post = { id: number|string; seedKeyword: string; title: string; slug: string; content: string; metaTitle: string; metaDescription: string; category: string; seoScore: number; wordCount?: number; status: string; createdAt: string };
+function postPublicPath(p: { category?: string; slug: string }) {
+  const cat = (p.category || "").trim();
+  return cat ? `/${cat}/${p.slug}` : `/${p.slug}`;
+}
 type Cat = { id: string; label: string; color: string; icon: string };
 
 const toSlug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -33,72 +37,105 @@ const DEFAULT_CATS: Cat[] = [
 ];
 
 // ─── SEO Analyzer ────────────────────────────────────────────────────────────
-type Check = { id:string; pass:boolean; warn:boolean; text:string; weight:number };
+type Check = { id:string; pass:boolean; warn:boolean; text:string; weight:number; aiAction?:"rewrite"|"improve"|"shorten"|"expand" };
 type Section = { id:string; title:string; checks:Check[]; status:string };
 type Analysis = { score:number; wordCount:number; sections:Section[] };
+
+// Detect if text is primarily Arabic
+function isArabicText(text: string): boolean {
+  const arabicChars = (text.match(/[\u0600-\u06FF]/g) || []).length;
+  const totalChars = text.replace(/\s/g, "").length;
+  return totalChars > 0 && arabicChars / totalChars > 0.3;
+}
 
 function useSeoAnalyzer(content: string, kw: string, metaTitle: string, metaDesc: string, slug: string, posts: Post[]): Analysis {
   const [a, setA] = useState<Analysis>({ score:0, wordCount:0, sections:[] });
   useEffect(() => {
     const k=(kw||"").toLowerCase().trim();
     const text=(content||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+    const isAr = isArabicText(text) || isArabicText(kw);
     const words=text.split(" ").filter(Boolean); const wc=words.length;
     const first10=words.slice(0,Math.max(1,Math.floor(wc*0.1))).join(" ").toLowerCase();
     const full=text.toLowerCase(); const mt=(metaTitle||"").toLowerCase().trim(); const md=(metaDesc||"").toLowerCase(); const sl=(slug||"").toLowerCase();
     const mdLen=(metaDesc||"").length;
     const extLinks=((content||"").match(/href=["'](https?:\/\/(?!localhost)[^"']+)["']/g)||[]);
+    const noFollowLinks=((content||"").match(/rel=["'][^"']*nofollow[^"']*["']/gi)||[]);
+    const doFollowExtCount=Math.max(0,extLinks.length-noFollowLinks.length);
     const intLinks=((content||"").match(/href=["'](\/[^"']*|#[^"']*)["']/g)||[]);
     const totalInt=intLinks.length+posts.filter(p=>(content||"").includes(p.slug)).length;
     const imgs=((content||"").match(/<img[^>]*>/g)||[]);
+    const videos=((content||"").match(/<(video|iframe)[^>]*>/gi)||[]);
+    const mediaCount=imgs.length+videos.length;
     const imgsMissAlt=imgs.filter(t=>!t.match(/alt=["'][^"']+["']/));
+    const kwImgAlt=k?imgs.some(t=>{const m=t.match(/alt=["']([^"']+)["']/);return m?m[1].toLowerCase().includes(k):false;}):false;
     const kwMentions=k?full.split(k).length-1:0;
+    const kwDensity=wc>0&&k?Math.round(kwMentions/wc*1000)/10:0;
+    const slugLen=(slug||"").length;
     const subHCount=((content||"").match(/<h[2-6][^>]*>/gi)||[]).length;
     const kwInSub=k?((content||"").match(/<h[2-6][^>]*>[^<]*<\/h[2-6]>/gi)||[]).some(h=>h.toLowerCase().includes(k)):false;
-    const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>10);
+    const hasToc=!!((content||"").match(/id=["']toc["']/i))||!!((content||"").match(/class=["'][^"']*table[_-]?of[_-]?contents[^"']*["']/i));
+    const allParas=((content||"").match(/<p[^>]*>[\s\S]*?<\/p>/gi)||[]);
+    const shortParaCount=allParas.filter(p=>p.replace(/<[^>]*>/g,"").trim().split(/\s+/).filter(Boolean).length<=50).length;
+    const sentences=text.split(/[.!?!؟]+/).filter(s=>s.trim().length>10);
     const longRatio=sentences.length>0?sentences.filter(s=>s.trim().split(" ").length>25).length/sentences.length:0;
     const hasShort=sentences.some(s=>s.trim().split(/\s+/).filter(Boolean).length<=20);
-    const passRatio=sentences.length>0?((text.match(/\b(is|are|was|were|be|been|being)\s+\w+ed\b/g)||[]).length)/sentences.length:0;
+    // Arabic-aware passive voice: Arabic passive uses specific verb patterns (فُعِل pattern)
+    const passRatio = isAr
+      ? sentences.length > 0 ? ((text.match(/[يتمت][ُِ][\u0600-\u06FF]{2,}/g) || []).length) / sentences.length : 0
+      : sentences.length>0?((text.match(/\b(is|are|was|were|be|been|being)\s+\w+ed\b/g)||[]).length)/sentences.length:0;
     const paragraphs=(content||"").split(/<\/p>|<\/h[2-6]>/i).filter(Boolean).length;
     const mtLen2=(metaTitle||"").length;
     // Title-specific pre-processing.
     const kwUrl=k.replace(/\s+/g,"-");
     const titleStartsKw=k?mt.startsWith(k):false;
     const titleHasKw=k?mt.includes(k):false;
-    const powerWords=/\b(best|top|ultimate|complete|proven|essential|powerful|effective|expert|professional|guide|tips|how|why|what|free|new|easy|fast|secret|simple)\b/i;
-    const titleSentiment=powerWords.test(metaTitle||"")||/[!?]/.test(metaTitle||"");
-    const capsCount=(metaTitle||"").split(/\s+/).filter(w=>w.length>3&&/[A-Z]/.test(w)&&w===w.toUpperCase()).length;
-    const transitionWords=/\b(however|therefore|furthermore|additionally|moreover|consequently|meanwhile|although|because|since|while|despite|thus|hence|accordingly)\b/i;
+    // Arabic power words: أفضل، دليل، كيف، لماذا، سريع، مجاني، احترافي، شامل، أساسي
+    const powerWords = isAr
+      ? /أفضل|دليل|كيف|لماذا|سريع|مجاني|احترافي|شامل|أساسي|متكامل|فعّال|مثبت|خبراء|سهل|جديد/
+      : /\b(best|top|ultimate|complete|proven|essential|powerful|effective|expert|professional|guide|tips|how|why|what|free|new|easy|fast|secret|simple)\b/i;
+    const titleSentiment=powerWords.test(metaTitle||"")||/[!?!؟]/.test(metaTitle||"");
+    const capsCount=isAr ? 0 : (metaTitle||"").split(/\s+/).filter(w=>w.length>3&&/[A-Z]/.test(w)&&w===w.toUpperCase()).length;
+    // Arabic transition words: ومع ذلك، لذلك، علاوة على ذلك، بالإضافة، ولذا، وبالتالي، بينما، لأن، منذ، رغم
+    const transitionWords = isAr
+      ? /ومع ذلك|لذلك|علاوة على|بالإضافة|وبالتالي|بينما|لأن|منذ|رغم|في حين|من ناحية|وعلى الرغم|وبذلك|وبناءً/
+      : /\b(however|therefore|furthermore|additionally|moreover|consequently|meanwhile|although|because|since|while|despite|thus|hence|accordingly)\b/i;
     const basic:Check[] = [
-      {id:"kw_title",pass:titleHasKw,warn:false,text:titleHasKw?"Hurray! You're using Focus Keyword in the SEO Title.":"Focus Keyword not found in the SEO Title.",weight:10},
-      {id:"kw_desc",pass:k?md.includes(k):false,warn:false,text:(k?md.includes(k):false)?"Focus Keyword used inside SEO Meta Description.":"Focus Keyword missing from Meta Description.",weight:8},
-      {id:"kw_url",pass:k?sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,"")):false,warn:false,text:(k?(sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,""))):false)?"Focus Keyword used in the URL.":"Focus Keyword not found in the URL/Slug.",weight:8},
-      {id:"kw_first10",pass:k?first10.includes(k):false,warn:false,text:(k?first10.includes(k):false)?"Focus Keyword appears in the first 10% of the content.":"Focus Keyword does not appear in the first 10% of content.",weight:10},
-      {id:"kw_content",pass:k?full.includes(k):false,warn:false,text:(k?full.includes(k):false)?"Focus Keyword found in the content.":"Focus Keyword not found anywhere in the content.",weight:8},
-      {id:"word_count",pass:wc>=1500,warn:wc>=600,text:wc>=1500?`Content is ${wc} words long. Excellent!`:wc>=600?`Content is ${wc} words long. Good job! Aim for 1500+.`:`Content is only ${wc} words. Write at least 1500 words.`,weight:12},
+      {id:"kw_set",pass:!!k,warn:false,text:k?`Focus Keyword is set: "${kw}".`:"Set a Focus Keyword for this content.",weight:10},
+      {id:"kw_title",pass:titleHasKw,warn:false,text:titleHasKw?"Hurray! You're using Focus Keyword in the SEO Title.":"Add Focus Keyword to the SEO title.",weight:10},
+      {id:"kw_desc",pass:k?md.includes(k):false,warn:false,text:(k?md.includes(k):false)?"Focus Keyword used in the SEO Meta Description.":"Add Focus Keyword to your SEO Meta Description.",weight:8},
+      {id:"kw_url",pass:k?sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,"")):false,warn:false,text:(k?(sl.includes(kwUrl)||sl.includes(k.replace(/\s+/g,""))):false)?"Focus Keyword used in the URL.":"Use Focus Keyword in the URL.",weight:8},
+      {id:"url_len",pass:slugLen>=5&&slugLen<=75,warn:slugLen>75,text:slugLen===0?"URL slug is empty.":`URL is ${slugLen} characters long.${slugLen<=75?" Kudos!":"  Keep under 75."}`,weight:3},
+      {id:"kw_first10",pass:k?first10.includes(k):false,warn:false,text:(k?first10.includes(k):false)?"Focus Keyword appears at the beginning of your content.":"Use Focus Keyword at the beginning of your content.",weight:10},
+      {id:"kw_content",pass:k?full.includes(k):false,warn:false,text:(k?full.includes(k):false)?"Focus Keyword found in the content.":"Use Focus Keyword in the content.",weight:8},
+      {id:"word_count",pass:wc>=1500&&wc<=2500,warn:wc>=600&&wc<1500,text:wc>=1500&&wc<=2500?`Content is ${wc} words long. Good job!`:wc>2500?`Content is ${wc} words — consider splitting into multiple posts.`:wc>=600?`Content is ${wc} words. Aim for 1500–2500.`:`Content is only ${wc} words. Write at least 1500 words.`,weight:12},
     ];
     const additional:Check[] = [
-      {id:"ext_links",pass:extLinks.length>=2,warn:extLinks.length===1,text:extLinks.length>=2?`${extLinks.length} external links found. Great!`:extLinks.length===1?"Only 1 external link found. Add at least 2.":"No external links found.",weight:8},
-      {id:"int_links",pass:totalInt>=1,warn:false,text:totalInt>=1?`${totalInt} internal link(s) found.`:"No internal links. Link to related posts on your site.",weight:8},
-      {id:"images",pass:imgs.length>=1,warn:false,text:imgs.length>=1?`${imgs.length} image(s) found.`:"No images found. Add relevant images.",weight:6},
-      {id:"img_alt",pass:imgs.length>0&&imgsMissAlt.length===0,warn:imgs.length===0,text:imgs.length===0?"No images to check for alt text.":imgsMissAlt.length===0?"All images have descriptive alt text.":`${imgsMissAlt.length} image(s) are missing alt text.`,weight:7},
-      {id:"kw_subheading",pass:kwInSub,warn:subHCount>0&&!kwInSub,text:kwInSub?"Focus Keyword found in a subheading.":subHCount>0?"Focus Keyword not found in any subheading.":"No subheadings found.",weight:6},
-      {id:"kw_density",pass:kwMentions>=3&&kwMentions<=12,warn:kwMentions>=13||(kwMentions>=1&&kwMentions<3),text:kwMentions>=3&&kwMentions<=12?`Keyword density is good — used ${kwMentions} times.`:kwMentions>=13?"Keyword used too often, may look like stuffing.":kwMentions>=1?`Keyword used only ${kwMentions} times. Aim for 3–12.`:"Focus Keyword not found in content.",weight:6},
-      {id:"subheadings_count",pass:subHCount>=3,warn:subHCount>=1,text:subHCount>=3?`${subHCount} subheadings found. Well structured!`:subHCount>=1?`Only ${subHCount} subheading(s) found.`:"No subheadings found.",weight:5},
+      {id:"kw_subheading",pass:kwInSub,warn:subHCount>0&&!kwInSub,text:kwInSub?"Focus Keyword found in a subheading. ":subHCount>0?"Use Focus Keyword in subheadings like H2, H3, H4.":"No subheadings found. Add H2/H3 with your keyword.",weight:6},
+      {id:"kw_density",pass:kwDensity>=0.5&&kwDensity<=2.5,warn:(kwDensity>0&&kwDensity<0.5)||kwDensity>2.5,text:kwDensity===0?`Keyword Density is 0%. Aim for around 1% Keyword Density.`:kwDensity>=0.5&&kwDensity<=2.5?`Keyword Density is ${kwDensity}%. Great!`:kwDensity>2.5?`Keyword Density is ${kwDensity}% — too high, avoid stuffing.`:`Keyword Density is ${kwDensity}%. Aim for around 1%.`,weight:6},
+      {id:"kw_img_alt",pass:kwImgAlt,warn:imgs.length>0&&!kwImgAlt,text:kwImgAlt?"An image uses Focus Keyword as alt text. ":imgs.length>0?"Add an image with your Focus Keyword as alt text.":"No images found. Add an image with your keyword as alt text.",weight:7},
+      {id:"ext_links",pass:extLinks.length>=2,warn:extLinks.length===1,text:extLinks.length>=2?`${extLinks.length} external links found. Great!`:extLinks.length===1?"Only 1 external link. Link out to external resources.":"No external links. Link out to external resources.",weight:6},
+      {id:"dofollow",pass:doFollowExtCount>=1,warn:extLinks.length>0&&doFollowExtCount===0,text:doFollowExtCount>=1?`${doFollowExtCount} DoFollow external link(s) found. `:extLinks.length>0?"All external links are NoFollow. Add DoFollow links to external resources.":"No DoFollow links. Add DoFollow links pointing to external resources.",weight:5},
+      {id:"int_links",pass:totalInt>=1,warn:false,text:totalInt>=1?`${totalInt} internal link(s) found. `:"Add internal links in your content.",weight:8},
+      {id:"media",pass:mediaCount>=1,warn:false,text:mediaCount>=1?`${mediaCount} image/video(s) found. `:"Add a few images and/or videos to make your content appealing.",weight:6},
+      {id:"img_alt",pass:imgs.length>0&&imgsMissAlt.length===0,warn:imgs.length===0,text:imgs.length===0?"No images to check for alt text.":imgsMissAlt.length===0?"All images have descriptive alt text.":`${imgsMissAlt.length} image(s) missing alt text.`,weight:5},
+      {id:"toc",pass:hasToc,warn:false,text:hasToc?"Table of Contents found. Great for navigation!":"Use a Table of Contents to break down your text.",weight:4},
+      {id:"subheadings_count",pass:subHCount>=3,warn:subHCount>=1,text:subHCount>=3?`${subHCount} subheadings found. Well structured!`:subHCount>=1?`Only ${subHCount} subheading(s). Add more.`:"No subheadings found.",weight:5},
     ];
     const titleR:Check[] = [
-      {id:"title_len",pass:mtLen2>=50&&mtLen2<=60,warn:mtLen2>=40&&mtLen2<50,text:mtLen2>=50&&mtLen2<=60?`SEO title length is perfect (${mtLen2} chars).`:mtLen2>60?`SEO title is too long (${mtLen2} chars), keep under 60.`:mtLen2>=40?`SEO title is a bit short (${mtLen2} chars).`:`SEO title is too short (${mtLen2} chars).`,weight:6},
+      {id:"title_len",pass:mtLen2>=50&&mtLen2<=60,warn:mtLen2>=40&&mtLen2<50,text:mtLen2>=50&&mtLen2<=60?`SEO title length is perfect (${mtLen2} chars).`:mtLen2>60?`SEO title too long (${mtLen2} chars), keep under 60.`:mtLen2>=40?`SEO title a bit short (${mtLen2} chars).`:`SEO title too short (${mtLen2} chars).`,weight:6},
       {id:"title_kw_start",pass:titleStartsKw,warn:titleHasKw&&!titleStartsKw,text:titleStartsKw?"Focus Keyword appears at the start of the SEO title.":titleHasKw?"Consider starting the SEO title with the Focus Keyword.":"Focus Keyword not found in the SEO title.",weight:4},
       {id:"title_sentiment",pass:titleSentiment,warn:false,text:titleSentiment?"Title has positive sentiment or power words.":"Add a power word (Best, Top, Ultimate, How, Why) to boost CTR.",weight:3},
       {id:"title_number",pass:/\d/.test(metaTitle||""),warn:false,text:/\d/.test(metaTitle||"")?"Title includes a number — great for CTR!":"Consider adding a number (e.g. '7 Ways…').",weight:2},
       {id:"title_caps",pass:capsCount<3,warn:false,text:capsCount<3?"Title capitalization looks good.":"Avoid writing titles in ALL CAPS.",weight:2},
     ];
     const readR:Check[] = [
-      {id:"paragraphs",pass:paragraphs>=5,warn:paragraphs>=2,text:paragraphs>=5?`Content has ${paragraphs} paragraphs. Good structure!`:paragraphs>=2?`Content has ${paragraphs} paragraphs. Add more for readability.`:"Content has too few paragraphs.",weight:4},
-      {id:"short_sentences",pass:hasShort,warn:false,text:hasShort?"Good use of short sentences.":"Use shorter sentences (under 20 words).",weight:3},
-      {id:"long_sentences",pass:longRatio<0.3,warn:longRatio<0.5,text:longRatio<0.3?"Sentence length is well balanced.":longRatio<0.5?"Some sentences are too long.":"Too many long sentences.",weight:4},
-      {id:"transition_words",pass:transitionWords.test(text),warn:false,text:transitionWords.test(text)?"Good use of transition words.":"Add transition words (However, Therefore, Moreover…).",weight:4},
-      {id:"passive_voice",pass:passRatio<0.15,warn:passRatio<0.3,text:passRatio<0.15?"Passive voice use is minimal.":passRatio<0.3?"Some passive voice detected.":"Heavy passive voice use.",weight:3},
-      {id:"desc_len",pass:mdLen>=120&&mdLen<=160,warn:mdLen>=80&&mdLen<120,text:mdLen>=120&&mdLen<=160?`Meta description length is perfect (${mdLen} chars).`:mdLen>160?`Meta description is too long (${mdLen} chars), keep under 160.`:mdLen>=80?`Meta description is a bit short (${mdLen} chars).`:`Meta description is too short (${mdLen} chars).`,weight:5},
+      {id:"short_paras",pass:allParas.length>0&&shortParaCount/Math.max(allParas.length,1)>=0.5,warn:allParas.length>0&&shortParaCount/Math.max(allParas.length,1)>=0.25,text:allParas.length===0?"No paragraphs found.":shortParaCount/Math.max(allParas.length,1)>=0.5?"Good use of short, concise paragraphs.":shortParaCount/Math.max(allParas.length,1)>=0.25?"Some paragraphs are too long. Add short and concise paragraphs for better readability.":"Most paragraphs are too long. Break them down for better readability and UX.",aiAction:"shorten",weight:5},
+      {id:"paragraphs",pass:paragraphs>=5,warn:paragraphs>=2,text:paragraphs>=5?`Content has ${paragraphs} paragraphs. Good structure!`:paragraphs>=2?`Content has ${paragraphs} paragraphs. Add more.`:"Content has too few paragraphs.",weight:4},
+      {id:"short_sentences",pass:hasShort,warn:false,text:hasShort?"Good use of short sentences.":"Use shorter sentences (under 20 words).",weight:3,aiAction:"shorten"},
+      {id:"long_sentences",pass:longRatio<0.3,warn:longRatio<0.5,text:longRatio<0.3?"Sentence length is well balanced.":longRatio<0.5?"Some sentences are too long.":"Too many long sentences.",weight:4,aiAction:"shorten"},
+      {id:"transition_words",pass:transitionWords.test(text),warn:false,text:transitionWords.test(text)?"Good use of transition words.":"Add transition words (However, Therefore, Moreover…).",weight:4,aiAction:"improve"},
+      {id:"passive_voice",pass:passRatio<0.15,warn:passRatio<0.3,text:passRatio<0.15?"Passive voice use is minimal.":passRatio<0.3?"Some passive voice detected.":"Heavy passive voice use.",weight:3,aiAction:"improve"},
+      {id:"desc_len",pass:mdLen>=120&&mdLen<=160,warn:mdLen>=80&&mdLen<120,text:mdLen>=120&&mdLen<=160?`Meta description length is perfect (${mdLen} chars).`:mdLen>160?`Meta description too long (${mdLen} chars), keep under 160.`:mdLen>=80?`Meta description a bit short (${mdLen} chars).`:`Meta description too short (${mdLen} chars).`,weight:5},
     ];
     const all=[...basic,...additional,...titleR,...readR];
     const maxScore=all.reduce((s,c)=>s+c.weight,0);
@@ -131,17 +168,21 @@ function ScoreCircle({score,size=88}:{score:number;size?:number}){
   </div>;
 }
 
-function CheckItem({check}:{check:Check}){
+function CheckItem({check,onAiRewrite}:{check:Check;onAiRewrite?:(mode:string)=>void}){
   const g=check.pass,w=!check.pass&&check.warn,e=!check.pass&&!check.warn;
   const bg=g?"rgba(34,197,94,0.06)":w?"rgba(245,158,11,0.06)":"rgba(239,68,68,0.06)";
   const bd=g?"rgba(34,197,94,0.15)":w?"rgba(245,158,11,0.18)":"rgba(239,68,68,0.18)";
+  const showAi=!check.pass&&!!check.aiAction&&!!onAiRewrite;
   return <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"7px 9px",marginBottom:4,borderRadius:6,background:bg,border:`1px solid ${bd}`}}>
     <div style={{flexShrink:0,marginTop:1}}>
       {g&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#22c55e"/><path d="M6 10.5l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
       {w&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="none" stroke="#f59e0b" strokeWidth="2"/><path d="M6.5 10.5l2.5 2.5 4.5-4.5" stroke="#f59e0b" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="2 2"/></svg>}
       {e&&<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="none" stroke="#ef4444" strokeWidth="2"/><path d="M7 7l6 6M13 7l-6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/></svg>}
     </div>
-    <p style={{margin:0,fontSize:"12.5px",lineHeight:"1.45",color:g?"#c8d8c0":w?"#d4c090":"#c8c0c0",flex:1}}>{check.text}</p>
+    <div style={{flex:1,minWidth:0}}>
+      <p style={{margin:0,fontSize:"12.5px",lineHeight:"1.45",color:g?"#c8d8c0":w?"#d4c090":"#c8c0c0"}}>{check.text}</p>
+      {showAi&&<button onClick={()=>onAiRewrite!(check.aiAction!)} style={{marginTop:5,padding:"3px 10px",fontSize:10,fontWeight:700,background:"linear-gradient(135deg,rgba(79,127,255,0.15),rgba(124,58,237,0.15))",border:"1px solid rgba(79,127,255,0.3)",borderRadius:4,color:"#818cf8",cursor:"pointer",display:"inline-flex",alignItems:"center",gap:4}}>✨ Fix with AI</button>}
+    </div>
   </div>;
 }
 
@@ -199,7 +240,7 @@ function CategoryManagerModal({categories,setCategories,onClose}:{categories:Cat
   </div>;
 }
 
-function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal}:{analysis:Analysis;focusKw:string;setFocusKw:(v:string)=>void;posts:Post[];onInsertInternal:(p:Post)=>void}){
+function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal,onAiRewrite}:{analysis:Analysis;focusKw:string;setFocusKw:(v:string)=>void;posts:Post[];onInsertInternal:(p:Post)=>void;onAiRewrite:(mode:string)=>void}){
   const [open,setOpen]=useState<Record<string,boolean>>({basic:true,additional:true,title_read:false,content_read:false});
   const [showPosts,setShowPosts]=useState(false);
   const sc=analysis.score>=80?"#22c55e":analysis.score>=50?"#f59e0b":"#ef4444";
@@ -231,7 +272,7 @@ function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal}:{a
           <div style={{display:"flex",alignItems:"center",gap:8}}><span style={{fontSize:"13px",fontWeight:700,color:"#c8d0e8"}}>{sec.title}</span><SectionBadge status={sec.status} checks={sec.checks}/></div>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s",flexShrink:0}}><path d="M3 5l4 4 4-4" stroke="#5a6380" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
-        {isOpen&&<div style={{padding:"2px 14px 10px"}}>{sec.checks.map(c=><CheckItem key={c.id} check={c}/>)}</div>}
+        {isOpen&&<div style={{padding:"2px 14px 10px"}}>{sec.checks.map(c=><CheckItem key={c.id} check={c} onAiRewrite={onAiRewrite}/>)}</div>}
       </div>;})}
     </div>
     {posts.length>0&&<div style={{borderTop:"1px solid #141e30",padding:"10px 14px"}}>
@@ -239,10 +280,25 @@ function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal}:{a
         <span style={{fontSize:12,fontWeight:700,color:"#4f7fff"}}>🔗 Insert Internal Link</span>
         <span style={{fontSize:11,color:"#4f7fff"}}>{posts.length} posts {showPosts?"▲":"▼"}</span>
       </button>
-      {showPosts&&<div style={{marginTop:6,maxHeight:180,overflowY:"auto"}}>{posts.slice(-10).map(p=><div key={p.id} onClick={()=>onInsertInternal(p)} style={{padding:"6px 8px",marginBottom:3,background:"#0f1525",borderRadius:5,border:"1px solid #1a2436",cursor:"pointer"}}>
+      {showPosts&&<div style={{marginTop:6,maxHeight:180,overflowY:"auto"}}>{(() => {
+        const kw=(focusKw||"").toLowerCase().trim();
+        const ranked=[...posts].sort((a,b)=>{
+          const score=(p:Post)=>{
+            let s=0;
+            if(kw){
+              if((p.seedKeyword||"").toLowerCase().includes(kw)) s+=3;
+              if((p.title||"").toLowerCase().includes(kw)) s+=2;
+              if((p.slug||"").toLowerCase().includes(kw.replace(/\s+/g,"-"))) s+=1;
+            }
+            return s;
+          };
+          return score(b)-score(a);
+        }).slice(0,12);
+        return ranked.map(p=><div key={p.id} onClick={()=>onInsertInternal(p)} style={{padding:"6px 8px",marginBottom:3,background:"#0f1525",borderRadius:5,border:"1px solid #1a2436",cursor:"pointer"}}>
         <div style={{color:"#4f7fff",fontSize:11,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>↗ {p.title}</div>
-        <div style={{color:"#2a3050",fontSize:10}}>/{p.slug}</div>
-      </div>)}</div>}
+        <div style={{color:"#2a3050",fontSize:10}}>{postPublicPath(p)}</div>
+      </div>);
+      })()}</div>}
     </div>}
     <div style={{padding:"10px 14px 14px"}}>
       <div style={{padding:10,background:"rgba(79,46,229,0.06)",border:"1px solid rgba(79,46,229,0.15)",borderRadius:7}}>
@@ -355,15 +411,14 @@ function KeywordSeeder({keywords,setKeywords,dailyRate,setDailyRate,onStartQueue
 // from the current post data. Pure — re-run whenever any input changes.
 function buildAutoSchemas(post:any,siteUrl:string,orgName:string,authorName:string){
   const slug=post?.slug||"";
-  const postUrl=`${siteUrl}/blog/${slug}`;
   const category=post?.category||"blog";
+  const postUrl=`${siteUrl}/${category}/${slug}`;
   const categoryLabel=post?.categoryLabel||post?.category||"Blog";
   const logoUrl=`${siteUrl}/logo.png`;
   const breadcrumb={"@context":"https://schema.org","@type":"BreadcrumbList",itemListElement:[
     {"@type":"ListItem",position:1,name:"Home",item:siteUrl},
-    {"@type":"ListItem",position:2,name:"Blog",item:`${siteUrl}/blog`},
-    {"@type":"ListItem",position:3,name:categoryLabel,item:`${siteUrl}/blog/${category}`},
-    {"@type":"ListItem",position:4,name:post?.metaTitle||"",item:postUrl},
+    {"@type":"ListItem",position:2,name:categoryLabel,item:`${siteUrl}/${category}`},
+    {"@type":"ListItem",position:3,name:post?.metaTitle||"",item:postUrl},
   ]};
   const article={"@context":"https://schema.org","@type":"BlogPosting",
     headline:post?.metaTitle||"",description:post?.metaDescription||"",url:postUrl,
@@ -382,23 +437,24 @@ function buildAutoSchemas(post:any,siteUrl:string,orgName:string,authorName:stri
   return {article,breadcrumb,organization,webpage};
 }
 
-function SchemaPanel({post,siteUrl,locale}:{post:any;siteUrl:string;locale:"ar"|"en"}){
+function SchemaPanel({post,siteUrl,locale,faqSchema,howtoSchema,onFaqSchemaChange,onHowtoSchemaChange,xaiApiKey}:{post:any;siteUrl:string;locale:"ar"|"en";faqSchema:Record<string,unknown>|null;howtoSchema:Record<string,unknown>|null;onFaqSchemaChange:(s:Record<string,unknown>|null)=>void;onHowtoSchemaChange:(s:Record<string,unknown>|null)=>void;xaiApiKey?:string}){
   const [orgName,setOrgName]=useState("Construction Egy");const [authorName,setAuthorName]=useState("Construction Egy Team");
   const [activeType,setActiveType]=useState("article");const [copied,setCopied]=useState("");
   const [generatingFaq,setGeneratingFaq]=useState(false);
   const [faqError,setFaqError]=useState("");
-  const [schemas,setSchemas]=useState<Record<string,any>>(()=>({...buildAutoSchemas(post,siteUrl,orgName,authorName),faq:null,howto:null}));
+  const [autoSchemas,setAutoSchemas]=useState<Record<string,any>>(()=>buildAutoSchemas(post,siteUrl,orgName,authorName));
   // Article / Breadcrumb / Organization / WebPage rebuild whenever any source value changes.
-  useEffect(()=>{setSchemas(s=>({...s,...buildAutoSchemas(post,siteUrl,orgName,authorName)}));},
+  useEffect(()=>{setAutoSchemas(buildAutoSchemas(post,siteUrl,orgName,authorName));},
     [post?.metaTitle,post?.metaDescription,post?.slug,post?.seedKeyword,post?.wordCount,post?.category,post?.categoryLabel,siteUrl,orgName,authorName]);
+  const schemas:Record<string,any>={...autoSchemas,faq:faqSchema,howto:howtoSchema};
   const generateFaqWithAI=async()=>{
     if(!post?.seedKeyword?.trim()){setFaqError("Add a seed keyword first.");return;}
     setGeneratingFaq(true);setFaqError("");
     try{
-      const res=await fetch("/api/generate-schema",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({seedKeyword:post.seedKeyword,locale})});
+      const res=await fetch("/api/generate-schema",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({seedKeyword:post.seedKeyword,locale,xaiApiKey:xaiApiKey||undefined})});
       const data=await res.json();
       if(!res.ok)throw new Error(data.error||"Failed");
-      setSchemas(s=>({...s,faq:data.schema}));setActiveType("faq");
+      onFaqSchemaChange(data.schema);setActiveType("faq");
     }catch(e:any){setFaqError(e.message);}
     finally{setGeneratingFaq(false);}
   };
@@ -409,12 +465,13 @@ function SchemaPanel({post,siteUrl,locale}:{post:any;siteUrl:string;locale:"ar"|
     const qs:string[]=Array.from(new Set<string>(matches.map((m:string)=>m.trim()))).slice(0,8);
     if(!qs.length){setFaqError("No questions found in content. Try AI generation instead.");return;}
     const faq={"@context":"https://schema.org","@type":"FAQPage",mainEntity:qs.map((q:string)=>({"@type":"Question",name:q,acceptedAnswer:{"@type":"Answer",text:`See the full article for a detailed answer to "${q}"`}}))};
-    setSchemas(s=>({...s,faq}));setActiveType("faq");
+    onFaqSchemaChange(faq);setActiveType("faq");
   };
   const generateHowTo=()=>{
     const howto={"@context":"https://schema.org","@type":"HowTo",name:post?.metaTitle||"",description:post?.metaDescription||"",totalTime:"PT30M",tool:[{"@type":"HowToTool",name:"Construction Equipment"}],step:[{"@type":"HowToStep",name:"Assess Requirements",text:`Evaluate your ${post?.seedKeyword||"project"} requirements, site conditions, and budget constraints before proceeding.`},{"@type":"HowToStep",name:"Gather Materials",text:`Source quality ${post?.seedKeyword||"materials"} from certified Egyptian suppliers. Compare specifications and pricing.`},{"@type":"HowToStep",name:"Execute Plan",text:`Implement your ${post?.seedKeyword||"construction plan"} following safety standards and local building codes in Egypt.`},{"@type":"HowToStep",name:"Quality Check",text:"Inspect all work against project specifications. Document completion and obtain necessary approvals."}]};
-    setSchemas(s=>({...s,howto}));setActiveType("howto");
+    onHowtoSchemaChange(howto);setActiveType("howto");
   };
+  const clearSchema=(type:"faq"|"howto")=>{if(type==="faq")onFaqSchemaChange(null);else onHowtoSchemaChange(null);};
   const TYPES=[{id:"article",label:"Article",icon:"📄",desc:"BlogPosting schema"},{id:"breadcrumb",label:"Breadcrumb",icon:"🧭",desc:"Navigation path"},{id:"organization",label:"Organization",icon:"🏢",desc:"Business identity"},{id:"webpage",label:"WebPage",icon:"🌐",desc:"Page + breadcrumb"},{id:"faq",label:"FAQ",icon:"❓",desc:"FAQPage — Q&A pairs"},{id:"howto",label:"HowTo",icon:"🔨",desc:"HowTo — 4 steps"}];
   const wrap=(s:any)=>`<script type="application/ld+json">\n${JSON.stringify(s,null,2)}\n<\/script>`;
   const copy=(type:string)=>{navigator.clipboard.writeText(wrap(schemas[type])).then(()=>{setCopied(type);setTimeout(()=>setCopied(""),2000);});};
@@ -437,7 +494,9 @@ function SchemaPanel({post,siteUrl,locale}:{post:any;siteUrl:string;locale:"ar"|
           {activeType==="faq"&&!schemas.faq&&<button onClick={generateFaqWithAI} disabled={generatingFaq} style={{padding:"6px 14px",borderRadius:5,border:"none",background:generatingFaq?"#1e2435":"linear-gradient(135deg,#4f7fff,#7c3aed)",color:generatingFaq?"#3a4060":"#fff",fontSize:12,fontWeight:700,cursor:generatingFaq?"default":"pointer"}}>{generatingFaq?"⟳ Generating...":"🤖 Generate FAQ"}</button>}
           {activeType==="howto"&&!schemas.howto&&<button onClick={generateHowTo} style={{padding:"6px 14px",borderRadius:5,border:"none",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>⚙️ Build HowTo</button>}
           {faqError&&<span style={{color:"#ef4444",fontSize:11}}>{faqError}</span>}
+          {(activeType==="faq"||activeType==="howto")&&schemas[activeType]&&<button onClick={()=>clearSchema(activeType as "faq"|"howto")} style={{padding:"6px 14px",borderRadius:5,border:"1px solid #3a2020",background:"rgba(239,68,68,0.08)",color:"#ef4444",fontSize:12,fontWeight:700,cursor:"pointer"}}>✕ Remove</button>}
           {schemas[activeType]&&<button onClick={()=>copy(activeType)} style={{padding:"6px 16px",borderRadius:5,border:"none",background:copied===activeType?"rgba(34,197,94,0.15)":"rgba(79,127,255,0.15)",color:copied===activeType?"#22c55e":"#4f7fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>{copied===activeType?"✓ Copied!":"📋 Copy Schema"}</button>}
+          {(activeType==="faq"||activeType==="howto")&&schemas[activeType]&&<span style={{fontSize:10,color:"#22c55e",fontWeight:700}}>● Saved with post</span>}
         </div>
         <div style={{flex:1,margin:"12px 16px 16px",overflow:"hidden",borderRadius:7,border:"1px solid #1e2740",display:"flex",flexDirection:"column"}}>
           {schemas[activeType]?<>
@@ -472,6 +531,12 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
   const [showImageModal, setShowImageModal] = useState(false);
   const [showCatManager, setShowCatManager] = useState(false);
   const [editingId, setEditingId] = useState<string|undefined>(initial.id);
+  const [faqSchema, setFaqSchema] = useState<Record<string, unknown> | null>(initial.faqSchema ?? null);
+  const [howtoSchema, setHowtoSchema] = useState<Record<string, unknown> | null>(initial.howtoSchema ?? null);
+  const [noindex, setNoindex] = useState(initial.noindex ?? false);
+  const [ogTitle, setOgTitle] = useState(initial.ogTitle ?? "");
+  const [ogDescription, setOgDescription] = useState(initial.ogDescription ?? "");
+  const [ogImage, setOgImage] = useState(initial.ogImage ?? "");
   const [categories, setCategories] = useState<Cat[]>(() => {
     const mapped = propCats.map(c => { const def = DEFAULT_CATS.find(d => d.id === c.slug); return def ?? { id: c.slug, label: c.label, color: "#4a5370", icon: "📁" }; });
     return [...mapped, ...DEFAULT_CATS.filter(d => !mapped.find(m => m.id === d.id))];
@@ -483,7 +548,56 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
   const [queueRunning, setQueueRunning] = useState(false);
   const [queueProgress, setQueueProgress] = useState<any>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [coverImage, setCoverImage] = useState<string | null>(initial.coverImage ?? null);
+  const [coverImageAlt, setCoverImageAlt] = useState<string | null>(initial.coverImageAlt ?? null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [rewriting, setRewriting] = useState(false);
+  const [rewriteMode, setRewriteMode] = useState<"rewrite"|"expand"|"shorten"|"improve">("rewrite");
+  const [xaiApiKey, setXaiApiKey] = useState("");
+  const [xaiKeyStatus, setXaiKeyStatus] = useState<{configured:boolean;source:string|null;masked:string|null}|null>(null);
+  const [savingXaiKey, setSavingXaiKey] = useState(false);
   const pauseRef = useRef(false);
+
+  // Load real DB posts on mount for internal links + Posts tab
+  useEffect(() => {
+    fetch("/api/categories").catch(()=>{});
+    fetch("/admin/blog?_data=1").catch(()=>{});
+    // Fetch published seo_posts to populate posts state
+    (async () => {
+      try {
+        const res = await fetch("/api/seo-posts-list");
+        if (res.ok) {
+          const data = await res.json() as Post[];
+          setPosts(data);
+        }
+      } catch { /* ignore */ }
+    })();
+    (async () => {
+      try {
+        const res = await fetch("/api/xai-key");
+        if (res.ok) {
+          const data = await res.json() as {configured:boolean;source:string|null;masked:string|null};
+          setXaiKeyStatus(data);
+        }
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  const saveXaiKey = async () => {
+    const key = xaiApiKey.trim();
+    if (!key) { setError("Paste your xAI API key first."); return; }
+    setSavingXaiKey(true); setError("");
+    try {
+      const res = await fetch("/api/xai-key", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ key }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to save key");
+      setXaiKeyStatus({ configured:true, source:"editor", masked:data.masked || null });
+      setXaiApiKey("");
+      setSavedMsg("xAI key saved");
+      setTimeout(()=>setSavedMsg(""), 2500);
+    } catch(e:any) { setError("Save key failed: " + e.message); }
+    finally { setSavingXaiKey(false); }
+  };
 
   const analysis = useSeoAnalyzer(content, focusKw || seedKw, metaTitle, metaDesc, slug, posts);
   const scoreColor = analysis.score >= 80 ? "#22c55e" : analysis.score >= 50 ? "#f59e0b" : "#ef4444";
@@ -492,7 +606,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
     if (!keyword.trim()) { setError("Enter a seed keyword."); return null; }
     setError("");
     const cat = categories.find(c => c.id === postCat);
-    const res = await fetch("/api/generate-article", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ seedKeyword:keyword, category:cat?.label||postCat, locale, externalSource:extSource, recentPosts:prevPosts.slice(-6).map(p=>({slug:p.slug,title:p.title})) }) });
+    const res = await fetch("/api/generate-article", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ seedKeyword:keyword, category:cat?.label||postCat, locale, externalSource:extSource, recentPosts:prevPosts.slice(-6).map(p=>({slug:p.slug,title:p.title})), xaiApiKey: xaiApiKey.trim() || undefined }) });
     if (!res.ok) { const e = await res.json(); throw new Error(e.error||"Generation failed"); }
     return res.json() as Promise<{content:string;metaTitle:string;metaDescription:string;slug:string}>;
   };
@@ -520,9 +634,13 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
       try {
         const r=await generateArticle(kw.kw,cur);
         if (r) {
-          const p:Post={id:Date.now()+i,seedKeyword:kw.kw,title:r.metaTitle,slug:r.slug,content:r.content,metaTitle:r.metaTitle,metaDescription:r.metaDescription,category:kw.category,seoScore:72+Math.floor(Math.random()*20),wordCount:r.content.split(" ").length,status:"published",createdAt:new Date().toISOString()};
+          const calcScore=72+Math.floor(Math.random()*20);
+          // Auto-save to DB
+          const saveResult = await savePost({ categorySlug:kw.category||postCat, seedKeyword:kw.kw, title:r.metaTitle, slug:r.slug, content:r.content, metaTitle:r.metaTitle, metaDescription:r.metaDescription, coverImage:null, coverImageAlt:null, status:"draft", publishAt:null, seoScore:calcScore, faqSchema:null, howtoSchema:null, noindex:false });
+          const savedId = saveResult.ok ? saveResult.id : String(Date.now()+i);
+          const p:Post={id:savedId,seedKeyword:kw.kw,title:r.metaTitle,slug:r.slug,content:r.content,metaTitle:r.metaTitle,metaDescription:r.metaDescription,category:kw.category,seoScore:calcScore,wordCount:r.content.split(" ").length,status:"draft",createdAt:new Date().toISOString()};
           cur=[...cur,p]; setPosts([...cur]);
-          setKeywords(p2=>p2.map(k=>k.id===kw.id?{...k,status:"done",seoScore:p.seoScore}:k));
+          setKeywords(p2=>p2.map(k=>k.id===kw.id?{...k,status:saveResult.ok?"done":"failed",seoScore:calcScore}:k));
         }
       } catch { setKeywords(p=>p.map(k=>k.id===kw.id?{...k,status:"failed"}:k)); }
       if (i<pending.length-1) await sleep(3000);
@@ -530,9 +648,50 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
     setQueueRunning(false); setQueueProgress(null);
   };
 
+  const handleUploadCover = async (file: File) => {
+    setUploadingCover(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("seedKeyword", seedKw || metaTitle || "cover");
+      const res = await fetch("/api/upload-seo-image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      setCoverImage(data.url);
+      setCoverImageAlt(data.alt || seedKw || "");
+    } catch(e:any) { setError("Cover upload failed: " + e.message); }
+    finally { setUploadingCover(false); }
+  };
+
+  const handleRewrite = async () => {
+    const sel = window.getSelection();
+    const selected = sel?.toString().trim() || "";
+    if (!selected && !content) { setError("Select text to rewrite, or generate content first."); return; }
+    const textToRewrite = selected || content;
+    setRewriting(true); setError("");
+    try {
+      const res = await fetch("/api/rewrite-selection", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ text:textToRewrite, mode:rewriteMode, keyword:focusKw||seedKw, locale, xaiApiKey: xaiApiKey.trim() || undefined }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Rewrite failed");
+      if (selected && sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        const tmp = document.createElement("div");
+        tmp.innerHTML = data.result;
+        const frag = document.createDocumentFragment();
+        while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+        range.insertNode(frag);
+        setContent(document.querySelector("[contenteditable]")?.innerHTML || data.result);
+      } else {
+        setContent(data.result);
+      }
+    } catch(e:any) { setError("Rewrite failed: " + e.message); }
+    finally { setRewriting(false); }
+  };
+
   const handleSave = async (status:"draft"|"published") => {
     if (!metaTitle||!content) { setError("Title and content required."); return; }
-    const input:SavePostInput = { id:editingId, categorySlug:postCat, seedKeyword:seedKw, title:metaTitle, slug:slug||toSlug(metaTitle), content, metaTitle, metaDescription:metaDesc, coverImage:null, coverImageAlt:null, status, publishAt:null, seoScore:analysis.score };
+    const input:SavePostInput = { id:editingId, categorySlug:postCat, seedKeyword:seedKw, title:metaTitle, slug:slug||toSlug(metaTitle), content, metaTitle, metaDescription:metaDesc, coverImage, coverImageAlt, status, publishAt:null, seoScore:analysis.score, faqSchema, howtoSchema, noindex, ogTitle: ogTitle.trim() || null, ogDescription: ogDescription.trim() || null, ogImage: ogImage.trim() || coverImage };
     const result = await savePost(input);
     if (!result.ok) { setError(result.error); return; }
     if (result.ok) setEditingId(result.id);
@@ -540,8 +699,8 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
     router.refresh();
   };
 
-  const newPost=()=>{setEditingId(undefined);setSeedKw("");setContent("");setMetaTitle("");setMetaDesc("");setSlug("");setFocusKw("");setPostCat(categories[0]?.id||"uncategorized");setError("");};
-  const loadPost=(p:Post)=>{setEditingId(String(p.id));setSeedKw(p.seedKeyword||"");setContent(p.content);setMetaTitle(p.metaTitle);setMetaDesc(p.metaDescription);setSlug(p.slug);setFocusKw(p.seedKeyword||"");setPostCat(p.category||"uncategorized");setTab("editor");};
+  const newPost=()=>{setEditingId(undefined);setSeedKw("");setContent("");setMetaTitle("");setMetaDesc("");setSlug("");setFocusKw("");setPostCat(categories[0]?.id||"uncategorized");setError("");setFaqSchema(null);setHowtoSchema(null);setNoindex(false);setCoverImage(null);setCoverImageAlt(null);setOgTitle("");setOgDescription("");setOgImage("");};
+  const loadPost=(p:Post)=>{setEditingId(String(p.id));setCoverImage(null);setCoverImageAlt(null);setSeedKw(p.seedKeyword||"");setContent(p.content);setMetaTitle(p.metaTitle);setMetaDesc(p.metaDescription);setSlug(p.slug);setFocusKw(p.seedKeyword||"");setPostCat(p.category||"uncategorized");setTab("editor");};
   const insertImage=(img:{url:string;alt:string})=>{setContent(prev=>prev+`<figure style="margin:24px 0;"><img src="${img.url}" alt="${img.alt}" style="width:100%;border-radius:8px;max-height:400px;object-fit:cover;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">${img.alt}</figcaption></figure>`);setShowImageModal(false);};
 
   return (
@@ -564,6 +723,10 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
         {savedMsg&&<span style={{color:"#22c55e",fontSize:12,fontWeight:600}}>{savedMsg}</span>}
         {queueRunning&&<span style={{color:"#f59e0b",fontSize:12,fontWeight:600}}>⟳ Queue Running</span>}
         {tab==="editor"&&<>
+          <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"#8a93b0",cursor:"pointer",marginRight:4}}>
+            <input type="checkbox" checked={noindex} onChange={e=>setNoindex(e.target.checked)} style={{cursor:"pointer"}}/>
+            noindex
+          </label>
           <button onClick={newPost} style={{padding:"6px 12px",borderRadius:5,border:"1px solid #1e2740",background:"transparent",color:"#5a6380",fontSize:12,fontWeight:600,cursor:"pointer"}}>+ New</button>
           <button onClick={()=>handleSave("draft")} style={{padding:"6px 12px",borderRadius:5,border:"1px solid #1e2740",background:"transparent",color:"#5a6380",fontSize:12,fontWeight:600,cursor:"pointer"}}>Draft</button>
           <button onClick={()=>handleSave("published")} style={{padding:"6px 14px",borderRadius:5,border:"none",background:"linear-gradient(135deg,#22c55e,#16a34a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>💾 Publish</button>
@@ -590,19 +753,35 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
           </div>)}
       </div>}
 
-      {tab==="schema"&&<div style={{flex:1,overflow:"hidden"}}><SchemaPanel post={{title:metaTitle,metaTitle,metaDescription:metaDesc,slug,seedKeyword:seedKw,wordCount:analysis.wordCount,category:postCat,categoryLabel:categories.find(c=>c.id===postCat)?.label||postCat,content,createdAt:new Date().toISOString()}} siteUrl={siteUrl} locale={locale}/></div>}
+      {tab==="schema"&&<div style={{flex:1,overflow:"hidden"}}><SchemaPanel post={{title:metaTitle,metaTitle,metaDescription:metaDesc,slug,seedKeyword:seedKw,wordCount:analysis.wordCount,category:postCat,categoryLabel:categories.find(c=>c.id===postCat)?.label||postCat,content,createdAt:new Date().toISOString()}} siteUrl={siteUrl} locale={locale} faqSchema={faqSchema} howtoSchema={howtoSchema} onFaqSchemaChange={setFaqSchema} onHowtoSchemaChange={setHowtoSchema} xaiApiKey={xaiApiKey.trim()}/></div>}
 
       {tab==="editor"&&<div style={{flex:1,display:"flex",overflow:"hidden"}}>
         <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
           <div style={{padding:"12px 16px",background:"#0c1120",borderBottom:"1px solid #1a2436",display:"flex",gap:8,flexWrap:"wrap",alignItems:"flex-end"}}>
+            <div style={{flex:"1 1 280px"}}>
+              <label style={lbl}>🔑 xAI / Grok API Key <span style={{color:xaiKeyStatus?.configured?"#22c55e":"#f59e0b",fontWeight:600}}>{xaiKeyStatus?.configured?`saved (${xaiKeyStatus.masked||"••••"})`:"not set"}</span></label>
+              <div style={{display:"flex",gap:6}}>
+                <input type="password" autoComplete="off" value={xaiApiKey} onChange={e=>setXaiApiKey(e.target.value)} placeholder={xaiKeyStatus?.configured?"Paste new key to replace…":"Paste key from console.x.ai"} style={{flex:1,padding:"8px 11px",background:"#111827",border:"1px solid #2a3045",borderRadius:6,color:"#e8ecf8",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"monospace"}}/>
+                <button type="button" onClick={saveXaiKey} disabled={savingXaiKey||!xaiApiKey.trim()} style={{padding:"8px 12px",borderRadius:6,border:"1px solid #2a5fff",background:savingXaiKey||!xaiApiKey.trim()?"#1a2030":"rgba(79,127,255,0.15)",color:savingXaiKey||!xaiApiKey.trim()?"#3a4060":"#4f7fff",fontSize:11,fontWeight:700,cursor:savingXaiKey||!xaiApiKey.trim()?"default":"pointer",whiteSpace:"nowrap"}}>{savingXaiKey?"Saving…":"Save key"}</button>
+              </div>
+            </div>
             <div style={{flex:"1 1 210px"}}><label style={lbl}>🌱 Seed Keyword</label><input value={seedKw} onChange={e=>setSeedKw(e.target.value)} placeholder="scaffolding rental prices Cairo" style={{width:"100%",padding:"8px 11px",background:"#111827",border:"1px solid #2a3045",borderRadius:6,color:"#e8ecf8",fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
             <div style={{flex:"1 1 180px"}}><label style={lbl}>🔗 External Source</label><input value={extSource} onChange={e=>setExtSource(e.target.value)} placeholder="https://source.com" style={{width:"100%",padding:"8px 11px",background:"#111827",border:"1px solid #2a3045",borderRadius:6,color:"#e8ecf8",fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
             <div style={{flex:"0 1 190px"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}><label style={lbl}>🗂 Category</label><button onClick={()=>setShowCatManager(true)} style={{fontSize:10,color:"#4f7fff",background:"none",border:"none",cursor:"pointer",padding:0,fontWeight:600}}>+ Manage</button></div>
               <CategoryPicker value={postCat} onChange={setPostCat} categories={categories}/>
             </div>
-            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
               <button onClick={handleGenerate} disabled={generating||!seedKw.trim()} style={{padding:"9px 18px",borderRadius:6,border:"none",background:generating||!seedKw.trim()?"#1a2030":"linear-gradient(135deg,#4f7fff,#7c3aed)",color:generating||!seedKw.trim()?"#3a4060":"#fff",fontWeight:700,fontSize:13,cursor:generating||!seedKw.trim()?"default":"pointer",whiteSpace:"nowrap"}}>{generating?genStep||"⟳ Generating...":"🤖 Generate with AI"}</button>
+              <div style={{display:"flex",alignItems:"center",background:"#111827",border:"1px solid #2a3045",borderRadius:6,overflow:"hidden"}}>
+                <select value={rewriteMode} onChange={e=>setRewriteMode(e.target.value as any)} style={{padding:"9px 8px",background:"transparent",border:"none",color:"#8a93b0",fontSize:11,outline:"none",cursor:"pointer"}}>
+                  <option value="rewrite">✏️ Rewrite</option>
+                  <option value="expand">📈 Expand</option>
+                  <option value="shorten">✂️ Shorten</option>
+                  <option value="improve">✨ Improve</option>
+                </select>
+                <button onClick={handleRewrite} disabled={rewriting||generating} style={{padding:"9px 12px",borderRadius:0,border:"none",borderLeft:"1px solid #2a3045",background:rewriting?"#1a2030":"rgba(245,158,11,0.12)",color:rewriting?"#3a4060":"#f59e0b",fontWeight:700,fontSize:12,cursor:rewriting||generating?"default":"pointer",whiteSpace:"nowrap"}}>{rewriting?"⟳ Rewriting...":"AI ↺"}</button>
+              </div>
               <button onClick={()=>setShowImageModal(true)} style={{padding:"9px 14px",borderRadius:6,border:"1px solid #4a2a7f",background:"rgba(168,85,247,0.1)",color:"#a855f7",fontSize:13,fontWeight:700,cursor:"pointer",whiteSpace:"nowrap"}}>🖼 Images</button>
             </div>
           </div>
@@ -612,16 +791,60 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
             <div style={{flex:"0 1 160px"}}><label style={lbl}>URL Slug</label><input value={slug} onChange={e=>setSlug(toSlug(e.target.value))} placeholder="post-url-slug" style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#4f9fff",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"monospace"}}/></div>
             <div style={{flex:"2 1 100%"}}><label style={{...lbl,marginBottom:4}}>Meta Description <span style={{color:metaDesc.length>=120&&metaDesc.length<=160?"#22c55e":metaDesc.length>160?"#ef4444":"#f59e0b"}}>{metaDesc.length}/160</span></label><textarea value={metaDesc} onChange={e=>setMetaDesc(e.target.value)} rows={2} placeholder="Compelling meta description..." style={{width:"100%",padding:"7px 10px",background:"#111827",border:`1px solid ${metaDesc.length>160?"#ef4444":"#2a3045"}`,borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
           </div>
-          {(metaTitle||metaDesc)&&<div style={{margin:"8px 16px",padding:"12px 16px",background:"#fff",borderRadius:7,boxShadow:"0 2px 16px rgba(0,0,0,0.3)"}}>
-            <div style={{fontSize:11,color:"#5f6368",fontFamily:"Arial",marginBottom:2}}>yoursite.com › blog › {slug||"post-url"}</div>
-            <div style={{fontSize:17,color:"#1a0dab",fontFamily:"Arial",lineHeight:"1.3",marginBottom:3}}>{metaTitle||"Post Title"}</div>
-            <div style={{fontSize:13,color:"#4d5156",fontFamily:"Arial",lineHeight:"1.4"}}>{metaDesc||"Meta description..."}</div>
+          {/* Cover image upload */}
+          <div style={{padding:"8px 16px",background:"#090e1c",borderBottom:"1px solid #131e30",display:"flex",alignItems:"center",gap:10}}>
+            <label style={{...lbl,marginBottom:0,flexShrink:0}}>🖼 Cover Image</label>
+            {coverImage
+              ? <div style={{display:"flex",alignItems:"center",gap:8,flex:1}}>
+                  <img src={coverImage} alt={coverImageAlt||""} style={{height:36,width:64,objectFit:"cover",borderRadius:4,border:"1px solid #2a3045"}}/>
+                  <span style={{fontSize:11,color:"#4a5370",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{coverImage}</span>
+                  <button onClick={()=>{setCoverImage(null);setCoverImageAlt(null);}} style={{background:"rgba(239,68,68,0.08)",border:"1px solid rgba(239,68,68,0.2)",color:"#ef4444",borderRadius:4,fontSize:11,padding:"3px 8px",cursor:"pointer"}}>✕ Remove</button>
+                </div>
+              : <label style={{display:"flex",alignItems:"center",gap:7,padding:"6px 14px",borderRadius:5,border:"1px dashed #2a3a6f",background:"rgba(79,127,255,0.05)",color:"#4f7fff",fontSize:12,fontWeight:600,cursor:uploadingCover?"default":"pointer"}}>
+                  <input type="file" accept="image/*" disabled={uploadingCover} onChange={e=>{const f=e.target.files?.[0];if(f)handleUploadCover(f);e.target.value="";}} style={{display:"none"}}/>
+                  {uploadingCover?"⟳ Uploading..":"📁 Upload cover"}
+                </label>
+            }
+            {coverImage&&<div style={{display:"flex",alignItems:"center",gap:6}}>
+              <label style={{...lbl,marginBottom:0,fontSize:10}}>Alt:</label>
+              <input value={coverImageAlt||""} onChange={e=>setCoverImageAlt(e.target.value)} placeholder="Alt text for cover image" style={{padding:"5px 8px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none",width:200}}/>
+            </div>}
+          </div>
+
+          {/* Social / Open Graph overrides (Rank Math Social tab) */}
+          <div style={{padding:"10px 16px",background:"#090e1c",borderBottom:"1px solid #131e30",display:"flex",gap:10,flexWrap:"wrap"}}>
+            <div style={{flex:"1 1 100%",fontSize:11,fontWeight:700,color:"#818cf8",textTransform:"uppercase",letterSpacing:"0.6px"}}>Social / Open Graph (optional overrides)</div>
+            <div style={{flex:"1 1 220px"}}><label style={{...lbl,marginBottom:4}}>OG Title <span style={{color:"#4a5370",fontWeight:500}}>{(ogTitle||metaTitle).length}/70</span></label><input value={ogTitle} onChange={e=>setOgTitle(e.target.value)} placeholder={metaTitle||"Defaults to meta title"} style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#e8ecf8",fontSize:13,outline:"none",boxSizing:"border-box"}}/></div>
+            <div style={{flex:"1 1 220px"}}><label style={lbl}>OG Image URL</label><input value={ogImage} onChange={e=>setOgImage(e.target.value)} placeholder={coverImage||"Defaults to cover image"} style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#4f9fff",fontSize:12,outline:"none",boxSizing:"border-box",fontFamily:"monospace"}}/></div>
+            <div style={{flex:"2 1 100%"}}><label style={{...lbl,marginBottom:4}}>OG Description <span style={{color:"#4a5370",fontWeight:500}}>{(ogDescription||metaDesc).length}/200</span></label><textarea value={ogDescription} onChange={e=>setOgDescription(e.target.value)} rows={2} placeholder={metaDesc||"Defaults to meta description"} style={{width:"100%",padding:"7px 10px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none",resize:"none",boxSizing:"border-box",fontFamily:"inherit"}}/></div>
+          </div>
+
+          {(metaTitle||metaDesc)&&<div style={{margin:"8px 16px 4px",display:"flex",gap:10,flexWrap:"wrap"}}>
+            {/* Google SERP preview */}
+            <div style={{flex:"1 1 340px",padding:"12px 16px",background:"#fff",borderRadius:7,boxShadow:"0 2px 16px rgba(0,0,0,0.3)"}}>
+              <div style={{fontSize:10,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.6px",marginBottom:6}}>Google Preview</div>
+              <div style={{fontSize:11,color:"#5f6368",fontFamily:"Arial",marginBottom:2}}>{siteUrl.replace(/^https?:\/\//,"")} › {postCat} › {slug||"post-url"}</div>
+              <div style={{fontSize:17,color:"#1a0dab",fontFamily:"Arial",lineHeight:"1.3",marginBottom:3}}>{metaTitle||"Post Title"}</div>
+              <div style={{fontSize:13,color:"#4d5156",fontFamily:"Arial",lineHeight:"1.4"}}>{metaDesc||"Meta description..."}</div>
+            </div>
+            {/* OG / Social share preview */}
+            <div style={{flex:"1 1 260px",borderRadius:7,overflow:"hidden",border:"1px solid #e4e6eb",boxShadow:"0 2px 16px rgba(0,0,0,0.3)",background:"#f0f2f5"}}>
+              <div style={{fontSize:10,color:"#888",fontWeight:700,textTransform:"uppercase",letterSpacing:"0.6px",padding:"6px 10px",background:"#fff",borderBottom:"1px solid #e4e6eb"}}>WhatsApp / LinkedIn Preview</div>
+              {(ogImage||coverImage)
+                ? <img src={ogImage||coverImage||""} alt={coverImageAlt||ogTitle||metaTitle||""} style={{width:"100%",height:120,objectFit:"cover",display:"block"}}/>
+                : <div style={{width:"100%",height:120,background:"#dde1e7",display:"flex",alignItems:"center",justifyContent:"center",color:"#90949c",fontSize:11}}>No cover image — upload one for rich social cards</div>}
+              <div style={{padding:"8px 10px",background:"#f0f2f5"}}>
+                <div style={{fontSize:10,color:"#606770",textTransform:"uppercase",marginBottom:2}}>{siteUrl.replace(/^https?:\/\//,"")}</div>
+                <div style={{fontSize:13,fontWeight:700,color:"#1c1e21",lineHeight:"1.3",marginBottom:2}}>{ogTitle||metaTitle||"Post Title"}</div>
+                <div style={{fontSize:12,color:"#606770",overflow:"hidden",display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical"}}>{ogDescription||metaDesc||""}</div>
+              </div>
+            </div>
           </div>}
           <div style={{flex:1,overflow:"hidden",background:"#0d1425",margin:"8px 16px 12px",borderRadius:7,border:"1px solid #1a2436",display:"flex",flexDirection:"column",minHeight:280}}>
             <RichEditor content={content} onChange={setContent} onInsertImage={()=>setShowImageModal(true)}/>
           </div>
         </div>
-        <RankMathSidebar analysis={analysis} focusKw={focusKw} setFocusKw={kw=>{setFocusKw(kw);if(!seedKw)setSeedKw(kw);}} posts={posts} onInsertInternal={p=>setContent(prev=>prev+` <a href="/${p.slug}">${p.title}</a>`)}/>
+        <RankMathSidebar analysis={analysis} focusKw={focusKw} setFocusKw={kw=>{setFocusKw(kw);if(!seedKw)setSeedKw(kw);}} posts={posts} onInsertInternal={p=>setContent(prev=>prev+` <a href="${postPublicPath(p)}">${p.title}</a>`)} onAiRewrite={mode=>{setRewriteMode(mode as any);setTimeout(handleRewrite,0);}}/>
       </div>}
 
       <div style={{height:26,background:"#060a14",borderTop:"1px solid #0e1628",display:"flex",alignItems:"center",padding:"0 16px",gap:16,flexShrink:0,fontSize:10}}>

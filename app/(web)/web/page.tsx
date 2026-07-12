@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { CountdownTimer } from "@/components/web/countdown-timer";
-import { getWebHomeData, type WebHomeItem } from "@/lib/homepage/web-home-data";
+import { getWebHomeData, getCategoryListingSections, type WebHomeItem } from "@/lib/homepage/web-home-data";
 import { createClient } from "@/lib/supabase/server";
 
 export const revalidate = 60;
@@ -39,7 +39,10 @@ export default async function WebHomePage() {
   const tCommon = await getTranslations("common");
   const locale = await getLocale();
   const supabase = await createClient();
-  const data = await getWebHomeData(supabase);
+  const [data, catListingSections] = await Promise.all([
+    getWebHomeData(supabase),
+    getCategoryListingSections(supabase),
+  ]);
 
   const hero = data.web_hero_slider;
   const categories = data.web_categories_strip;
@@ -384,6 +387,56 @@ export default async function WebHomePage() {
                 </div>
               </section>
             ) : null}
+
+            {/* === CATEGORY LISTING SECTIONS === */}
+            {catListingSections.filter((s) => s.enabled && s.listings.length > 0).map((sec) => (
+              <section key={sec.id} className="bg-white rounded-xl p-4 border border-[#ebebeb]">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <span className="text-[17px] font-bold text-[#1a1a1a]">
+                      {pick(sec.title_ar, sec.title_en, locale) || sec.categorySlug}
+                    </span>
+                    {pick(sec.subtitle_ar, sec.subtitle_en, locale) ? (
+                      <p className="text-xs text-[#888] mt-0.5">{pick(sec.subtitle_ar, sec.subtitle_en, locale)}</p>
+                    ) : null}
+                  </div>
+                  <Link
+                    className="text-xs text-[#B71C1C] font-semibold"
+                    href={`/gallery?category=${encodeURIComponent(sec.categorySlug)}`}
+                  >
+                    {tCommon("viewAll")} ›
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                  {sec.listings.slice(0, 8).map((listing) => {
+                    const img = listing.images?.[0] ?? null;
+                    const fmt = new Intl.NumberFormat(locale === "ar" ? "ar-EG" : "en-US", { maximumFractionDigits: 0 });
+                    const priceLabel = `${fmt.format(listing.price)} ${listing.price_unit ?? "EGP"}`;
+                    return (
+                      <Link
+                        key={listing.id}
+                        href={`/listings/${listing.id}`}
+                        className="bg-white rounded-xl overflow-hidden border border-[#ebebeb] hover:-translate-y-0.5 hover:shadow-md transition-all block"
+                      >
+                        <div className="h-32 flex items-center justify-center relative bg-[#FFF3E0]">
+                          {img ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={img} alt={listing.title} className="absolute inset-0 w-full h-full object-cover" />
+                          ) : null}
+                        </div>
+                        <div className="p-2.5">
+                          <div className="text-xs text-[#1a1a1a] leading-snug mb-1 line-clamp-2 font-medium">{listing.title}</div>
+                          <div className="text-[15px] font-bold text-[#B71C1C] tabular-nums">{priceLabel}</div>
+                          {listing.location ? (
+                            <div className="text-[11px] text-[#888] mt-0.5 truncate">📍 {listing.location}</div>
+                          ) : null}
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
 
           {/* === RIGHT COLUMN (placeholder; can be a future section type) === */}

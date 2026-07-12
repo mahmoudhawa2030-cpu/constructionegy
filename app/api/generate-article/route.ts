@@ -1,6 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest, NextResponse } from "next/server";
 
+import { callGrok, resolveXaiApiKey, grokArticleModel, grokFastModel } from "@/lib/ai/grok";
 import { createClient } from "@/lib/supabase/server";
 
 export const maxDuration = 120;
@@ -11,23 +11,8 @@ type GenerateBody = {
   locale?: "ar" | "en";
   externalSource?: string;
   recentPosts?: Array<{ slug: string; title: string }>;
+  xaiApiKey?: string;
 };
-
-async function callClaude(
-  client: Anthropic,
-  model: string,
-  prompt: string,
-  maxTokens: number,
-): Promise<string> {
-  const msg = await client.messages.create({
-    model,
-    max_tokens: maxTokens,
-    messages: [{ role: "user", content: prompt }],
-  });
-  const block = msg.content[0];
-  if (block.type !== "text") throw new Error("Unexpected content type from Claude");
-  return block.text.trim();
-}
 
 function slugify(t: string): string {
   return t
@@ -72,9 +57,12 @@ export async function POST(req: NextRequest) {
   if (!seedKeyword)
     return NextResponse.json({ error: "seedKeyword is required" }, { status: 400 });
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey)
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY is not configured" }, { status: 500 });
+  const xaiApiKey = await resolveXaiApiKey(body.xaiApiKey);
+  if (!xaiApiKey)
+    return NextResponse.json(
+      { error: "Grok API key missing. Paste it in the SEO editor (xAI key field) or set XAI_API_KEY." },
+      { status: 500 },
+    );
 
   const externalSource = (body.externalSource ?? "").trim();
   const recentPosts = body.recentPosts ?? [];
@@ -90,13 +78,12 @@ export async function POST(req: NextRequest) {
     : "Include 2–3 external links to real authoritative construction or engineering websites (e.g., ASTM, ISO, CIOB, Buildipedia, ENR).";
 
   try {
-    const client = new Anthropic({ apiKey });
-
-    // ── Call 1: Article body — Sonnet for depth and quality ────────────────
-    const content = await callClaude(
-      client,
-      "claude-3-5-sonnet-20241022",
-      `You are an expert SEO content writer for a B2B construction marketplace in Egypt.
+    // ── Call 1: Article body ───────────────────────────────────────────────
+    const content = await callGrok({
+      apiKey: xaiApiKey,
+      model: grokArticleModel(),
+      maxTokens: 8000,
+      prompt: `You are an expert SEO content writer for a B2B construction marketplace in Egypt.
 Write a comprehensive blog article in ${lang} about: "${seedKeyword}" (category: ${category}).
 
 STRICT RULES — follow all 13:
@@ -115,37 +102,38 @@ STRICT RULES — follow all 13:
 13. No placeholder text — every sentence must be specific, researched, and valuable.
 
 Output ONLY the raw HTML article body. No JSON wrapper. No explanation. No preamble.`,
-      8000,
-    );
+    });
 
-    // ── Call 2: Meta title — Haiku for speed ──────────────────────────────
-    const rawTitle = await callClaude(
-      client,
-      "claude-3-5-haiku-20241022",
-      `Write ONE SEO meta title in ${lang} for an article about "${seedKeyword}".
+    // ── Call 2: Meta title ─────────────────────────────────────────────────
+    const rawTitle = await callGrok({
+      apiKey: xaiApiKey,
+      model: grokFastModel(),
+      maxTokens: 120,
+      temperature: 0.5,
+      prompt: `Write ONE SEO meta title in ${lang} for an article about "${seedKeyword}".
 Rules:
 - Exactly 52–59 characters total (count every character including spaces carefully).
 - Must contain the exact phrase "${seedKeyword}".
 - Include one power word: Best, Top, Complete, Ultimate, Essential, Proven, or Expert.
 - No surrounding quotes, no trailing punctuation.
 - Output ONLY the title text. Nothing else.`,
-      120,
-    );
+    });
     const metaTitle = rawTitle.replace(/^["'`]|["'`]$/g, "").trim().slice(0, 60);
 
-    // ── Call 3: Meta description — Haiku for speed ────────────────────────
-    const rawDesc = await callClaude(
-      client,
-      "claude-3-5-haiku-20241022",
-      `Write ONE SEO meta description in ${lang} for a page titled: "${metaTitle}".
+    // ── Call 3: Meta description ───────────────────────────────────────────
+    const rawDesc = await callGrok({
+      apiKey: xaiApiKey,
+      model: grokFastModel(),
+      maxTokens: 200,
+      temperature: 0.5,
+      prompt: `Write ONE SEO meta description in ${lang} for a page titled: "${metaTitle}".
 Rules:
 - Exactly 130–155 characters total (count carefully).
 - Include the exact phrase "${seedKeyword}".
 - Include one CTA word: Discover, Learn, Explore, Get, Find, or See.
 - Write in active voice only.
 - Output ONLY the description text. Nothing else.`,
-      200,
-    );
+    });
     const metaDescription = rawDesc.replace(/^["'`]|["'`]$/g, "").trim().slice(0, 160);
 
     const slug = slugify(metaTitle || seedKeyword);

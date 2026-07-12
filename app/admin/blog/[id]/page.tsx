@@ -52,6 +52,12 @@ export default async function EditBlogPostPage({ params }: PageProps) {
           coverImageAlt: post.cover_image_alt,
           status: post.status === "published" ? "published" : "draft",
           publishAt: post.publish_at,
+          faqSchema: (post.faq_schema as Record<string, unknown> | null) ?? null,
+          howtoSchema: (post.howto_schema as Record<string, unknown> | null) ?? null,
+          noindex: post.noindex ?? false,
+          ogTitle: post.og_title ?? null,
+          ogDescription: post.og_description ?? null,
+          ogImage: post.og_image ?? null,
         }}
         locale={locale === "ar" ? "ar" : "en"}
         siteUrl={getSiteUrl()}

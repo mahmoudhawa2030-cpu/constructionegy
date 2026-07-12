@@ -305,6 +305,96 @@ export async function updateWebItemAction(
   return { ok: true };
 }
 
+// ─── Category Listing Sections ────────────────────────────────────────────────
+
+/** Create a new category listing section (slug = web_cat_{categorySlug}). */
+export async function createCatListingsSectionAction(
+  _prev: WebHomepageActionState | null,
+  formData: FormData,
+): Promise<WebHomepageActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const catSlug = slug.safeParse(s(formData, "category_slug"));
+  if (!catSlug.success) return { ok: false, message: "Invalid category slug." };
+
+  const sectionSlug = `web_cat_${catSlug.data}`;
+  const sort_order = nullableInt(s(formData, "sort_order")) ?? 100;
+
+  const { error } = await supabase.from("homepage_sections").insert({
+    slug: sectionSlug,
+    section_type: "grid",
+    sort_order,
+    enabled: true,
+    title_ar: nullableStr(s(formData, "title_ar")),
+    title_en: nullableStr(s(formData, "title_en")),
+    subtitle_ar: nullableStr(s(formData, "subtitle_ar")),
+    subtitle_en: nullableStr(s(formData, "subtitle_en")),
+  });
+
+  if (error) {
+    if (error.code === "23505") return { ok: false, message: "A section for this category already exists." };
+    return { ok: false, message: error.message };
+  }
+
+  revalidateAll();
+  return { ok: true, message: "Section created ✓" };
+}
+
+/** Update titles, sort order, and enabled state of a category listing section. */
+export async function updateCatListingsSectionAction(
+  _prev: WebHomepageActionState | null,
+  formData: FormData,
+): Promise<WebHomepageActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const id = uuid.safeParse(s(formData, "id"));
+  if (!id.success) return { ok: false, message: "Invalid section id." };
+
+  const sort_order = nullableInt(s(formData, "sort_order")) ?? 0;
+  const enabled = s(formData, "enabled") === "on";
+
+  const { error } = await supabase
+    .from("homepage_sections")
+    .update({
+      sort_order,
+      enabled,
+      title_ar: nullableStr(s(formData, "title_ar")),
+      title_en: nullableStr(s(formData, "title_en")),
+      subtitle_ar: nullableStr(s(formData, "subtitle_ar")),
+      subtitle_en: nullableStr(s(formData, "subtitle_en")),
+    })
+    .eq("id", id.data)
+    .like("slug", "web_cat_%");
+
+  if (error) return { ok: false, message: error.message };
+  revalidateAll();
+  return { ok: true, message: "Saved ✓" };
+}
+
+/** Delete a category listing section by id. */
+export async function deleteCatListingsSectionAction(
+  _prev: WebHomepageActionState | null,
+  formData: FormData,
+): Promise<WebHomepageActionState> {
+  await requireAdmin();
+  const supabase = await createClient();
+
+  const id = uuid.safeParse(s(formData, "id"));
+  if (!id.success) return { ok: false, message: "Invalid section id." };
+
+  const { error } = await supabase
+    .from("homepage_sections")
+    .delete()
+    .eq("id", id.data)
+    .like("slug", "web_cat_%");
+
+  if (error) return { ok: false, message: error.message };
+  revalidateAll();
+  return { ok: true, message: "Section deleted." };
+}
+
 /**
  * Universal item delete.
  */

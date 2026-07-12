@@ -135,6 +135,52 @@ export async function saveMobileHomepageContent(
   return { success: true };
 }
 
+export async function saveMobileHomepageConfig(
+  sections: SectionConfig[],
+  content: HomepageContent,
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { success: false, error: "Not authenticated" };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!profile?.is_admin) {
+    return { success: false, error: "Not authorized" };
+  }
+
+  const ordered = sections.map((s, i) => ({ ...s, order: i + 1 }));
+
+  const { error } = await (supabase as any)
+    .from("mobile_homepage_config")
+    .upsert(
+      {
+        key: CONFIG_KEY,
+        sections: ordered,
+        content,
+      },
+      { onConflict: "key" },
+    );
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/(mobile)");
+  revalidatePath("/admin/homepage/mobile");
+  return { success: true };
+}
+
 export async function getMergedHomepageConfig(): Promise<{
   sections: SectionConfig[];
   content: HomepageContent;

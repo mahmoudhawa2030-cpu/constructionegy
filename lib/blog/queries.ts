@@ -15,6 +15,12 @@ export type SeoPostRow = {
   publish_at: string | null;
   created_at: string;
   updated_at: string;
+  faq_schema: Record<string, unknown> | null;
+  howto_schema: Record<string, unknown> | null;
+  noindex: boolean;
+  og_title: string | null;
+  og_description: string | null;
+  og_image: string | null;
 };
 
 export type CategoryRow = {
@@ -34,7 +40,7 @@ const CATEGORY_SELECT =
   "slug, label_ar, label_en, is_active, seo_title_ar, seo_title_en, seo_description_ar, seo_description_en, intro_ar, intro_en";
 
 const POST_SELECT =
-  "id, category_slug, seed_keyword, title, slug, content, meta_title, meta_description, cover_image, cover_image_alt, status, publish_at, created_at, updated_at";
+  "id, category_slug, seed_keyword, title, slug, content, meta_title, meta_description, cover_image, cover_image_alt, status, publish_at, created_at, updated_at, faq_schema, howto_schema, noindex, og_title, og_description, og_image";
 
 export async function getCategoryBySlug(slug: string): Promise<CategoryRow | null> {
   const supabase = await createClient();
