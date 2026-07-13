@@ -92,9 +92,14 @@ const GROUPS: NavGroup[] = [
     groupKey: "sidebarGroupTools",
     items: [
       {
-        href: "/admin/blog",
+        href: "/admin/blog/new",
         labelKey: "blog",
         icon: "M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z",
+      },
+      {
+        href: "/admin/blog",
+        labelKey: "blogPosts",
+        icon: "M4 6h16M4 12h16M4 18h10",
       },
       {
         href: "/admin/tracking",
@@ -130,6 +135,16 @@ function SvgIcon({ d }: { d: string }) {
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/admin") return pathname === "/admin";
+  // Posts list only (exact)
+  if (href === "/admin/blog") {
+    return pathname === "/admin/blog";
+  }
+  // Blog editor: new post or edit existing (/admin/blog/:id), not the list
+  if (href === "/admin/blog/new") {
+    if (pathname === "/admin/blog/new") return true;
+    if (pathname === "/admin/blog") return false;
+    return /^\/admin\/blog\/[^/]+$/.test(pathname);
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
