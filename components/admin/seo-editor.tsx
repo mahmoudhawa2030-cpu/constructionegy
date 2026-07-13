@@ -316,355 +316,372 @@ function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal,onA
   </div>;
 }
 
-const IMG_HANDLE_CLASS = "seo-img-handle";
-const IMG_SELECTED_CLASS = "seo-img-selected";
-
-function stripEditorChrome(root: HTMLElement): string {
-  root.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n) => n.remove());
-  root.querySelectorAll(`.${IMG_SELECTED_CLASS}`).forEach((n) => {
-    (n as HTMLElement).classList.remove(IMG_SELECTED_CLASS);
-    (n as HTMLElement).style.outline = "";
-    (n as HTMLElement).style.outlineOffset = "";
-  });
-  return root.innerHTML;
-}
-
 function applyImgBaseStyles(img: HTMLImageElement) {
   img.style.display = "block";
   img.style.maxWidth = "100%";
   img.style.height = "auto";
   img.style.borderRadius = img.style.borderRadius || "8px";
   img.style.cursor = "pointer";
-  if (!img.style.width && !img.getAttribute("width")) {
-    img.style.width = "100%";
-  }
-  // Drop fixed max-height so mouse resize can grow freely
   if (img.style.maxHeight) img.style.maxHeight = "";
   if (img.style.objectFit === "cover") img.style.objectFit = "contain";
+  if (!img.style.width && !img.getAttribute("width")) img.style.width = "100%";
 }
 
-function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
-  const ref=useRef<HTMLDivElement>(null);
-  const selectedImgRef=useRef<HTMLImageElement|null>(null);
-  const resizingRef=useRef<{img:HTMLImageElement;startX:number;startW:number}|null>(null);
-  const [htmlMode,setHtmlMode]=useState(false);
-  const [htmlDraft,setHtmlDraft]=useState(content||"");
-  const [selectedImg,setSelectedImg]=useState<HTMLImageElement|null>(null);
-  const [altDraft,setAltDraft]=useState("");
-  const [sizeLabel,setSizeLabel]=useState("");
+type ImgBox = { top: number; left: number; width: number; height: number };
 
-  const emitHtml=()=>{
-    if(!ref.current) return;
-    const clone=ref.current.cloneNode(true) as HTMLElement;
-    onChange(stripEditorChrome(clone));
+function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
+  const shellRef = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const selectedImgRef = useRef<HTMLImageElement | null>(null);
+  const skipSyncRef = useRef(false);
+  const [htmlMode, setHtmlMode] = useState(false);
+  const [htmlDraft, setHtmlDraft] = useState(content || "");
+  const [imgSelected, setImgSelected] = useState(false);
+  const [altDraft, setAltDraft] = useState("");
+  const [sizeLabel, setSizeLabel] = useState("");
+  const [imgBox, setImgBox] = useState<ImgBox | null>(null);
+
+  const emitHtml = () => {
+    if (!ref.current) return;
+    // Mark so content prop echo does not wipe selection / DOM
+    skipSyncRef.current = true;
+    onChange(ref.current.innerHTML);
   };
 
-  const clearSelection=()=>{
-    if(ref.current){
-      ref.current.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n)=>n.remove());
-      ref.current.querySelectorAll(`.${IMG_SELECTED_CLASS}`).forEach((n)=>{
-        (n as HTMLElement).classList.remove(IMG_SELECTED_CLASS);
-        (n as HTMLElement).style.outline="";
-        (n as HTMLElement).style.outlineOffset="";
-      });
+  const measureSelected = () => {
+    const img = selectedImgRef.current;
+    const wrap = editorWrapRef.current;
+    if (!img || !wrap || !img.isConnected) {
+      setImgBox(null);
+      return;
     }
-    selectedImgRef.current=null;
-    setSelectedImg(null);
+    const ir = img.getBoundingClientRect();
+    const wr = wrap.getBoundingClientRect();
+    setImgBox({
+      top: ir.top - wr.top,
+      left: ir.left - wr.left,
+      width: ir.width,
+      height: ir.height,
+    });
+    setSizeLabel(`${Math.round(ir.width)}px`);
+  };
+
+  const clearSelection = () => {
+    const prev = selectedImgRef.current;
+    if (prev) {
+      prev.style.outline = "";
+      prev.style.outlineOffset = "";
+    }
+    selectedImgRef.current = null;
+    setImgSelected(false);
     setAltDraft("");
     setSizeLabel("");
+    setImgBox(null);
   };
 
-  const placeHandle=(img:HTMLImageElement)=>{
-    if(!ref.current) return;
-    ref.current.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n)=>n.remove());
-    const parent=img.parentElement;
-    if(!parent) return;
-    const cs=window.getComputedStyle(parent);
-    if(cs.position==="static") parent.style.position="relative";
-
-    img.classList.add(IMG_SELECTED_CLASS);
-    img.style.outline="2px solid #4f7fff";
-    img.style.outlineOffset="2px";
-
-    const handle=document.createElement("span");
-    handle.className=IMG_HANDLE_CLASS;
-    handle.contentEditable="false";
-    handle.title="Drag to resize";
-    handle.setAttribute("data-seo-ui","1");
-    Object.assign(handle.style,{
-      position:"absolute",
-      width:"14px",
-      height:"14px",
-      background:"#4f7fff",
-      border:"2px solid #fff",
-      borderRadius:"3px",
-      cursor:"nwse-resize",
-      zIndex:"20",
-      boxShadow:"0 1px 4px rgba(0,0,0,0.45)",
-      touchAction:"none",
-      userSelect:"none",
-    });
-
-    const syncHandlePos=()=>{
-      const parentRect=parent.getBoundingClientRect();
-      const imgRect=img.getBoundingClientRect();
-      handle.style.left=`${imgRect.right-parentRect.left-8}px`;
-      handle.style.top=`${imgRect.bottom-parentRect.top-8}px`;
-    };
-    syncHandlePos();
-    parent.appendChild(handle);
-
-    const onHandleDown=(e:MouseEvent|PointerEvent)=>{
-      e.preventDefault();
-      e.stopPropagation();
-      const startW=img.getBoundingClientRect().width;
-      resizingRef.current={img,startX:(e as MouseEvent).clientX,startW};
-      const onMove=(ev:MouseEvent)=>{
-        const st=resizingRef.current;
-        if(!st) return;
-        const delta=ev.clientX-st.startX;
-        const parentW=parent.getBoundingClientRect().width || ref.current?.clientWidth || 600;
-        const next=Math.max(80,Math.min(parentW,Math.round(st.startW+delta)));
-        st.img.style.width=`${next}px`;
-        st.img.style.height="auto";
-        st.img.removeAttribute("width");
-        st.img.removeAttribute("height");
-        setSizeLabel(`${next}px`);
-        syncHandlePos();
-      };
-      const onUp=()=>{
-        document.removeEventListener("mousemove",onMove);
-        document.removeEventListener("mouseup",onUp);
-        resizingRef.current=null;
-        emitHtml();
-        syncHandlePos();
-      };
-      document.addEventListener("mousemove",onMove);
-      document.addEventListener("mouseup",onUp);
-    };
-    handle.addEventListener("mousedown",onHandleDown);
-  };
-
-  const selectImage=(img:HTMLImageElement)=>{
-    clearSelection();
+  const selectImage = (img: HTMLImageElement) => {
+    if (selectedImgRef.current && selectedImgRef.current !== img) {
+      selectedImgRef.current.style.outline = "";
+      selectedImgRef.current.style.outlineOffset = "";
+    }
     applyImgBaseStyles(img);
-    selectedImgRef.current=img;
-    setSelectedImg(img);
-    setAltDraft(img.getAttribute("alt")||"");
-    const w=Math.round(img.getBoundingClientRect().width||img.clientWidth||0);
-    setSizeLabel(w?`${w}px`:"auto");
-    placeHandle(img);
+    img.style.outline = "2px solid #4f7fff";
+    img.style.outlineOffset = "2px";
+    selectedImgRef.current = img;
+    setImgSelected(true);
+    setAltDraft(img.getAttribute("alt") || "");
+    // measure after toolbar layout (toolbar changes height)
+    requestAnimationFrame(() => {
+      measureSelected();
+      requestAnimationFrame(() => measureSelected());
+    });
   };
 
-  const applyAlt=()=>{
-    const img=selectedImgRef.current;
-    if(!img) return;
-    const alt=altDraft.trim();
-    img.setAttribute("alt",alt);
-    const fig=img.closest("figure");
-    const cap=fig?.querySelector("figcaption");
-    if(cap) cap.textContent=alt;
+  const applyAlt = () => {
+    const img = selectedImgRef.current;
+    if (!img) return;
+    const alt = altDraft.trim();
+    img.setAttribute("alt", alt);
+    const cap = img.closest("figure")?.querySelector("figcaption");
+    if (cap) cap.textContent = alt;
     emitHtml();
+    measureSelected();
   };
 
-  const setWidthPct=(pct:number)=>{
-    const img=selectedImgRef.current;
-    if(!img||!ref.current) return;
-    img.style.width=`${pct}%`;
-    img.style.height="auto";
+  const setWidthPct = (pct: number) => {
+    const img = selectedImgRef.current;
+    if (!img) return;
+    img.style.width = `${pct}%`;
+    img.style.height = "auto";
     img.removeAttribute("width");
     img.removeAttribute("height");
     setSizeLabel(`${pct}%`);
-    placeHandle(img);
     emitHtml();
+    requestAnimationFrame(() => measureSelected());
   };
 
-  useEffect(()=>{
-    if(!htmlMode && ref.current && ref.current.innerHTML!==content){
-      clearSelection();
-      ref.current.innerHTML=content;
-      ref.current.querySelectorAll("img").forEach((el)=>applyImgBaseStyles(el as HTMLImageElement));
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const img = selectedImgRef.current;
+    if (!img) return;
+    const startX = e.clientX;
+    const startW = img.getBoundingClientRect().width;
+    const maxW = ref.current?.clientWidth || 800;
+
+    const onMove = (ev: MouseEvent) => {
+      const next = Math.max(80, Math.min(maxW, Math.round(startW + (ev.clientX - startX))));
+      img.style.width = `${next}px`;
+      img.style.height = "auto";
+      img.removeAttribute("width");
+      img.removeAttribute("height");
+      setSizeLabel(`${next}px`);
+      measureSelected();
+    };
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      emitHtml();
+      measureSelected();
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  };
+
+  useEffect(() => {
+    if (htmlMode || !ref.current) return;
+    if (skipSyncRef.current) {
+      skipSyncRef.current = false;
+      return;
     }
-  },[content,htmlMode]);
+    // Do not clobber DOM while an image is selected (resize/alt UI active)
+    if (selectedImgRef.current) return;
+    if (ref.current.innerHTML !== content) {
+      ref.current.innerHTML = content || "";
+      ref.current.querySelectorAll("img").forEach((el) => applyImgBaseStyles(el as HTMLImageElement));
+    }
+  }, [content, htmlMode]);
 
-  useEffect(()=>{
-    if(htmlMode) setHtmlDraft(content||"");
-  },[htmlMode]);
+  useEffect(() => {
+    if (htmlMode) setHtmlDraft(content || "");
+  }, [htmlMode, content]);
 
-  useEffect(()=>{
-    if(htmlMode) clearSelection();
-  },[htmlMode]);
+  useEffect(() => {
+    if (htmlMode) clearSelection();
+  }, [htmlMode]);
 
-  const exec=(cmd:string,val?:string)=>{
-    document.execCommand(cmd,false,val);
+  useEffect(() => {
+    if (!imgSelected) return;
+    const onScroll = () => measureSelected();
+    const el = ref.current;
+    el?.addEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      el?.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [imgSelected]);
+
+  const exec = (cmd: string, val?: string) => {
+    document.execCommand(cmd, false, val);
     ref.current?.focus();
     emitHtml();
   };
 
-  const switchToHtml=()=>{
-    if(ref.current){
-      const clean=stripEditorChrome(ref.current.cloneNode(true) as HTMLElement);
-      setHtmlDraft(clean);
-      onChange(clean);
-    } else {
-      setHtmlDraft(content||"");
-    }
+  const switchToHtml = () => {
+    const current = ref.current?.innerHTML ?? content ?? "";
     clearSelection();
+    setHtmlDraft(current);
+    onChange(current);
     setHtmlMode(true);
   };
 
-  const switchToVisual=()=>{
+  const switchToVisual = () => {
     onChange(htmlDraft);
     setHtmlMode(false);
   };
 
-  const onEditorClick=(e:React.MouseEvent<HTMLDivElement>)=>{
-    const t=e.target as HTMLElement;
-    if(t.classList?.contains(IMG_HANDLE_CLASS)||t.closest?.(`.${IMG_HANDLE_CLASS}`)) return;
-    if(t.tagName==="IMG"){
+  const onEditorMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName === "IMG") {
+      e.preventDefault();
+      e.stopPropagation();
+      selectImage(t as HTMLImageElement);
+      return;
+    }
+  };
+
+  const onEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName === "IMG") {
       e.preventDefault();
       selectImage(t as HTMLImageElement);
       return;
     }
-    if(!t.closest?.(`.${IMG_SELECTED_CLASS}`) && selectedImgRef.current){
+    // Click empty area → deselect
+    if (selectedImgRef.current) {
       clearSelection();
-      emitHtml();
     }
   };
 
-  const btns=[
-    {l:"B",cmd:"bold"},
-    {l:"I",cmd:"italic"},
-    {l:"U",cmd:"underline"},
-    {l:"H2",cmd:"formatBlock",val:"h2"},
-    {l:"H3",cmd:"formatBlock",val:"h3"},
-    {l:"¶",cmd:"formatBlock",val:"p"},
-    {l:"• List",cmd:"insertUnorderedList"},
-    {l:"1. List",cmd:"insertOrderedList"},
-    {l:'""',cmd:"formatBlock",val:"blockquote"},
+  const btns = [
+    { l: "B", cmd: "bold" },
+    { l: "I", cmd: "italic" },
+    { l: "U", cmd: "underline" },
+    { l: "H2", cmd: "formatBlock", val: "h2" },
+    { l: "H3", cmd: "formatBlock", val: "h3" },
+    { l: "¶", cmd: "formatBlock", val: "p" },
+    { l: "• List", cmd: "insertUnorderedList" },
+    { l: "1. List", cmd: "insertOrderedList" },
+    { l: '""', cmd: "formatBlock", val: "blockquote" },
   ];
 
-  const toolBtn=(active?:boolean):React.CSSProperties=>({
-    padding:"3px 9px",
-    fontSize:"11px",
-    fontWeight:600,
-    background:active?"rgba(79,127,255,0.2)":"#1e2740",
-    color:active?"#4f7fff":"#8a93b0",
-    border:active?"1px solid #4f7fff":"1px solid #252f45",
-    borderRadius:"3px",
-    cursor:"pointer",
+  const toolBtn = (active?: boolean): React.CSSProperties => ({
+    padding: "3px 9px",
+    fontSize: "11px",
+    fontWeight: 600,
+    background: active ? "rgba(79,127,255,0.2)" : "#1e2740",
+    color: active ? "#4f7fff" : "#8a93b0",
+    border: active ? "1px solid #4f7fff" : "1px solid #252f45",
+    borderRadius: "3px",
+    cursor: "pointer",
   });
 
   return (
-    <div style={{display:"flex",flexDirection:"column",height:"100%"}}>
-      <div style={{display:"flex",flexWrap:"wrap",gap:"3px",padding:"7px 10px",background:"#131929",borderBottom:"1px solid #1e2740",alignItems:"center"}}>
-        {!htmlMode && btns.map(b=>(
-          <button
-            key={b.l}
-            type="button"
-            onMouseDown={e=>{e.preventDefault();exec(b.cmd,b.val);}}
-            style={toolBtn()}
-          >{b.l}</button>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", position: "relative" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "3px", padding: "7px 10px", background: "#131929", borderBottom: "1px solid #1e2740", alignItems: "center", flexShrink: 0 }}>
+        {!htmlMode && btns.map((b) => (
+          <button key={b.l} type="button" onMouseDown={(e) => { e.preventDefault(); exec(b.cmd, b.val); }} style={toolBtn()}>{b.l}</button>
         ))}
         {!htmlMode && (
           <>
-            <button
-              type="button"
-              onMouseDown={e=>{e.preventDefault();const u=prompt("Enter URL:");if(u)exec("createLink",u);}}
-              style={{...toolBtn(),color:"#4f7fff",border:"1px solid #2a3a6f"}}
-            >🔗 Link</button>
-            <button
-              type="button"
-              onMouseDown={e=>{e.preventDefault();onInsertImage();}}
-              style={{...toolBtn(),color:"#a855f7",border:"1px solid #4a2a7f"}}
-            >🖼 Images</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); const u = prompt("Enter URL:"); if (u) exec("createLink", u); }} style={{ ...toolBtn(), color: "#4f7fff", border: "1px solid #2a3a6f" }}>🔗 Link</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); onInsertImage(); }} style={{ ...toolBtn(), color: "#a855f7", border: "1px solid #4a2a7f" }}>🖼 Images</button>
           </>
         )}
-        <div style={{marginInlineStart:"auto",display:"flex",gap:4}}>
-          <button
-            type="button"
-            onClick={()=>{ if(htmlMode) switchToVisual(); }}
-            style={toolBtn(!htmlMode)}
-            title="Visual editor"
-          >Visual</button>
-          <button
-            type="button"
-            onClick={()=>{ if(!htmlMode) switchToHtml(); }}
-            style={toolBtn(htmlMode)}
-            title="Edit / paste raw HTML"
-          >{"</> HTML"}</button>
+        <div style={{ marginInlineStart: "auto", display: "flex", gap: 4 }}>
+          <button type="button" onClick={() => { if (htmlMode) switchToVisual(); }} style={toolBtn(!htmlMode)} title="Visual editor">Visual</button>
+          <button type="button" onClick={() => { if (!htmlMode) switchToHtml(); }} style={toolBtn(htmlMode)} title="Edit / paste raw HTML">{"</> HTML"}</button>
         </div>
       </div>
 
-      {!htmlMode && selectedImg && (
-        <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",padding:"8px 12px",background:"#0c1428",borderBottom:"1px solid #1e2740"}}>
-          <span style={{fontSize:11,fontWeight:700,color:"#4f7fff"}}>🖼 Image</span>
-          <span style={{fontSize:11,color:"#5a6380"}}>{sizeLabel}</span>
-          {[25,50,75,100].map((p)=>(
-            <button key={p} type="button" onMouseDown={(e)=>e.preventDefault()} onClick={()=>setWidthPct(p)} style={{...toolBtn(),padding:"2px 8px",fontSize:10}}>{p}%</button>
+      {/* Always-visible image toolbar when an image is selected */}
+      {!htmlMode && imgSelected && (
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
+            alignItems: "center",
+            padding: "10px 12px",
+            background: "#152038",
+            borderBottom: "2px solid #4f7fff",
+            flexShrink: 0,
+            zIndex: 5,
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 800, color: "#93c5fd" }}>🖼 Image tools</span>
+          <span style={{ fontSize: 11, color: "#94a3b8" }}>{sizeLabel || "—"}</span>
+          {[25, 50, 75, 100].map((p) => (
+            <button key={p} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setWidthPct(p)} style={{ ...toolBtn(), padding: "4px 10px", fontSize: 11 }}>{p}%</button>
           ))}
-          <label style={{display:"flex",alignItems:"center",gap:6,flex:"1 1 220px",minWidth:180,fontSize:11,color:"#8a93b0"}}>
-            Alt (SEO)
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flex: "1 1 260px", minWidth: 200 }}>
+            <span style={{ fontSize: 11, color: "#93c5fd", fontWeight: 700, whiteSpace: "nowrap" }}>Alt (SEO)</span>
             <input
               value={altDraft}
-              onChange={(e)=>setAltDraft(e.target.value)}
-              onKeyDown={(e)=>{ if(e.key==="Enter"){ e.preventDefault(); applyAlt(); } }}
-              placeholder="Describe image + keyword…"
+              onChange={(e) => setAltDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyAlt(); } }}
+              placeholder="Describe the image + focus keyword"
               dir="auto"
-              style={{flex:1,padding:"5px 8px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none"}}
+              style={{ flex: 1, padding: "7px 10px", background: "#0b1220", border: "1px solid #4f7fff", borderRadius: 6, color: "#e8ecf8", fontSize: 13, outline: "none" }}
             />
-          </label>
-          <button type="button" onMouseDown={(e)=>e.preventDefault()} onClick={applyAlt} style={{...toolBtn(true),padding:"5px 10px"}}>Save alt</button>
-          <button type="button" onMouseDown={(e)=>e.preventDefault()} onClick={()=>{clearSelection();emitHtml();}} style={{...toolBtn(),padding:"5px 10px"}}>Done</button>
-          <span style={{fontSize:10,color:"#3a4060"}}>Drag blue corner to resize · click image to select</span>
+            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={applyAlt} style={{ ...toolBtn(true), padding: "7px 12px" }}>Save alt</button>
+          </div>
+          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => clearSelection()} style={{ ...toolBtn(), padding: "7px 12px" }}>Done</button>
+          <span style={{ width: "100%", fontSize: 11, color: "#64748b" }}>Click image → drag blue handle to resize, or use % buttons. Edit alt then Save alt.</span>
         </div>
       )}
 
       {htmlMode ? (
         <textarea
           value={htmlDraft}
-          onChange={e=>{
-            setHtmlDraft(e.target.value);
-            onChange(e.target.value);
-          }}
+          onChange={(e) => { setHtmlDraft(e.target.value); onChange(e.target.value); }}
           spellCheck={false}
           dir="auto"
           placeholder="Paste full HTML here (like WordPress Text/HTML mode)..."
           style={{
-            flex:1,
-            minHeight:"360px",
-            padding:"16px 18px",
-            outline:"none",
-            resize:"none",
-            border:"none",
-            background:"#0a0f1a",
-            color:"#a5f3fc",
-            fontSize:"13px",
-            lineHeight:1.55,
-            fontFamily:"ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-            boxSizing:"border-box",
+            flex: 1,
+            minHeight: "360px",
+            padding: "16px 18px",
+            outline: "none",
+            resize: "none",
+            border: "none",
+            background: "#0a0f1a",
+            color: "#a5f3fc",
+            fontSize: "13px",
+            lineHeight: 1.55,
+            fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+            boxSizing: "border-box",
           }}
         />
       ) : (
-        <div
-          ref={ref}
-          contentEditable
-          suppressContentEditableWarning
-          onInput={()=>emitHtml()}
-          onClick={onEditorClick}
-          data-placeholder="Start writing or click 'Generate with AI'..."
-          style={{
-            flex:1,
-            padding:"20px 24px",
-            outline:"none",
-            overflowY:"auto",
-            color:"#d4d9f0",
-            fontSize:"15px",
-            lineHeight:"1.85",
-            fontFamily:"'Georgia',serif",
-            minHeight:"360px",
-          }}
-        />
+        <div style={{ flex: 1, position: "relative", minHeight: 360, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+          <div
+            ref={ref}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={() => emitHtml()}
+            onMouseDown={onEditorMouseDown}
+            onClick={onEditorClick}
+            data-placeholder="Start writing or click 'Generate with AI'..."
+            style={{
+              flex: 1,
+              padding: "20px 24px",
+              outline: "none",
+              overflowY: "auto",
+              color: "#d4d9f0",
+              fontSize: "15px",
+              lineHeight: "1.85",
+              fontFamily: "'Georgia',serif",
+              minHeight: "360px",
+            }}
+          />
+          {/* Resize overlay OUTSIDE contentEditable so it always works */}
+          {imgSelected && imgBox && (
+            <div
+              style={{
+                position: "absolute",
+                top: imgBox.top,
+                left: imgBox.left,
+                width: imgBox.width,
+                height: imgBox.height,
+                pointerEvents: "none",
+                zIndex: 30,
+                boxSizing: "border-box",
+                border: "2px solid #4f7fff",
+                borderRadius: 8,
+              }}
+            >
+              <div
+                onMouseDown={startResize}
+                title="Drag to resize"
+                style={{
+                  position: "absolute",
+                  right: -8,
+                  bottom: -8,
+                  width: 18,
+                  height: 18,
+                  background: "#4f7fff",
+                  border: "2px solid #fff",
+                  borderRadius: 4,
+                  cursor: "nwse-resize",
+                  pointerEvents: "auto",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.45)",
+                }}
+              />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -1273,8 +1290,6 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
         [contenteditable] blockquote{border-left:3px solid #4f7fff;margin:14px 0;padding:8px 18px;background:rgba(79,127,255,0.05);color:#8a93b0;font-style:italic}
         [contenteditable] figure{margin:20px 0;position:relative}
         [contenteditable] img{max-width:100%;height:auto;border-radius:8px;cursor:pointer}
-        [contenteditable] img.seo-img-selected{outline:2px solid #4f7fff;outline-offset:2px}
-        [contenteditable] .seo-img-handle{position:absolute;width:14px;height:14px;background:#4f7fff;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:20;box-shadow:0 1px 4px rgba(0,0,0,.45);user-select:none}
         [contenteditable] figcaption{text-align:center;color:#5a6380;font-size:13px;margin-top:6px}
         ::-webkit-scrollbar{width:5px}
         ::-webkit-scrollbar-track{background:#070b16}
