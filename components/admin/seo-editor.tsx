@@ -329,10 +329,11 @@ function applyImgBaseStyles(img: HTMLImageElement) {
 
 type ImgBox = { top: number; left: number; width: number; height: number };
 
-function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
+function RichEditor({content,onChange,onInsertImage,onBrowseStock,seedKeyword,registerReplaceHandler}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void;onBrowseStock?:()=>void;seedKeyword?:string;registerReplaceHandler?:(fn:(url:string,alt?:string)=>void)=>void}){
   const editorWrapRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const selectedImgRef = useRef<HTMLImageElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const skipSyncRef = useRef(false);
   const [htmlMode, setHtmlMode] = useState(false);
   const [htmlDraft, setHtmlDraft] = useState(content || "");
@@ -340,6 +341,10 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
   const [altDraft, setAltDraft] = useState("");
   const [sizeLabel, setSizeLabel] = useState("");
   const [imgBox, setImgBox] = useState<ImgBox | null>(null);
+  const [replaceUrl, setReplaceUrl] = useState("");
+  const [replaceBusy, setReplaceBusy] = useState(false);
+  const [replaceErr, setReplaceErr] = useState("");
+  const [showReplaceBox, setShowReplaceBox] = useState(true);
 
   const emitHtml = () => {
     if (!ref.current) return;
@@ -377,6 +382,70 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
     setAltDraft("");
     setSizeLabel("");
     setImgBox(null);
+    setReplaceUrl("");
+    setReplaceErr("");
+    setReplaceBusy(false);
+    setShowReplaceBox(true);
+  };
+
+  const replaceImageSrc = (url: string, nextAlt?: string) => {
+    const img = selectedImgRef.current;
+    if (!img || !url.trim()) return;
+    const clean = url.trim();
+    img.setAttribute("src", clean);
+    if (nextAlt !== undefined) {
+      img.setAttribute("alt", nextAlt);
+      setAltDraft(nextAlt);
+      const cap = img.closest("figure")?.querySelector("figcaption");
+      if (cap) cap.textContent = nextAlt;
+    }
+    setReplaceUrl(clean);
+    applyImgBaseStyles(img);
+    img.style.outline = "2px solid #4f7fff";
+    img.style.outlineOffset = "2px";
+    emitHtml();
+    requestAnimationFrame(() => {
+      measureSelected();
+      requestAnimationFrame(() => measureSelected());
+    });
+  };
+
+  useEffect(() => {
+    registerReplaceHandler?.(replaceImageSrc);
+  });
+
+  const applyReplaceUrl = () => {
+    const u = replaceUrl.trim();
+    if (!u) {
+      setReplaceErr("Enter an image URL");
+      return;
+    }
+    if (!/^https?:\/\//i.test(u) && !u.startsWith("data:image/")) {
+      setReplaceErr("URL must start with http:// or https://");
+      return;
+    }
+    setReplaceErr("");
+    replaceImageSrc(u);
+  };
+
+  const uploadReplaceFile = async (file: File) => {
+    if (!selectedImgRef.current) return;
+    setReplaceBusy(true);
+    setReplaceErr("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("seedKeyword", seedKeyword || altDraft || "image");
+      const res = await fetch("/api/upload-seo-image", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Upload failed");
+      replaceImageSrc(data.url, data.alt || altDraft || seedKeyword || "");
+    } catch (e: any) {
+      setReplaceErr(e?.message || "Upload failed");
+    } finally {
+      setReplaceBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const selectImage = (img: HTMLImageElement) => {
@@ -390,6 +459,9 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
     selectedImgRef.current = img;
     setImgSelected(true);
     setAltDraft(img.getAttribute("alt") || "");
+    setReplaceUrl(img.getAttribute("src") || "");
+    setReplaceErr("");
+    setShowReplaceBox(true);
     // measure after toolbar layout (toolbar changes height)
     requestAnimationFrame(() => {
       measureSelected();
@@ -570,9 +642,8 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
         <div
           style={{
             display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            alignItems: "center",
+            flexDirection: "column",
+            gap: 10,
             padding: "10px 12px",
             background: "#152038",
             borderBottom: "2px solid #4f7fff",
@@ -580,25 +651,95 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
             zIndex: 5,
           }}
         >
-          <span style={{ fontSize: 12, fontWeight: 800, color: "#93c5fd" }}>🖼 Image tools</span>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>{sizeLabel || "—"}</span>
-          {[25, 50, 75, 100].map((p) => (
-            <button key={p} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setWidthPct(p)} style={{ ...toolBtn(), padding: "4px 10px", fontSize: 11 }}>{p}%</button>
-          ))}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flex: "1 1 260px", minWidth: 200 }}>
-            <span style={{ fontSize: 11, color: "#93c5fd", fontWeight: 700, whiteSpace: "nowrap" }}>Alt (SEO)</span>
-            <input
-              value={altDraft}
-              onChange={(e) => setAltDraft(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyAlt(); } }}
-              placeholder="Describe the image + focus keyword"
-              dir="auto"
-              style={{ flex: 1, padding: "7px 10px", background: "#0b1220", border: "1px solid #4f7fff", borderRadius: 6, color: "#e8ecf8", fontSize: 13, outline: "none" }}
-            />
-            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={applyAlt} style={{ ...toolBtn(true), padding: "7px 12px" }}>Save alt</button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: "#93c5fd" }}>🖼 Image tools</span>
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>{sizeLabel || "—"}</span>
+            {[25, 50, 75, 100].map((p) => (
+              <button key={p} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setWidthPct(p)} style={{ ...toolBtn(), padding: "4px 10px", fontSize: 11 }}>{p}%</button>
+            ))}
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flex: "1 1 260px", minWidth: 200 }}>
+              <span style={{ fontSize: 11, color: "#93c5fd", fontWeight: 700, whiteSpace: "nowrap" }}>Alt (SEO)</span>
+              <input
+                value={altDraft}
+                onChange={(e) => setAltDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyAlt(); } }}
+                placeholder="Describe the image + focus keyword"
+                dir="auto"
+                style={{ flex: 1, padding: "7px 10px", background: "#0b1220", border: "1px solid #4f7fff", borderRadius: 6, color: "#e8ecf8", fontSize: 13, outline: "none" }}
+              />
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={applyAlt} style={{ ...toolBtn(true), padding: "7px 12px" }}>Save alt</button>
+            </div>
+            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => setShowReplaceBox((v) => !v)} style={{ ...toolBtn(showReplaceBox), padding: "7px 12px" }}>{showReplaceBox ? "Hide replace" : "Replace image"}</button>
+            <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => clearSelection()} style={{ ...toolBtn(), padding: "7px 12px" }}>Done</button>
           </div>
-          <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => clearSelection()} style={{ ...toolBtn(), padding: "7px 12px" }}>Done</button>
-          <span style={{ width: "100%", fontSize: 11, color: "#64748b" }}>Click image → drag blue handle to resize, or use % buttons. Edit alt then Save alt.</span>
+
+          {showReplaceBox && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                padding: 12,
+                background: "#0b1220",
+                border: "1px solid #2a3a6f",
+                borderRadius: 8,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 800, color: "#c4b5fd" }}>🔁 Replace this photo</div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  style={{ display: "none" }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadReplaceFile(f);
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={replaceBusy}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    ...toolBtn(true),
+                    padding: "8px 12px",
+                    opacity: replaceBusy ? 0.6 : 1,
+                    cursor: replaceBusy ? "default" : "pointer",
+                  }}
+                >
+                  {replaceBusy ? "⟳ Uploading…" : "📁 Upload from device"}
+                </button>
+                <button
+                  type="button"
+                  disabled={replaceBusy}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => (onBrowseStock ? onBrowseStock() : onInsertImage())}
+                  style={{ ...toolBtn(), padding: "8px 12px", color: "#a855f7", border: "1px solid #4a2a7f" }}
+                  title="Search stock images and replace this photo"
+                >
+                  🔍 Browse stock
+                </button>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                <span style={{ fontSize: 11, color: "#93c5fd", fontWeight: 700, whiteSpace: "nowrap" }}>Or image URL</span>
+                <input
+                  value={replaceUrl}
+                  onChange={(e) => setReplaceUrl(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyReplaceUrl(); } }}
+                  placeholder="https://…/photo.jpg"
+                  dir="ltr"
+                  style={{ flex: "1 1 280px", minWidth: 200, padding: "8px 10px", background: "#111827", border: "1px solid #2a3045", borderRadius: 6, color: "#e8ecf8", fontSize: 12, outline: "none" }}
+                />
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={applyReplaceUrl} style={{ ...toolBtn(true), padding: "8px 12px" }}>Apply URL</button>
+              </div>
+              {replaceErr ? <div style={{ fontSize: 11, color: "#f87171" }}>{replaceErr}</div> : null}
+              <div style={{ fontSize: 11, color: "#64748b" }}>
+                Upload replaces this image in place. Paste any direct image link and click Apply URL. Drag the blue corner to resize.
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1117,11 +1258,24 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
 
   const newPost=()=>{setEditingId(undefined);setSeedKw("");setContent("");setMetaTitle("");setMetaDesc("");setSlug("");setFocusKw("");setPostCat(categories[0]?.id||"uncategorized");setError("");setFaqSchema(null);setHowtoSchema(null);setNoindex(false);setCoverImage(null);setCoverImageAlt(null);setOgTitle("");setOgDescription("");setOgImage("");};
   const loadPost=(p:Post)=>{setEditingId(String(p.id));setCoverImage(null);setCoverImageAlt(null);setSeedKw(p.seedKeyword||"");setContent(p.content);setMetaTitle(p.metaTitle);setMetaDesc(p.metaDescription);setSlug(p.slug);setFocusKw(p.seedKeyword||"");setPostCat(p.category||"uncategorized");setTab("editor");};
-  const insertImage=(img:{url:string;alt:string})=>{setContent(prev=>prev+`<figure style="margin:24px 0;"><img src="${img.url}" alt="${img.alt}" style="width:100%;border-radius:8px;max-height:400px;object-fit:cover;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">${img.alt}</figcaption></figure>`);setShowImageModal(false);};
+  const stockReplaceModeRef = useRef(false);
+  const applyStockReplaceRef = useRef<((url: string, alt?: string) => void) | null>(null);
+  const insertImage = (img: { url: string; alt: string }) => {
+    if (stockReplaceModeRef.current && applyStockReplaceRef.current) {
+      applyStockReplaceRef.current(img.url, img.alt);
+      stockReplaceModeRef.current = false;
+      setShowImageModal(false);
+      return;
+    }
+    stockReplaceModeRef.current = false;
+    const a = (img.alt || "").replace(/"/g, "&quot;").replace(/</g, "");
+    setContent((prev) => prev + `<figure style="margin:24px 0;"><img src="${img.url}" alt="${a}" style="width:100%;max-width:100%;height:auto;border-radius:8px;display:block;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">${a}</figcaption></figure>`);
+    setShowImageModal(false);
+  };
 
   return (
     <div style={{minHeight:"100vh",background:"#090d1a",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#d4d9f0",display:"flex",flexDirection:"column"}}>
-      {showImageModal&&<ImageModal keyword={seedKw||focusKw||"construction"} onInsert={insertImage} onClose={()=>setShowImageModal(false)}/>}
+      {showImageModal&&<ImageModal keyword={seedKw||focusKw||"construction"} onInsert={insertImage} onClose={()=>{stockReplaceModeRef.current=false;setShowImageModal(false);}}/>}
       {showCatManager&&<CategoryManagerModal categories={categories} setCategories={setCategories} onClose={()=>setShowCatManager(false)}/>}
 
       {/* TOP BAR */}
@@ -1257,7 +1411,14 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
             </div>
           </div>}
           <div style={{flex:1,overflow:"hidden",background:"#0d1425",margin:"8px 16px 12px",borderRadius:7,border:"1px solid #1a2436",display:"flex",flexDirection:"column",minHeight:280}}>
-            <RichEditor content={content} onChange={setContent} onInsertImage={()=>setShowImageModal(true)}/>
+            <RichEditor
+              content={content}
+              onChange={setContent}
+              seedKeyword={seedKw || focusKw || ""}
+              onInsertImage={() => { stockReplaceModeRef.current = false; setShowImageModal(true); }}
+              onBrowseStock={() => { stockReplaceModeRef.current = true; setShowImageModal(true); }}
+              registerReplaceHandler={(fn) => { applyStockReplaceRef.current = fn; }}
+            />
           </div>
         </div>
         <RankMathSidebar analysis={analysis} focusKw={focusKw} setFocusKw={kw=>{setFocusKw(kw);if(!seedKw)setSeedKw(kw);}} posts={posts} onInsertInternal={p=>setContent(prev=>prev+` <a href="${postPublicPath(p)}">${p.title}</a>`)} onAiRewrite={mode=>{setRewriteMode(mode as any);setTimeout(handleRewrite,0);}}/>
