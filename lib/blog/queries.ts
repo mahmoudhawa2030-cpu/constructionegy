@@ -42,12 +42,35 @@ const CATEGORY_SELECT =
 const POST_SELECT =
   "id, category_slug, seed_keyword, title, slug, content, meta_title, meta_description, cover_image, cover_image_alt, status, publish_at, created_at, updated_at, faq_schema, howto_schema, noindex, og_title, og_description, og_image";
 
+/** Decode path segments that may still be percent-encoded (Arabic slugs). */
+export function decodePathSegment(value: string): string {
+  if (!value) return value;
+  let out = value;
+  // Decode up to twice in case of double-encoding (%25xx)
+  for (let i = 0; i < 2; i += 1) {
+    if (!/%[0-9A-Fa-f]{2}/.test(out)) break;
+    try {
+      const next = decodeURIComponent(out);
+      if (next === out) break;
+      out = next;
+    } catch {
+      break;
+    }
+  }
+  // NFC so Arabic URL forms match DB storage
+  try {
+    return out.normalize("NFC");
+  } catch {
+    return out;
+  }
+}
+
 export async function getCategoryBySlug(slug: string): Promise<CategoryRow | null> {
   const supabase = await createClient();
   const { data } = await supabase
     .from("categories")
     .select(CATEGORY_SELECT)
-    .eq("slug", slug)
+    .eq("slug", decodePathSegment(slug))
     .maybeSingle();
   return (data as CategoryRow) ?? null;
 }
@@ -60,7 +83,7 @@ export async function getPublishedPostsByCategory(
   const { data } = await supabase
     .from("seo_posts")
     .select(POST_SELECT)
-    .eq("category_slug", categorySlug)
+    .eq("category_slug", decodePathSegment(categorySlug))
     .eq("status", "published")
     .order("publish_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
@@ -73,11 +96,13 @@ export async function getPublishedPost(
   slug: string,
 ): Promise<SeoPostRow | null> {
   const supabase = await createClient();
+  const cat = decodePathSegment(categorySlug);
+  const postSlug = decodePathSegment(slug);
   const { data } = await supabase
     .from("seo_posts")
     .select(POST_SELECT)
-    .eq("category_slug", categorySlug)
-    .eq("slug", slug)
+    .eq("category_slug", cat)
+    .eq("slug", postSlug)
     .eq("status", "published")
     .maybeSingle();
   return (data as SeoPostRow) ?? null;

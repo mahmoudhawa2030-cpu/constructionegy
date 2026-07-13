@@ -14,6 +14,17 @@ const nextConfig: NextConfig = {
         hostname: "**.supabase.co",
         pathname: "/storage/v1/object/**",
       },
+      // Self-hosted Supabase Kong / storage (production)
+      {
+        protocol: "https",
+        hostname: "api.souqelmemar.com",
+        pathname: "/storage/v1/object/**",
+      },
+      {
+        protocol: "https",
+        hostname: "souqelmemar.com",
+        pathname: "/storage/v1/object/**",
+      },
       // Self-hosted storage (MinIO on Hetzner) — set NEXT_PUBLIC_STORAGE_BASE_URL when active
       {
         protocol: "https",
@@ -21,6 +32,19 @@ const nextConfig: NextConfig = {
           ? new URL(process.env.NEXT_PUBLIC_STORAGE_BASE_URL).hostname
           : "storage.example.com",
       },
+      // Allow raw IP / LAN storage during self-host (optional)
+      ...(process.env.NEXT_PUBLIC_SUPABASE_URL
+        ? [
+            {
+              protocol: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).protocol.replace(
+                ":",
+                "",
+              ) as "http" | "https",
+              hostname: new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname,
+              pathname: "/storage/v1/object/**",
+            },
+          ]
+        : []),
     ],
   },
   async redirects() {

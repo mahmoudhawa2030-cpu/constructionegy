@@ -143,6 +143,7 @@ export default async function BlogPostPage({ params }: PageProps) {
               priority
               sizes="(max-width: 768px) 100vw, 768px"
               src={post.cover_image}
+              unoptimized
             />
           </div>
         ) : null}
