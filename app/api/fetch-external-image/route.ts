@@ -1,34 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
-import { randomSuffix, slugify } from "@/lib/seo/slugs";
+import { searchStockImagesForKeyword, toEnglishImageQuery } from "@/lib/seo/stock-images";
+import { randomSuffix, storageObjectBase } from "@/lib/seo/slugs";
 
 type FetchBody = {
   query: string;
-  source?: "unsplash" | "pexels";
+  source?: "unsplash" | "pexels" | "openverse";
   altText?: string;
 };
 
-// Unsplash Source API (no key required)
-async function fetchFromUnsplash(query: string): Promise<string | null> {
-  try {
-    // Use Unsplash Source with random sig to get different images
-    const sig = Math.random().toString(36).substring(7);
-    const url = `https://source.unsplash.com/featured/1200x630/?${encodeURIComponent(query)}&sig=${sig}`;
-    
-    // Fetch to get the actual image URL (follows redirects)
-    const response = await fetch(url, { method: "HEAD", redirect: "follow" });
-    if (!response.ok) return null;
-    
-    // Get the final URL after redirects
-    const finalUrl = response.url;
-    return finalUrl;
-  } catch {
-    return null;
-  }
-}
-
-// Pexels API (requires key, better quality)
+// Pexels API (requires key)
 async function fetchFromPexels(query: string, apiKey: string): Promise<string | null> {
   try {
     const response = await fetch(
@@ -41,6 +23,15 @@ async function fetchFromPexels(query: string, apiKey: string): Promise<string | 
     if (!data.photos?.[0]?.src?.large) return null;
     
     return data.photos[0].src.large;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchFromOpenverse(query: string): Promise<string | null> {
+  try {
+    const { images } = await searchStockImagesForKeyword(query, 1);
+    return images[0]?.url ?? null;
   } catch {
     return null;
   }
@@ -86,12 +77,15 @@ export async function POST(req: NextRequest) {
   }
 
   const query = (body.query ?? "").trim();
-  const source = body.source ?? "unsplash";
+  const source = body.source ?? "openverse";
   const altText = (body.altText ?? query).trim();
 
   if (!query) {
     return NextResponse.json({ error: "query is required" }, { status: 400 });
   }
+
+  // Translate AR→EN for better stock results
+  const searchQuery = await toEnglishImageQuery(query);
 
   // Fetch image URL from source
   let imageUrl: string | null = null;
@@ -104,9 +98,9 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-    imageUrl = await fetchFromPexels(query, pexelsKey);
+    imageUrl = await fetchFromPexels(searchQuery, pexelsKey);
   } else {
-    imageUrl = await fetchFromUnsplash(query);
+    imageUrl = await fetchFromOpenverse(query);
   }
 
   if (!imageUrl) {
@@ -129,8 +123,8 @@ export async function POST(req: NextRequest) {
   const ext = imageUrl.split(".").pop()?.toLowerCase().split("?")[0] || "jpg";
   const contentType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
 
-  // Upload to Supabase Storage
-  const baseName = slugify(query) || "image";
+  // Upload to Supabase Storage (ASCII keys only — Arabic rejected as Invalid key)
+  const baseName = storageObjectBase(searchQuery || query, "image");
   const path = `${baseName}-${randomSuffix()}.${ext === "png" ? "png" : ext === "webp" ? "webp" : "jpg"}`;
 
   const { error: uploadError } = await supabase.storage
@@ -147,7 +141,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     url: publicUrl,
-    alt: altText || baseName.replace(/-/g, " "),
+    alt: altText || query,
     source,
     query,
   });

@@ -463,50 +463,64 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
 
 type StockImage = { url:string; thumb:string; alt:string; credit:string };
 
-// fetchImages: build `count` keyless stock-image URLs at 1200×630 (full) / 400×250 (thumb).
-// Seed variations: [query, "{query} construction", "{query} professional"].
-// Uses LoremFlickr (Flickr CC images by tag) — no API key required.
-async function fetchImages(query:string,count:number):Promise<StockImage[]>{
+/** AR→EN + Openverse search via /api/seo-images/search */
+async function fetchImages(query:string,_count:number):Promise<{images:StockImage[];englishQuery:string;error?:string}>{
   const q=(query||"").trim()||"construction";
-  const variations=[q,`${q} construction`,`${q} professional`];
-  return Array.from({length:count},(_,i)=>{
-    const seed=variations[i%3];
-    const tags=encodeURIComponent(seed.replace(/\s+/g,","));
+  try{
+    const res=await fetch(`/api/seo-images/search?q=${encodeURIComponent(q)}&count=9`);
+    const data=await res.json();
+    if(!res.ok) return {images:[],englishQuery:"",error:data.error||"Search failed"};
     return {
-      url:`https://loremflickr.com/1200/630/${tags}?lock=${i+1}`,
-      thumb:`https://loremflickr.com/400/250/${tags}?lock=${i+1}`,
-      alt:`${q} - professional construction image`,
-      credit:"Flickr (CC) via LoremFlickr",
+      images:(data.images||[]).map((img:StockImage)=>({
+        url:img.url,
+        thumb:img.thumb||img.url,
+        alt:img.alt||q,
+        credit:img.credit||"Openverse",
+      })),
+      englishQuery:data.englishQuery||"",
     };
-  });
+  }catch(e:any){
+    return {images:[],englishQuery:"",error:e?.message||"Network error"};
+  }
 }
 
 function ImageModal({keyword,onInsert,onClose}:{keyword:string;onInsert:(img:{url:string;alt:string})=>void;onClose:()=>void}){
   const [images,setImages]=useState<StockImage[]>([]);
   const [loading,setLoading]=useState(true);
   const [q,setQ]=useState(keyword||"");
+  const [enQuery,setEnQuery]=useState("");
+  const [err,setErr]=useState("");
   const load=async(query:string)=>{
-    setLoading(true);
-    try{setImages(await fetchImages(query,9));}
+    setLoading(true); setErr("");
+    try{
+      const r=await fetchImages(query,9);
+      setImages(r.images);
+      setEnQuery(r.englishQuery||"");
+      if(r.error) setErr(r.error);
+      else if(!r.images.length) setErr("No images found. Try English terms e.g. scaffolding construction");
+    }
     finally{setLoading(false);}
   };
   useEffect(()=>{load(keyword);},[keyword]);
   return <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.85)",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center"}}>
     <div style={{width:"min(720px,95vw)",background:"#0f1525",borderRadius:12,border:"1px solid #2a3045",overflow:"hidden",maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
-      <div style={{padding:"16px 20px",borderBottom:"1px solid #1e2740",display:"flex",alignItems:"center",gap:12}}>
+      <div style={{padding:"16px 20px",borderBottom:"1px solid #1e2740",display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
         <span style={{fontSize:"16px",fontWeight:800,color:"#e8ecf8",flex:1}}>🖼 Insert Image</span>
-        <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&load(q)} placeholder="Search images..." style={{padding:"6px 12px",background:"#111827",border:"1px solid #2a3045",borderRadius:6,color:"#e8ecf8",fontSize:"13px",outline:"none",width:"200px"}}/>
-        <button onClick={()=>load(q)} style={{padding:"6px 14px",background:"linear-gradient(135deg,#4f7fff,#7c3aed)",color:"#fff",border:"none",borderRadius:6,fontSize:"12px",fontWeight:700,cursor:"pointer"}}>Search</button>
-        <button onClick={onClose} style={{background:"none",border:"none",color:"#5a6380",fontSize:"20px",cursor:"pointer",lineHeight:1}}>✕</button>
+        <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>e.key==="Enter"&&load(q)} placeholder="ايجار سقالات / scaffolding..." dir="auto" style={{padding:"6px 12px",background:"#111827",border:"1px solid #2a3045",borderRadius:6,color:"#e8ecf8",fontSize:"13px",outline:"none",width:"220px"}}/>
+        <button type="button" onClick={()=>load(q)} style={{padding:"6px 14px",background:"linear-gradient(135deg,#4f7fff,#7c3aed)",color:"#fff",border:"none",borderRadius:6,fontSize:"12px",fontWeight:700,cursor:"pointer"}}>Search</button>
+        <button type="button" onClick={onClose} style={{background:"none",border:"none",color:"#5a6380",fontSize:"20px",cursor:"pointer",lineHeight:1}}>✕</button>
       </div>
+      {enQuery&&<div style={{padding:"6px 20px",fontSize:11,color:"#4a5370",borderBottom:"1px solid #1a2436"}}>Search: <span style={{color:"#4f7fff"}}>{enQuery}</span></div>}
       <div style={{padding:16,overflowY:"auto"}}>
-        {loading?<div style={{textAlign:"center",padding:"40px",color:"#5a6380"}}><div style={{fontSize:"32px",marginBottom:12}}>⏳</div>Loading images...</div>:<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
-          {images.map((img,i)=><div key={i} onClick={()=>onInsert(img)} style={{borderRadius:8,overflow:"hidden",cursor:"pointer",border:"2px solid transparent",transition:"all 0.2s"}} onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.borderColor="#4f7fff"} onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.borderColor="transparent"}>
-            <img src={img.thumb} alt={img.alt} loading="lazy" style={{width:"100%",height:"120px",objectFit:"cover",display:"block"}}/>
+        {loading?<div style={{textAlign:"center",padding:"40px",color:"#5a6380"}}><div style={{fontSize:"32px",marginBottom:12}}>⏳</div>Finding relevant images...</div>
+        :err&&!images.length?<div style={{textAlign:"center",padding:"40px",color:"#ef4444",fontSize:13}}>{err}</div>
+        :<div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {images.map((img,i)=><div key={i} onClick={()=>onInsert({url:img.url,alt:img.alt})} style={{borderRadius:8,overflow:"hidden",cursor:"pointer",border:"2px solid transparent",transition:"all 0.2s"}} onMouseEnter={e=>(e.currentTarget as HTMLDivElement).style.borderColor="#4f7fff"} onMouseLeave={e=>(e.currentTarget as HTMLDivElement).style.borderColor="transparent"}>
+            <img src={img.thumb} alt={img.alt} loading="lazy" style={{width:"100%",height:"120px",objectFit:"cover",display:"block",background:"#111827"}}/>
             <div style={{padding:"6px 8px",background:"#111827",fontSize:"10px",color:"#4a5370",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>Click to insert • {img.credit}</div>
           </div>)}
         </div>}
-        <div style={{marginTop:12,padding:10,background:"rgba(79,127,255,0.05)",borderRadius:6,border:"1px solid rgba(79,127,255,0.1)"}}><div style={{color:"#4a5370",fontSize:"11px"}}>💡 Free <strong style={{color:"#4f7fff"}}>Flickr (CC)</strong> images — no API key needed. Alt text auto-set to your keyword for SEO.</div></div>
+        <div style={{marginTop:12,padding:10,background:"rgba(79,127,255,0.05)",borderRadius:6,border:"1px solid rgba(79,127,255,0.1)"}}><div style={{color:"#4a5370",fontSize:"11px"}}>💡 Arabic keywords are translated to English, then searched on <strong style={{color:"#4f7fff"}}>Openverse (CC)</strong>. Alt text uses your focus keyword for SEO.</div></div>
       </div>
     </div>
   </div>;
@@ -751,10 +765,48 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
   const handleGenerate = async () => {
     setGenerating(true);
     try {
-      setGenStep("✍️ Writing article (1600–2000 words)...");
+      setGenStep("Writing article (1600-2000 words)...");
       const r = await generateArticle();
-      if (r) { setContent(r.content); setMetaTitle(r.metaTitle); setMetaDesc(r.metaDescription); setSlug(r.slug||toSlug(seedKw)); setFocusKw(seedKw); setGenStep("✅ Done!"); setTimeout(()=>setGenStep(""),2000); }
-    } catch(e:any) { setError("Generation failed: "+e.message); setGenStep(""); }
+      if (r) {
+        let html = r.content || "";
+        setGenStep("Adding relevant images...");
+        try {
+          const imgRes = await fetch("/api/seo-images/search?q=" + encodeURIComponent(seedKw || focusKw || "construction") + "&count=3");
+          if (imgRes.ok) {
+            const imgData = await imgRes.json() as { images?: Array<{ url: string; alt: string }> };
+            const imgs = imgData.images || [];
+            if (imgs.length) {
+              const figure = (img: { url: string; alt: string }) => {
+                const a = (img.alt || seedKw || "").replace(/"/g, "&quot;").replace(/</g, "");
+                return '<figure style="margin:24px 0;"><img src="' + img.url + '" alt="' + a + '" style="width:100%;border-radius:8px;max-height:400px;object-fit:cover;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">' + a + "</figcaption></figure>";
+              };
+              let inserted = 0;
+              html = html.replace(/<\/p>/i, (m) => {
+                if (inserted > 0) return m;
+                inserted += 1;
+                return "</p>" + figure(imgs[0]);
+              });
+              if (imgs[1]) {
+                let h2n = 0;
+                html = html.replace(/<\/h2>/gi, (m) => {
+                  h2n += 1;
+                  if (h2n === 2 && imgs[1]) return "</h2>" + figure(imgs[1]);
+                  if (h2n === 4 && imgs[2]) return "</h2>" + figure(imgs[2]);
+                  return m;
+                });
+              }
+            }
+          }
+        } catch { /* non-fatal */ }
+        setContent(html);
+        setMetaTitle(r.metaTitle);
+        setMetaDesc(r.metaDescription);
+        setSlug(r.slug || toSlug(seedKw));
+        setFocusKw(seedKw);
+        setGenStep("Done!");
+        setTimeout(() => setGenStep(""), 2000);
+      }
+    } catch (e: any) { setError("Generation failed: " + e.message); setGenStep(""); }
     finally { setGenerating(false); }
   };
 

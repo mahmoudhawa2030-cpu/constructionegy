@@ -53,7 +53,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "File too large" }, { status: 400 });
   }
 
-  const baseName = slugify(seedKeyword) || "image";
+  // Supabase Storage keys must be ASCII — Arabic seed keywords become "cover"/"image"
+  const baseName = storageObjectBase(seedKeyword, "cover");
   const ext = extFor(file.type);
   const path = `${baseName}-${randomSuffix()}.${ext}`;
   const bytes = await file.arrayBuffer();
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     url: publicUrl,
-    alt: seedKeyword || baseName.replace(/-/g, " "),
+    // Keep human/Arabic alt for SEO; path is ASCII-only
+    alt: seedKeyword || "cover image",
   });
 }

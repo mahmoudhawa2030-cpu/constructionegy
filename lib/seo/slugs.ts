@@ -48,6 +48,22 @@ export function slugify(input: string): string {
     .slice(0, 80);
 }
 
+/**
+ * ASCII-only object key for Supabase Storage.
+ * Storage rejects non-ASCII keys (e.g. Arabic) with "Invalid key".
+ * Safe for file paths; not for public URL slugs (use slugify for those).
+ */
+export function storageObjectBase(input: string, fallback = "image"): string {
+  const ascii = input
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return ascii || fallback;
+}
+
 /** Random alphanumeric suffix for unique file names. */
 export function randomSuffix(length = 6): string {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
