@@ -330,7 +330,7 @@ function applyImgBaseStyles(img: HTMLImageElement) {
 type ImgBox = { top: number; left: number; width: number; height: number };
 
 function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
-  const shellRef = useRef<HTMLDivElement>(null);
+  const editorWrapRef = useRef<HTMLDivElement>(null);
   const ref = useRef<HTMLDivElement>(null);
   const selectedImgRef = useRef<HTMLImageElement | null>(null);
   const skipSyncRef = useRef(false);
@@ -625,7 +625,7 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
           }}
         />
       ) : (
-        <div style={{ flex: 1, position: "relative", minHeight: 360, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div ref={editorWrapRef} style={{ flex: 1, position: "relative", minHeight: 360, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <div
             ref={ref}
             contentEditable
