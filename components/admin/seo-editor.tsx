@@ -316,14 +316,174 @@ function RankMathSidebar({analysis,focusKw,setFocusKw,posts,onInsertInternal,onA
   </div>;
 }
 
+const IMG_HANDLE_CLASS = "seo-img-handle";
+const IMG_SELECTED_CLASS = "seo-img-selected";
+
+function stripEditorChrome(root: HTMLElement): string {
+  root.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n) => n.remove());
+  root.querySelectorAll(`.${IMG_SELECTED_CLASS}`).forEach((n) => {
+    (n as HTMLElement).classList.remove(IMG_SELECTED_CLASS);
+    (n as HTMLElement).style.outline = "";
+    (n as HTMLElement).style.outlineOffset = "";
+  });
+  return root.innerHTML;
+}
+
+function applyImgBaseStyles(img: HTMLImageElement) {
+  img.style.display = "block";
+  img.style.maxWidth = "100%";
+  img.style.height = "auto";
+  img.style.borderRadius = img.style.borderRadius || "8px";
+  img.style.cursor = "pointer";
+  if (!img.style.width && !img.getAttribute("width")) {
+    img.style.width = "100%";
+  }
+  // Drop fixed max-height so mouse resize can grow freely
+  if (img.style.maxHeight) img.style.maxHeight = "";
+  if (img.style.objectFit === "cover") img.style.objectFit = "contain";
+}
+
 function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v:string)=>void;onInsertImage:()=>void}){
   const ref=useRef<HTMLDivElement>(null);
+  const selectedImgRef=useRef<HTMLImageElement|null>(null);
+  const resizingRef=useRef<{img:HTMLImageElement;startX:number;startW:number}|null>(null);
   const [htmlMode,setHtmlMode]=useState(false);
   const [htmlDraft,setHtmlDraft]=useState(content||"");
+  const [selectedImg,setSelectedImg]=useState<HTMLImageElement|null>(null);
+  const [altDraft,setAltDraft]=useState("");
+  const [sizeLabel,setSizeLabel]=useState("");
+
+  const emitHtml=()=>{
+    if(!ref.current) return;
+    const clone=ref.current.cloneNode(true) as HTMLElement;
+    onChange(stripEditorChrome(clone));
+  };
+
+  const clearSelection=()=>{
+    if(ref.current){
+      ref.current.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n)=>n.remove());
+      ref.current.querySelectorAll(`.${IMG_SELECTED_CLASS}`).forEach((n)=>{
+        (n as HTMLElement).classList.remove(IMG_SELECTED_CLASS);
+        (n as HTMLElement).style.outline="";
+        (n as HTMLElement).style.outlineOffset="";
+      });
+    }
+    selectedImgRef.current=null;
+    setSelectedImg(null);
+    setAltDraft("");
+    setSizeLabel("");
+  };
+
+  const placeHandle=(img:HTMLImageElement)=>{
+    if(!ref.current) return;
+    ref.current.querySelectorAll(`.${IMG_HANDLE_CLASS}`).forEach((n)=>n.remove());
+    const parent=img.parentElement;
+    if(!parent) return;
+    const cs=window.getComputedStyle(parent);
+    if(cs.position==="static") parent.style.position="relative";
+
+    img.classList.add(IMG_SELECTED_CLASS);
+    img.style.outline="2px solid #4f7fff";
+    img.style.outlineOffset="2px";
+
+    const handle=document.createElement("span");
+    handle.className=IMG_HANDLE_CLASS;
+    handle.contentEditable="false";
+    handle.title="Drag to resize";
+    handle.setAttribute("data-seo-ui","1");
+    Object.assign(handle.style,{
+      position:"absolute",
+      width:"14px",
+      height:"14px",
+      background:"#4f7fff",
+      border:"2px solid #fff",
+      borderRadius:"3px",
+      cursor:"nwse-resize",
+      zIndex:"20",
+      boxShadow:"0 1px 4px rgba(0,0,0,0.45)",
+      touchAction:"none",
+      userSelect:"none",
+    });
+
+    const syncHandlePos=()=>{
+      const parentRect=parent.getBoundingClientRect();
+      const imgRect=img.getBoundingClientRect();
+      handle.style.left=`${imgRect.right-parentRect.left-8}px`;
+      handle.style.top=`${imgRect.bottom-parentRect.top-8}px`;
+    };
+    syncHandlePos();
+    parent.appendChild(handle);
+
+    const onHandleDown=(e:MouseEvent|PointerEvent)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const startW=img.getBoundingClientRect().width;
+      resizingRef.current={img,startX:(e as MouseEvent).clientX,startW};
+      const onMove=(ev:MouseEvent)=>{
+        const st=resizingRef.current;
+        if(!st) return;
+        const delta=ev.clientX-st.startX;
+        const parentW=parent.getBoundingClientRect().width || ref.current?.clientWidth || 600;
+        const next=Math.max(80,Math.min(parentW,Math.round(st.startW+delta)));
+        st.img.style.width=`${next}px`;
+        st.img.style.height="auto";
+        st.img.removeAttribute("width");
+        st.img.removeAttribute("height");
+        setSizeLabel(`${next}px`);
+        syncHandlePos();
+      };
+      const onUp=()=>{
+        document.removeEventListener("mousemove",onMove);
+        document.removeEventListener("mouseup",onUp);
+        resizingRef.current=null;
+        emitHtml();
+        syncHandlePos();
+      };
+      document.addEventListener("mousemove",onMove);
+      document.addEventListener("mouseup",onUp);
+    };
+    handle.addEventListener("mousedown",onHandleDown);
+  };
+
+  const selectImage=(img:HTMLImageElement)=>{
+    clearSelection();
+    applyImgBaseStyles(img);
+    selectedImgRef.current=img;
+    setSelectedImg(img);
+    setAltDraft(img.getAttribute("alt")||"");
+    const w=Math.round(img.getBoundingClientRect().width||img.clientWidth||0);
+    setSizeLabel(w?`${w}px`:"auto");
+    placeHandle(img);
+  };
+
+  const applyAlt=()=>{
+    const img=selectedImgRef.current;
+    if(!img) return;
+    const alt=altDraft.trim();
+    img.setAttribute("alt",alt);
+    const fig=img.closest("figure");
+    const cap=fig?.querySelector("figcaption");
+    if(cap) cap.textContent=alt;
+    emitHtml();
+  };
+
+  const setWidthPct=(pct:number)=>{
+    const img=selectedImgRef.current;
+    if(!img||!ref.current) return;
+    img.style.width=`${pct}%`;
+    img.style.height="auto";
+    img.removeAttribute("width");
+    img.removeAttribute("height");
+    setSizeLabel(`${pct}%`);
+    placeHandle(img);
+    emitHtml();
+  };
 
   useEffect(()=>{
     if(!htmlMode && ref.current && ref.current.innerHTML!==content){
+      clearSelection();
       ref.current.innerHTML=content;
+      ref.current.querySelectorAll("img").forEach((el)=>applyImgBaseStyles(el as HTMLImageElement));
     }
   },[content,htmlMode]);
 
@@ -331,21 +491,45 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
     if(htmlMode) setHtmlDraft(content||"");
   },[htmlMode]);
 
+  useEffect(()=>{
+    if(htmlMode) clearSelection();
+  },[htmlMode]);
+
   const exec=(cmd:string,val?:string)=>{
     document.execCommand(cmd,false,val);
     ref.current?.focus();
-    onChange(ref.current?.innerHTML||"");
+    emitHtml();
   };
 
   const switchToHtml=()=>{
-    const current=ref.current?.innerHTML ?? content ?? "";
-    setHtmlDraft(current);
+    if(ref.current){
+      const clean=stripEditorChrome(ref.current.cloneNode(true) as HTMLElement);
+      setHtmlDraft(clean);
+      onChange(clean);
+    } else {
+      setHtmlDraft(content||"");
+    }
+    clearSelection();
     setHtmlMode(true);
   };
 
   const switchToVisual=()=>{
     onChange(htmlDraft);
     setHtmlMode(false);
+  };
+
+  const onEditorClick=(e:React.MouseEvent<HTMLDivElement>)=>{
+    const t=e.target as HTMLElement;
+    if(t.classList?.contains(IMG_HANDLE_CLASS)||t.closest?.(`.${IMG_HANDLE_CLASS}`)) return;
+    if(t.tagName==="IMG"){
+      e.preventDefault();
+      selectImage(t as HTMLImageElement);
+      return;
+    }
+    if(!t.closest?.(`.${IMG_SELECTED_CLASS}`) && selectedImgRef.current){
+      clearSelection();
+      emitHtml();
+    }
   };
 
   const btns=[
@@ -412,6 +596,30 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
         </div>
       </div>
 
+      {!htmlMode && selectedImg && (
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,alignItems:"center",padding:"8px 12px",background:"#0c1428",borderBottom:"1px solid #1e2740"}}>
+          <span style={{fontSize:11,fontWeight:700,color:"#4f7fff"}}>🖼 Image</span>
+          <span style={{fontSize:11,color:"#5a6380"}}>{sizeLabel}</span>
+          {[25,50,75,100].map((p)=>(
+            <button key={p} type="button" onMouseDown={(e)=>e.preventDefault()} onClick={()=>setWidthPct(p)} style={{...toolBtn(),padding:"2px 8px",fontSize:10}}>{p}%</button>
+          ))}
+          <label style={{display:"flex",alignItems:"center",gap:6,flex:"1 1 220px",minWidth:180,fontSize:11,color:"#8a93b0"}}>
+            Alt (SEO)
+            <input
+              value={altDraft}
+              onChange={(e)=>setAltDraft(e.target.value)}
+              onKeyDown={(e)=>{ if(e.key==="Enter"){ e.preventDefault(); applyAlt(); } }}
+              placeholder="Describe image + keyword…"
+              dir="auto"
+              style={{flex:1,padding:"5px 8px",background:"#111827",border:"1px solid #2a3045",borderRadius:5,color:"#e8ecf8",fontSize:12,outline:"none"}}
+            />
+          </label>
+          <button type="button" onMouseDown={(e)=>e.preventDefault()} onClick={applyAlt} style={{...toolBtn(true),padding:"5px 10px"}}>Save alt</button>
+          <button type="button" onMouseDown={(e)=>e.preventDefault()} onClick={()=>{clearSelection();emitHtml();}} style={{...toolBtn(),padding:"5px 10px"}}>Done</button>
+          <span style={{fontSize:10,color:"#3a4060"}}>Drag blue corner to resize · click image to select</span>
+        </div>
+      )}
+
       {htmlMode ? (
         <textarea
           value={htmlDraft}
@@ -442,7 +650,8 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
           ref={ref}
           contentEditable
           suppressContentEditableWarning
-          onInput={()=>onChange(ref.current?.innerHTML||"")}
+          onInput={()=>emitHtml()}
+          onClick={onEditorClick}
           data-placeholder="Start writing or click 'Generate with AI'..."
           style={{
             flex:1,
@@ -460,6 +669,7 @@ function RichEditor({content,onChange,onInsertImage}:{content:string;onChange:(v
     </div>
   );
 }
+
 
 type StockImage = { url:string; thumb:string; alt:string; credit:string };
 
@@ -778,7 +988,7 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
             if (imgs.length) {
               const figure = (img: { url: string; alt: string }) => {
                 const a = (img.alt || seedKw || "").replace(/"/g, "&quot;").replace(/</g, "");
-                return '<figure style="margin:24px 0;"><img src="' + img.url + '" alt="' + a + '" style="width:100%;border-radius:8px;max-height:400px;object-fit:cover;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">' + a + "</figcaption></figure>";
+                return '<figure style="margin:24px 0;position:relative;"><img src="' + img.url + '" alt="' + a + '" style="width:100%;max-width:100%;height:auto;border-radius:8px;display:block;" /><figcaption style="text-align:center;color:#888;font-size:13px;margin-top:8px;">' + a + "</figcaption></figure>";
               };
               let inserted = 0;
               html = html.replace(/<\/p>/i, (m) => {
@@ -1061,8 +1271,10 @@ export function SeoEditor({ initial, categories: propCats, siteUrl, locale }: Pr
         [contenteditable] ul,[contenteditable] ol{margin:0 0 13px;padding-left:22px}
         [contenteditable] li{margin-bottom:5px}
         [contenteditable] blockquote{border-left:3px solid #4f7fff;margin:14px 0;padding:8px 18px;background:rgba(79,127,255,0.05);color:#8a93b0;font-style:italic}
-        [contenteditable] figure{margin:20px 0}
-        [contenteditable] img{max-width:100%;border-radius:8px}
+        [contenteditable] figure{margin:20px 0;position:relative}
+        [contenteditable] img{max-width:100%;height:auto;border-radius:8px;cursor:pointer}
+        [contenteditable] img.seo-img-selected{outline:2px solid #4f7fff;outline-offset:2px}
+        [contenteditable] .seo-img-handle{position:absolute;width:14px;height:14px;background:#4f7fff;border:2px solid #fff;border-radius:3px;cursor:nwse-resize;z-index:20;box-shadow:0 1px 4px rgba(0,0,0,.45);user-select:none}
         [contenteditable] figcaption{text-align:center;color:#5a6380;font-size:13px;margin-top:6px}
         ::-webkit-scrollbar{width:5px}
         ::-webkit-scrollbar-track{background:#070b16}
