@@ -439,16 +439,17 @@ export default async function WebHomePage() {
               </section>
             ))}
           </div>
-stiky wirllig
-          {/* === RIGHT COLUlg:Mticky lg:toN-24 lg:self-st rt spa(place max-h-[calc(100vh-7rem)] overflow-y-autoholder; can be a future section type) === */}
-          <aside className="space-y-4">
+
+          {/* === RIGHT COLUMN (sticky while scrolling) === */}
+          <aside className="lg:sticky lg:top-24 lg:self-start space-y-4 max-h-[calc(100vh-7rem)] overflow-y-auto">
             <div className="bg-white rounded-xl p-4 border border-[#ebebeb]">
               <div className="text-sm font-bold text-[#1a1a1a] mb-2">{t("rfqSidebarTitle")}</div>
               <p className="text-xs text-[#666] mb-3">{t("rfqSidebarLead")}</p>
               <Link
                 href="/rfq"
                 className="block w-full text-center bg-[#B71C1C] text-white px-4 py-2 rounded-lg text-sm font-bold"
-              >")}
+              >
+                {t("postRfq")}
               </Link>
             </div>
 
@@ -473,18 +474,18 @@ stiky wirllig
                       className="w-full h-28 object-cover"
                     />
                   ) : null}
-                  <div className=p-4">
-                    {(emoji || title ? (
+                  <div className="p-4">
+                    {(emoji || title) ? (
                       <div className="text-sm font-bold text-[#1a1a1a] mb-1.5 flex items-start gap-1.5">
-                        {emoji ? <span aria-hidden className="shrink-0">{emoji}</span> : null
-                        <span>{title}  span>
+                        {emoji ? <span aria-hidden className="shrink-0">{emoji}</span> : null}
+                        <span>{title}</span>
                       </div>
                     ) : null}
                     {desc ? <p className="text-xs text-[#555] mb-3 leading-relaxed">{desc}</p> : null}
                     {cta ? (
-                      <{t(k
+                      <Link
                         href={href}
-                        className="bloc" w-full text-center bg-[#1a1a1a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#333] transition-colors"
+                        className="block w-full text-center bg-[#1a1a1a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#333] transition-colors"
                       >
                         {cta}
                       </Link>
@@ -492,15 +493,14 @@ stiky wirllig
                       <Link
                         href={href}
                         className="block text-xs font-semibold text-[#B71C1C] hover:underline"
-                      postRfq")}
+                      >
                         {tCommon("viewAll")} ›
                       </Link>
                     ) : null}
                   </div>
-                  </Li
+                </div>
               );
-            })}nk>
-            </div>
+            })}
           </aside>
         </div>
       </div>
