@@ -27,6 +27,7 @@ import type {
  * - trending: listing_id picker, title override
  * - promo_banners: bg_color, kicker, title, cta_label, href
  * - featured_suppliers: supplier_id picker, title override (display name)
+ * - sidebar_cards: image, title, description, cta_label, href, bg_color
  */
 type FormShape =
   | "title"
@@ -65,6 +66,15 @@ const FIELD_PRESETS: Record<WebHomeSectionSlug, FormShape[]> = {
   web_trending: ["listing_id", "title"],
   web_promo_banners: ["bg_color", "kicker", "title", "cta_label", "href"],
   web_featured_suppliers: ["supplier_id", "title"],
+  web_sidebar_cards: [
+    "image_url",
+    "title",
+    "description",
+    "cta_label",
+    "href",
+    "bg_color",
+    "icon_emoji",
+  ],
 };
 
 type Props = {
@@ -747,6 +757,8 @@ function labelForSection(
   switch (slug) {
     case "web_hero_slider":
       return t("sectionHero");
+    case "web_sidebar_cards":
+      return t("sectionSidebarCards");
     case "web_categories_strip":
       return t("sectionCategories");
     case "web_flash_deals":

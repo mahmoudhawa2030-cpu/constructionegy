@@ -50,6 +50,7 @@ export default async function WebHomePage() {
   const trending = data.web_trending;
   const promos = data.web_promo_banners;
   const suppliers = data.web_featured_suppliers;
+  const sidebarCards = data.web_sidebar_cards?.items ?? [];
 
   const heroSlides = hero?.items ?? [];
   const activeSlide = heroSlides[0]; // First slide always visible (server-rendered)
@@ -438,8 +439,8 @@ export default async function WebHomePage() {
               </section>
             ))}
           </div>
-
-          {/* === RIGHT COLUMN (placeholder; can be a future section type) === */}
+stiky wirllig
+          {/* === RIGHT COLUlg:Mticky lg:toN-24 lg:self-st rt spa(place max-h-[calc(100vh-7rem)] overflow-y-autoholder; can be a future section type) === */}
           <aside className="space-y-4">
             <div className="bg-white rounded-xl p-4 border border-[#ebebeb]">
               <div className="text-sm font-bold text-[#1a1a1a] mb-2">{t("rfqSidebarTitle")}</div>
@@ -447,9 +448,58 @@ export default async function WebHomePage() {
               <Link
                 href="/rfq"
                 className="block w-full text-center bg-[#B71C1C] text-white px-4 py-2 rounded-lg text-sm font-bold"
-              >
-                {t("postRfq")}
+              >")}
               </Link>
+            </div>
+
+            {sidebarCards.map((card) => {
+              const title = pick(card.title_ar, card.title_en, locale);
+              const desc = pick(card.description_ar, card.description_en, locale);
+              const cta = pick(card.cta_label_ar, card.cta_label_en, locale);
+              const href = card.href?.trim() || "#";
+              const bg = card.bg_color?.trim() || "#ffffff";
+              const emoji = card.icon_emoji?.trim() || "";
+              return (
+                <div
+                  key={card.id}
+                  className="rounded-xl border border-[#ebebeb] overflow-hidden shadow-sm"
+                  style={{ backgroundColor: bg }}
+                >
+                  {card.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={card.image_url}
+                      alt={title || ""}
+                      className="w-full h-28 object-cover"
+                    />
+                  ) : null}
+                  <div className=p-4">
+                    {(emoji || title ? (
+                      <div className="text-sm font-bold text-[#1a1a1a] mb-1.5 flex items-start gap-1.5">
+                        {emoji ? <span aria-hidden className="shrink-0">{emoji}</span> : null
+                        <span>{title}  span>
+                      </div>
+                    ) : null}
+                    {desc ? <p className="text-xs text-[#555] mb-3 leading-relaxed">{desc}</p> : null}
+                    {cta ? (
+                      <{t(k
+                        href={href}
+                        className="bloc" w-full text-center bg-[#1a1a1a] text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-[#333] transition-colors"
+                      >
+                        {cta}
+                      </Link>
+                    ) : href && href !== "#" ? (
+                      <Link
+                        href={href}
+                        className="block text-xs font-semibold text-[#B71C1C] hover:underline"
+                      postRfq")}
+                        {tCommon("viewAll")} ›
+                      </Link>
+                    ) : null}
+                  </div>
+                  </Li
+              );
+            })}nk>
             </div>
           </aside>
         </div>

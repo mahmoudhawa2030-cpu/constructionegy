@@ -75,7 +75,7 @@
   },
   "adminWebHomepage": {
     "title": "Web home page",
-    "lead": "Manage every section that appears on the web home page: slider, categories, flash deals, trending, promo banners and featured suppliers.",
+    "lead": "Manage every section that appears on the web home page: slider, categories, flash deals, trending, promo banners, featured suppliers, and sticky sidebar cards under RFQ.",
     "backAdmin": "â† Back to admin",
     "previewWebHome": "Preview /web",
     "infoNote": "Changes are applied immediately. Disable a section to hide it from the home page without losing items.",
@@ -86,6 +86,7 @@
     "sectionTrending": "Trending now",
     "sectionPromos": "Promo banners",
     "sectionSuppliers": "Featured suppliers",
+    "sectionSidebarCards": "Sidebar cards (under RFQ)",
     "itemsTitle": "Items ({count})",
     "noItems": "No items yet â€” add the first one below.",
     "addItem": "Add item",

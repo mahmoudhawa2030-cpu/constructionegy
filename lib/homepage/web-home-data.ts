@@ -7,7 +7,8 @@ export type WebHomeSectionSlug =
   | "web_flash_deals"
   | "web_trending"
   | "web_promo_banners"
-  | "web_featured_suppliers";
+  | "web_featured_suppliers"
+  | "web_sidebar_cards";
 
 export const WEB_HOME_SECTION_SLUGS: WebHomeSectionSlug[] = [
   "web_hero_slider",
@@ -16,6 +17,7 @@ export const WEB_HOME_SECTION_SLUGS: WebHomeSectionSlug[] = [
   "web_trending",
   "web_promo_banners",
   "web_featured_suppliers",
+  "web_sidebar_cards",
 ];
 
 type ItemRow = Database["public"]["Tables"]["homepage_section_items"]["Row"];
@@ -52,7 +54,7 @@ export type WebHomeData = Record<WebHomeSectionSlug, WebHomeSection | null>;
 export async function getWebHomeData(
   client: SupabaseClient<Database>,
 ): Promise<WebHomeData> {
-  // 1. Fetch all 6 enabled sections by slug
+  // 1. Fetch all known web-home sections by slug (enabled only for public home)
   const { data: sections } = await client
     .from("homepage_sections")
     .select("*")
@@ -214,6 +216,7 @@ function emptyData(): WebHomeData {
     web_categories_strip: null,
     web_flash_deals: null,
     web_trending: null,
+    web_sidebar_cards: null,
     web_promo_banners: null,
     web_featured_suppliers: null,
   };
