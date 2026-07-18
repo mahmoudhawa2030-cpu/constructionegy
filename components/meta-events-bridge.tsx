@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
@@ -6,27 +6,46 @@ import { Suspense, useEffect, useRef } from "react";
 import { trackMetaBrowserEvent } from "@/lib/meta/browser";
 
 /**
- * Sends PageView to Meta Pixel + Conversion API on route changes (shared event_id).
- * Pair with browser Pixel init in Admin → Tracking (you may remove the standalone
- * fbq('track','PageView') line to avoid a duplicate first hit without event_id).
+ * Single owner of PageView: browser Pixel + CAPI with the same event_id.
+ * Admin Pixel snippet must not also call fbq('track','PageView') — TrackingScripts strips it.
  */
 function MetaPageViewTrackerInner() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastKey = useRef<string>("");
+  const inflight = useRef(false);
 
   useEffect(() => {
     const qs = searchParams?.toString() ?? "";
     const key = `${pathname}?${qs}`;
-    if (!pathname || key === lastKey.current) return;
-    lastKey.current = key;
+    if (!pathname || key === lastKey.current || inflight.current) return;
 
-    // Let Pixel base code inject first on cold load
-    const t = window.setTimeout(() => {
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 40;
+
+    const fire = () => {
+      if (cancelled) return;
+      attempts += 1;
+      const hasFbq = typeof window !== "undefined" && typeof window.fbq === "function";
+      if (!hasFbq && attempts < maxAttempts) {
+        window.setTimeout(fire, 50);
+        return;
+      }
+      if (lastKey.current === key) return;
+      lastKey.current = key;
+      inflight.current = false;
       trackMetaBrowserEvent("PageView");
-    }, 50);
+    };
 
-    return () => window.clearTimeout(t);
+    inflight.current = true;
+    const t = window.setTimeout(fire, 80);
+
+    return () => {
+      cancelled = true;
+      inflight.current = false;
+      window.clearTimeout(t);
+    };
   }, [pathname, searchParams]);
 
   return null;

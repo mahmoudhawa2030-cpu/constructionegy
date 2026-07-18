@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect } from "react";
 
@@ -10,16 +10,23 @@ type Props = {
 /**
  * Injects admin-managed tracking HTML without wiping <head> (which drops CSS).
  * Script tags from innerHTML do not execute in React — recreate them in the DOM.
+ *
+ * Strips bare Meta PageView calls so PageView is owned by MetaEventsBridge
+ * (Pixel + CAPI with the same event_id) and ads are not double-counted.
  */
 export function TrackingScripts({ header, footer }: Props) {
   useEffect(() => {
+    if (document.querySelector("[data-tracking='tracking-header'],[data-tracking='tracking-footer']")) {
+      return;
+    }
+
     const cleanups: Array<() => void> = [];
 
     if (header.trim()) {
-      cleanups.push(injectHtml(header, document.head, "tracking-header"));
+      cleanups.push(injectHtml(sanitizeTrackingHtml(header), document.head, "tracking-header"));
     }
     if (footer.trim()) {
-      cleanups.push(injectHtml(footer, document.body, "tracking-footer"));
+      cleanups.push(injectHtml(sanitizeTrackingHtml(footer), document.body, "tracking-footer"));
     }
 
     return () => {
@@ -28,6 +35,23 @@ export function TrackingScripts({ header, footer }: Props) {
   }, [header, footer]);
 
   return null;
+}
+
+/** Remove automatic PageView so bridge can send one deduped PageView. Keep fbq('init'). */
+export function sanitizeTrackingHtml(html: string): string {
+  let out = html;
+
+  out = out.replace(
+    /fbq\s*\(\s*['"]track['"]\s*,\s*['"]PageView['"]\s*(?:,\s*\{[\s\S]*?\})?\s*\)\s*;?/gi,
+    "/* PageView handled by MetaEventsBridge (deduped) */",
+  );
+
+  out = out.replace(
+    /<noscript>\s*<img\b[^>]*facebook\.com\/tr\?[^>]*\bev=PageView[^>]*>\s*<\/noscript>/gi,
+    "",
+  );
+
+  return out;
 }
 
 function injectHtml(html: string, parent: HTMLElement, marker: string): () => void {
