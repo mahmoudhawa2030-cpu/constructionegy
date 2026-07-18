@@ -6,6 +6,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
+import { MetaEventsBridge } from "@/components/meta-events-bridge";
 import { SiteSchemaScripts } from "@/components/seo/site-schema";
 import { TrackingScripts } from "@/components/tracking-scripts";
 import { getSiteSeoSettings } from "@/lib/seo/site-settings";
@@ -14,6 +15,7 @@ import { getSiteUrl } from "@/lib/seo/site-url";
 import { getTrackingScripts } from "@/lib/tracking/get-tracking-scripts";
 
 import "./globals.css";
+
 
 const notoSansArabic = Noto_Sans_Arabic({
   variable: "--font-arabic",
@@ -76,7 +78,9 @@ export default async function RootLayout({
           </AppThemeProvider>
         </NextIntlClientProvider>
         <TrackingScripts footer={tracking.footer} header={tracking.header} />
+        <MetaEventsBridge />
       </body>
+
 
     </html>
   );

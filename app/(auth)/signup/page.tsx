@@ -9,9 +9,11 @@ import { EmailOtpCells } from "@/components/email-otp-cells";
 import { PasswordInput } from "@/components/password-input";
 import { getEmailOtpLength } from "@/lib/auth/email-otp-length";
 import { isPhoneTaken } from "@/lib/auth/check-phone";
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
 import { formatAuthErrorMessage } from "@/lib/supabase/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
 import { revokeOtherSessions } from "@/lib/supabase/revoke-other-sessions";
+
 
 /** Must match an entry under Supabase → Authentication → URL Configuration → Redirect URLs. */
 function getEmailRedirectTo(): string {
@@ -76,6 +78,12 @@ export default function SignupPage() {
       if (phone.trim()) {
         await supabase.from("profiles").update({ phone_number: phone.trim() }).eq("id", data.session.user.id);
       }
+      trackMetaBrowserEvent("CompleteRegistration", {
+        email,
+        phone: phone.trim() || undefined,
+        externalId: data.session.user.id,
+        customData: { content_name: "signup" },
+      });
       router.refresh();
       router.push("/profile");
       return;
@@ -95,6 +103,7 @@ export default function SignupPage() {
     }
     setMessage(t("checkEmail"));
   }
+
 
   async function handleVerifyOtp(e: React.FormEvent) {
     e.preventDefault();
@@ -125,12 +134,19 @@ export default function SignupPage() {
       if (phone.trim()) {
         await supabase.from("profiles").update({ phone_number: phone.trim() }).eq("id", data.session.user.id);
       }
+      trackMetaBrowserEvent("CompleteRegistration", {
+        email: pendingEmail,
+        phone: phone.trim() || undefined,
+        externalId: data.session.user.id,
+        customData: { content_name: "signup_otp" },
+      });
       router.refresh();
       router.push("/profile");
       return;
     }
     setError(t("verifyFailed"));
   }
+
 
   async function handleResendOtp() {
     setError(null);

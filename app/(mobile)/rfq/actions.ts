@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 
+import { trackMetaServerEvent } from "@/lib/meta/capi";
 import { createSupplierBidDraft } from "@/lib/rfq/bid-service";
 import { parseClosingDateLocalToIso } from "@/lib/rfq/closing-date";
 import { persistBidAttachmentFiles } from "@/lib/rfq/persist-bid-attachments";
 import { updateRfqDraftForOwner } from "@/lib/rfq/draft-service";
 import { canAccessFeature } from "@/lib/subscriptions/can-access";
 import { createClient } from "@/lib/supabase/server";
+
 
 const UUID = z.string().uuid();
 
@@ -196,12 +198,25 @@ export async function submitRfqDraftForBidsAction(
     return { ok: false, message: t("publishFailed") };
   }
 
+  void trackMetaServerEvent({
+    event_name: "Lead",
+    event_source_url: "/rfq",
+    externalId: user.id,
+    email: user.email,
+    custom_data: {
+      content_name: "rfq_publish",
+      content_ids: [parsedId.data],
+      content_category: "rfq",
+    },
+  });
+
   revalidatePath("/");
   revalidatePath("/rfq");
   revalidatePath("/rfq/opportunities");
   revalidatePath(`/rfq/opportunities/${parsedId.data}`);
   return { ok: true, message: t("published") };
 }
+
 
 export type RfqBidActionState = RfqDraftUiActionState;
 

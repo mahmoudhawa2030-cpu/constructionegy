@@ -40,6 +40,11 @@ services:
       - XAI_MODEL=${XAI_MODEL:-}
       - XAI_MODEL_ARTICLE=${XAI_MODEL_ARTICLE:-}
       - XAI_MODEL_FAST=${XAI_MODEL_FAST:-}
+      # Meta Conversions API (server-side) — never expose token to the browser
+      - META_PIXEL_ID=${META_PIXEL_ID:-}
+      - META_CAPI_ACCESS_TOKEN=${META_CAPI_ACCESS_TOKEN:-}
+      - META_CAPI_TEST_EVENT_CODE=${META_CAPI_TEST_EVENT_CODE:-}
+
     depends_on:
       - redis
     restart: unless-stopped
