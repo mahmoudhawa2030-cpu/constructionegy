@@ -7,6 +7,7 @@ import { AppThemeProvider } from "@/components/app-theme-provider";
 import { CapacitorBridge } from "@/components/capacitor-bridge";
 import { PresenceHeartbeat } from "@/components/presence-heartbeat";
 import { SiteSchemaScripts } from "@/components/seo/site-schema";
+import { TrackingScripts } from "@/components/tracking-scripts";
 import { getSiteSeoSettings } from "@/lib/seo/site-settings";
 import { buildPageMetadata } from "@/lib/seo/meta";
 import { getSiteUrl } from "@/lib/seo/site-url";
@@ -65,9 +66,6 @@ export default async function RootLayout({
       lang={locale}
       suppressHydrationWarning
     >
-      {tracking.header ? (
-        <head dangerouslySetInnerHTML={{ __html: tracking.header }} />
-      ) : null}
       <body className="flex h-full flex-col font-sans">
         <SiteSchemaScripts organization={siteSeo.organizationSchema} website={siteSeo.websiteSchema} />
         <NextIntlClientProvider locale={locale} messages={messages}>
@@ -77,10 +75,9 @@ export default async function RootLayout({
             {children}
           </AppThemeProvider>
         </NextIntlClientProvider>
-        {tracking.footer ? (
-          <div dangerouslySetInnerHTML={{ __html: tracking.footer }} />
-        ) : null}
+        <TrackingScripts footer={tracking.footer} header={tracking.header} />
       </body>
+
     </html>
   );
 }
