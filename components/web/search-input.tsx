@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
+
 export function SearchInput() {
   const [query, setQuery] = useState("");
   const router = useRouter();
@@ -11,10 +13,15 @@ export function SearchInput() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/gallery?q=${encodeURIComponent(query.trim())}`);
+    const q = query.trim();
+    if (q) {
+      trackMetaBrowserEvent("Search", {
+        customData: { search_string: q, content_category: "listings" },
+      });
+      router.push(`/gallery?q=${encodeURIComponent(q)}`);
     }
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="relative w-full">

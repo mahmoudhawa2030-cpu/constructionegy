@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { toggleListingFavorite } from "@/lib/favorites/actions";
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
+
 
 type Props = {
   listingId: string;
@@ -68,9 +70,18 @@ export function ListingFavoriteHeart({
         return;
       }
       setFavorited(r.favorited);
+      if (r.favorited) {
+        trackMetaBrowserEvent("AddToWishlist", {
+          customData: {
+            content_ids: [listingId],
+            content_type: "product",
+          },
+        });
+      }
       router.refresh();
     });
   };
+
 
   if (variant === "card") {
     if (!isLoggedIn) {

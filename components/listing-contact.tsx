@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import { ListingPhoneLink } from "@/components/listing-phone-link";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
 
 type Props = {
   listingId: string;
@@ -36,8 +37,13 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
       }
       const result = raw as StartChatResult;
       if (result.ok) {
-        // Full navigation is more reliable than client router after server actions
-        // (Firefox + Vercel sometimes fail to apply router.push before paint).
+        trackMetaBrowserEvent("Contact", {
+          customData: {
+            content_ids: [listingId],
+            content_type: "product",
+            content_name: "listing_chat",
+          },
+        });
         window.location.assign(`/messages/${result.chatId}`);
         return;
       }
@@ -67,6 +73,13 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
     setPhoneRevealLoading(false);
     if (result.ok) {
       setRevealedPhone(result.phone);
+      trackMetaBrowserEvent("Contact", {
+        customData: {
+          content_ids: [listingId],
+          content_type: "product",
+          content_name: "listing_phone_reveal",
+        },
+      });
       return;
     }
     if (result.reason === "login") {

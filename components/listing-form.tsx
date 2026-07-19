@@ -11,8 +11,10 @@ import { createListing, updateListing } from "@/lib/listings/actions";
 import { labelForCategorySlug } from "@/lib/listings/categories";
 import { EGYPT_GOVERNORATES_AR, isEgyptGovernorateAr } from "@/lib/listings/egypt-governorates";
 import { compressImageForUpload } from "@/lib/images/compress-image-client";
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
 import { createClient } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/database.types";
+
 
 const MAX_FILES = 10;
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -193,9 +195,20 @@ export function ListingForm({
       setError(result.message);
       return;
     }
+    trackMetaBrowserEvent("Lead", {
+      customData: {
+        content_ids: [result.id],
+        content_type: "product",
+        content_name: "listing_create",
+        content_category: category,
+        value: Number.isFinite(price) ? price : undefined,
+        currency: price_unit || "EGP",
+      },
+    });
     router.push(`/listings/${result.id}`);
     router.refresh();
   }
+
 
   function removeImage(url: string) {
     setImageList((prev) => prev.filter((u) => u !== url));

@@ -5,6 +5,8 @@ import { useState } from "react";
 
 import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
+import { trackMetaBrowserEvent } from "@/lib/meta/browser";
+
 
 type Props = {
   listingId: string;
@@ -76,6 +78,13 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
       }
       const result = raw as StartChatResult;
       if (result.ok) {
+        trackMetaBrowserEvent("Contact", {
+          customData: {
+            content_ids: [listingId],
+            content_type: "product",
+            content_name: "listing_chat",
+          },
+        });
         window.location.assign(`/messages/${result.chatId}`);
         return;
       }
@@ -93,8 +102,16 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
     }
   }
 
+
   async function handleCall() {
     if (revealedPhone) {
+      trackMetaBrowserEvent("Contact", {
+        customData: {
+          content_ids: [listingId],
+          content_type: "product",
+          content_name: "listing_phone_click",
+        },
+      });
       window.location.href = `tel:${revealedPhone.replace(/\s/g, "")}`;
       return;
     }
@@ -110,6 +127,13 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
     setPhoneLoading(false);
     if (result.ok) {
       setRevealedPhone(result.phone);
+      trackMetaBrowserEvent("Contact", {
+        customData: {
+          content_ids: [listingId],
+          content_type: "product",
+          content_name: result.phone ? "listing_phone_click" : "listing_phone_reveal",
+        },
+      });
       if (result.phone) {
         window.location.href = `tel:${result.phone.replace(/\s/g, "")}`;
       } else {
@@ -117,6 +141,7 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
       }
       return;
     }
+
     if (result.reason === "login") {
       window.location.assign(
         `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,

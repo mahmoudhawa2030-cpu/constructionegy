@@ -239,7 +239,15 @@ export default async function WebListingDetailPage({ params }: PageProps) {
     <>
       <JsonLd data={productJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
-      <ListingViewTracker listingId={listing.id} skip={isOwner} />
+      <ListingViewTracker
+        listingId={listing.id}
+        skip={isOwner}
+        title={listing.title}
+        category={listing.category}
+        price={Number(listing.price)}
+        currency={listing.price_unit || "EGP"}
+      />
+
 
       <div className="mx-auto w-full max-w-[1280px] px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
         {/* Breadcrumb */}

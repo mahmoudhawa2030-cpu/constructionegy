@@ -241,7 +241,15 @@ export default async function ListingDetailPage({ params }: PageProps) {
     <>
       <JsonLd data={productJsonLd} />
       <JsonLd data={breadcrumbJsonLd} />
-      <ListingViewTracker listingId={listing.id} skip={isOwner} />
+      <ListingViewTracker
+        listingId={listing.id}
+        skip={isOwner}
+        title={listing.title}
+        category={listing.category}
+        price={Number(listing.price)}
+        currency={listing.price_unit || "EGP"}
+      />
+
 
       {/* OLX-style mobile layout */}
       <div className="bg-white text-zinc-900">

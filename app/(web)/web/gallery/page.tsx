@@ -3,9 +3,11 @@ import { permanentRedirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { ListingCard } from "@/components/listing-card";
+import { MetaSearchTracker } from "@/components/meta-search-tracker";
 import { getCategoryLabelMap } from "@/lib/categories/queries";
 import { isReservedSlug } from "@/lib/seo/slugs";
 import { createClient } from "@/lib/supabase/server";
+
 
 export const dynamic = "force-dynamic";
 
@@ -77,8 +79,10 @@ export default async function WebGalleryPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 py-6 sm:px-6 lg:px-8">
+      {searchQuery ? <MetaSearchTracker query={searchQuery} /> : null}
       {/* Page heading */}
       <div className="flex flex-col gap-1">
+
         <h1 className="font-bina-display text-2xl font-bold tracking-wide text-zinc-900">
           {filteredLabel
             ? t.rich("titleFiltered", {

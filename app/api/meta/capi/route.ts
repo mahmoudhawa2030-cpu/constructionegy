@@ -14,7 +14,9 @@ const ALLOWED_EVENTS = new Set([
   "ViewContent",
   "Search",
   "Contact",
+  "AddToWishlist",
 ]);
+
 
 type Body = {
   event_name?: string;

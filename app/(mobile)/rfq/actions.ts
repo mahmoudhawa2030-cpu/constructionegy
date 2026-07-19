@@ -281,11 +281,26 @@ export async function createRfqBidDraftAction(
     }
   }
 
+  void trackMetaServerEvent({
+    event_name: "Lead",
+    event_source_url: `/rfq/opportunities/${parsedId.data}`,
+    externalId: user.id,
+    email: user.email,
+    custom_data: {
+      content_name: "rfq_bid",
+      content_ids: [parsedId.data, created.bidId],
+      content_category: "rfq_bid",
+      value: total_amount ?? undefined,
+      currency: "EGP",
+    },
+  });
+
   revalidatePath("/rfq/opportunities");
   revalidatePath(`/rfq/opportunities/${parsedId.data}`);
   revalidatePath("/rfq");
   return { ok: true, message: t("bidSaved") };
 }
+
 
 export async function addRfqBidDraftAttachmentsAction(
   _prev: RfqBidActionState | null,
