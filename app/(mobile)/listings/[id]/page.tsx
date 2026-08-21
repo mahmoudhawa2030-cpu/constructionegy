@@ -551,7 +551,7 @@ export default async function ListingDetailPage({ params }: PageProps) {
           ) : null}
         </div>
 
-        {/* Sticky bottom action bar (Chat + Call) */}
+        {/* Sticky bottom action bar (Call only) */}
         <ListingMobileActionBar
           isLoggedIn={Boolean(user)}
           isOwner={isOwner}

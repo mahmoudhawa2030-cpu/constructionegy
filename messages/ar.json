@@ -296,7 +296,12 @@
     "hoursAgo": "{count, plural, =1 {منذ ساعة} =2 {منذ ساعتين} few {منذ # ساعات} many {منذ # ساعة} other {منذ # ساعة}}",
     "daysAgo": "{count, plural, =1 {منذ يوم} =2 {منذ يومين} few {منذ # أيام} many {منذ # يوماً} other {منذ # يوم}}",
     "monthsAgo": "{count, plural, =1 {منذ شهر} =2 {منذ شهرين} few {منذ # أشهر} many {منذ # شهراً} other {منذ # شهر}}",
-    "yearsAgo": "{count, plural, =1 {منذ سنة} =2 {منذ سنتين} few {منذ # سنوات} many {منذ # سنة} other {منذ # سنة}}"
+    "yearsAgo": "{count, plural, =1 {منذ سنة} =2 {منذ سنتين} few {منذ # سنوات} many {منذ # سنة} other {منذ # سنة}}",
+    "contactByPhoneOnly": "التواصل مع البائع متاح عبر رقم الهاتف فقط.",
+    "loginToContactPhone": "سجّل الدخول لعرض رقم هاتف البائع بخصوص هذا الإعلان.",
+    "loginToShowPhone": "تسجيل الدخول لإظهار الهاتف",
+    "loadingPhone": "جاري التحميل…",
+    "ownListingPhoneHint": "هذا إعلانك — يمكن للمشترين التواصل معك عبر الهاتف من هنا."
   },
   "suppliers": {
     "unnamedSupplier": "مورد غير مسماة",

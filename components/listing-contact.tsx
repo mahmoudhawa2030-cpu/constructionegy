@@ -1,9 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import { ListingPhoneLink } from "@/components/listing-phone-link";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
 import { trackMetaBrowserEvent } from "@/lib/meta/browser";
@@ -15,56 +15,10 @@ type Props = {
 };
 
 export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
+  const t = useTranslations("listingDetail");
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [phoneRevealLoading, setPhoneRevealLoading] = useState(false);
   const [revealedPhone, setRevealedPhone] = useState<string | null | undefined>(undefined);
-
-  async function startChat() {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/chat/for-listing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId }),
-        credentials: "same-origin",
-      });
-      const raw: unknown = await res.json().catch(() => null);
-      if (!raw || typeof raw !== "object" || !("ok" in raw)) {
-        setError("تعذر بدء المحادثة.");
-        return;
-      }
-      const result = raw as StartChatResult;
-      if (result.ok) {
-        trackMetaBrowserEvent("Contact", {
-          customData: {
-            content_ids: [listingId],
-            content_type: "product",
-            content_name: "listing_chat",
-          },
-        });
-        window.location.assign(`/messages/${result.chatId}`);
-        return;
-      }
-      if (result.reason === "login") {
-        window.location.assign(
-          `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-        );
-        return;
-      }
-      if (result.reason === "own_listing") {
-        setError("لا يمكنك مراسلة نفسك لإعلانك.");
-        return;
-      }
-      setError(result.message ?? "تعذر بدء المحادثة.");
-    } catch (e) {
-      console.error(e);
-      setError(e instanceof Error ? e.message : "تعذر بدء المحادثة.");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function revealPhone() {
     setError(null);
@@ -89,16 +43,16 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
       return;
     }
     if (result.reason === "own_listing") {
-      setError("هذا إعلانك.");
+      setError(t("ownListing"));
       return;
     }
-    setError(result.message ?? "تعذر جلب رقم الهاتف.");
+    setError(result.message ?? t("noPhone"));
   }
 
   if (isOwner) {
     return (
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
-        هذا إعلانك — يمكن للمشترين مراسلتك من هنا عند عرض الإعلان.
+        {t("ownListingPhoneHint")}
       </div>
     );
   }
@@ -106,14 +60,12 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
-          سجّل الدخول لمراسلة البائع بخصوص هذا الإعلان.
-        </p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("loginToContactPhone")}</p>
         <Link
           className="inline-flex w-fit rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
           href={`/login?next=/listings/${listingId}`}
         >
-          تسجيل الدخول للمراسلة
+          {t("loginToShowPhone")}
         </Link>
       </div>
     );
@@ -121,39 +73,29 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
 
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="flex flex-col gap-2">
-        {revealedPhone === undefined ? (
-          <button
-            className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-950 dark:text-zinc-50 dark:hover:bg-zinc-900"
-            disabled={phoneRevealLoading}
-            type="button"
-            onClick={revealPhone}
-          >
-            {phoneRevealLoading ? "جاري التحميل…" : "إظهار رقم الهاتف"}
-          </button>
-        ) : revealedPhone ? (
-          <ListingPhoneLink
-            className="block w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-950 tabular-nums dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
-            listingId={listingId}
-            telHref={`tel:${revealedPhone.replace(/\s/g, "")}`}
-          >
-            {revealedPhone}
-          </ListingPhoneLink>
-        ) : (
-          <p className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
-            لا يوجد رقم هاتف مُسجّل لدى البائع.
-          </p>
-        )}
-      </div>
-      <p className="text-sm text-zinc-600 dark:text-zinc-400">تواصل مع البائع عبر المحادثة.</p>
-      <button
-        className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-        disabled={loading}
-        type="button"
-        onClick={startChat}
-      >
-        {loading ? "جاري الفتح…" : "مراسلة البائع"}
-      </button>
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("contactByPhoneOnly")}</p>
+      {revealedPhone === undefined ? (
+        <button
+          className="w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+          disabled={phoneRevealLoading}
+          type="button"
+          onClick={revealPhone}
+        >
+          {phoneRevealLoading ? t("loadingPhone") : t("showPhone")}
+        </button>
+      ) : revealedPhone ? (
+        <ListingPhoneLink
+          className="block w-full rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-center text-sm font-medium text-emerald-950 tabular-nums dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-100"
+          listingId={listingId}
+          telHref={`tel:${revealedPhone.replace(/\s/g, "")}`}
+        >
+          {revealedPhone}
+        </ListingPhoneLink>
+      ) : (
+        <p className="rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-center text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400">
+          {t("noPhone")}
+        </p>
+      )}
       {error ? (
         <p className="text-sm text-red-600 dark:text-red-400" role="alert">
           {error}

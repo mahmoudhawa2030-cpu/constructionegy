@@ -294,7 +294,12 @@
     "hoursAgo": "{count, plural, =1 {1 hour ago} other {# hours ago}}",
     "daysAgo": "{count, plural, =1 {1 day ago} other {# days ago}}",
     "monthsAgo": "{count, plural, =1 {1 month ago} other {# months ago}}",
-    "yearsAgo": "{count, plural, =1 {1 year ago} other {# years ago}}"
+    "yearsAgo": "{count, plural, =1 {1 year ago} other {# years ago}}",
+    "contactByPhoneOnly": "Contact the seller by phone only.",
+    "loginToContactPhone": "Log in to view the seller phone number for this listing.",
+    "loginToShowPhone": "Log in to show phone",
+    "loadingPhone": "Loading…",
+    "ownListingPhoneHint": "This is your listing — buyers can contact you by phone from here."
   },
   "suppliers": {
     "unnamedSupplier": "Unnamed Supplier",

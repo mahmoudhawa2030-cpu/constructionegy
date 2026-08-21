@@ -1,22 +1,23 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 
 import { markConversationSeenWithClient } from "@/lib/chat/mark-conversation-seen-core";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateChatForListingCore, type StartChatResult } from "@/lib/chat/get-or-create-for-listing";
+import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import type { Database } from "@/lib/supabase/database.types";
 
 type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 
 export type { StartChatResult };
 
-export async function getOrCreateChatForListing(listingId: string): Promise<StartChatResult> {
-  const result = await getOrCreateChatForListingCore(listingId);
-  if (result.ok) {
-    revalidatePath("/messages");
-  }
-  return result;
+/** Listing contact is phone-only; internal messaging from listings is disabled. */
+export async function getOrCreateChatForListing(_listingId: string): Promise<StartChatResult> {
+  return {
+    ok: false,
+    reason: "error",
+    message: "التواصل على الإعلانات متاح عبر رقم الهاتف فقط.",
+  };
 }
 
 export type SendMessageResult =

@@ -1,35 +1,16 @@
-"use client";
+﻿"use client";
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import type { StartChatResult } from "@/lib/chat/get-or-create-for-listing";
 import { revealSellerPhoneForListing } from "@/lib/listings/contact-actions";
 import { trackMetaBrowserEvent } from "@/lib/meta/browser";
-
 
 type Props = {
   listingId: string;
   isOwner: boolean;
   isLoggedIn: boolean;
 };
-
-function ChatIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden
-      className={className ?? "h-5 w-5"}
-      fill="none"
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
-    >
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
-  );
-}
 
 function PhoneIcon({ className }: { className?: string }) {
   return (
@@ -50,58 +31,9 @@ function PhoneIcon({ className }: { className?: string }) {
 
 export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props) {
   const t = useTranslations("listingDetail");
-  const [chatLoading, setChatLoading] = useState(false);
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [revealedPhone, setRevealedPhone] = useState<string | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
-
-  async function startChat() {
-    if (!isLoggedIn) {
-      window.location.assign(
-        `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-      );
-      return;
-    }
-    setError(null);
-    setChatLoading(true);
-    try {
-      const res = await fetch("/api/chat/for-listing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId }),
-        credentials: "same-origin",
-      });
-      const raw: unknown = await res.json().catch(() => null);
-      if (!raw || typeof raw !== "object" || !("ok" in raw)) {
-        setError("تعذر بدء المحادثة.");
-        return;
-      }
-      const result = raw as StartChatResult;
-      if (result.ok) {
-        trackMetaBrowserEvent("Contact", {
-          customData: {
-            content_ids: [listingId],
-            content_type: "product",
-            content_name: "listing_chat",
-          },
-        });
-        window.location.assign(`/messages/${result.chatId}`);
-        return;
-      }
-      if (result.reason === "login") {
-        window.location.assign(
-          `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-        );
-        return;
-      }
-      setError(result.message ?? "تعذر بدء المحادثة.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "تعذر بدء المحادثة.");
-    } finally {
-      setChatLoading(false);
-    }
-  }
-
 
   async function handleCall() {
     if (revealedPhone) {
@@ -165,26 +97,15 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
           {error}
         </p>
       ) : null}
-      <div className="flex gap-2">
-        <button
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#dc3545] py-3 text-base font-semibold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-60"
-          disabled={chatLoading}
-          type="button"
-          onClick={startChat}
-        >
-          <ChatIcon />
-          <span>{chatLoading ? "…" : t("chat")}</span>
-        </button>
-        <button
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#2b6cb0] py-3 text-base font-semibold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-60"
-          disabled={phoneLoading}
-          type="button"
-          onClick={handleCall}
-        >
-          <PhoneIcon />
-          <span>{phoneLoading ? "…" : revealedPhone ? revealedPhone : t("call")}</span>
-        </button>
-      </div>
+      <button
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#2b6cb0] py-3 text-base font-semibold text-white shadow-sm transition active:scale-[0.99] disabled:opacity-60"
+        disabled={phoneLoading}
+        type="button"
+        onClick={handleCall}
+      >
+        <PhoneIcon />
+        <span>{phoneLoading ? "…" : revealedPhone ? revealedPhone : t("call")}</span>
+      </button>
     </div>
   );
 }
