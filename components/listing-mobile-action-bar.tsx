@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -29,7 +29,7 @@ function PhoneIcon({ className }: { className?: string }) {
   );
 }
 
-export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props) {
+export function ListingMobileActionBar({ listingId, isOwner }: Props) {
   const t = useTranslations("listingDetail");
   const [phoneLoading, setPhoneLoading] = useState(false);
   const [revealedPhone, setRevealedPhone] = useState<string | null | undefined>(undefined);
@@ -47,12 +47,7 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
       window.location.href = `tel:${revealedPhone.replace(/\s/g, "")}`;
       return;
     }
-    if (!isLoggedIn) {
-      window.location.assign(
-        `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-      );
-      return;
-    }
+
     setError(null);
     setPhoneLoading(true);
     const result = await revealSellerPhoneForListing(listingId);
@@ -74,12 +69,6 @@ export function ListingMobileActionBar({ listingId, isOwner, isLoggedIn }: Props
       return;
     }
 
-    if (result.reason === "login") {
-      window.location.assign(
-        `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-      );
-      return;
-    }
     setError(result.message ?? t("noPhone"));
   }
 

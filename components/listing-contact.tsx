@@ -1,6 +1,5 @@
-﻿"use client";
+"use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -14,7 +13,7 @@ type Props = {
   isLoggedIn: boolean;
 };
 
-export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
+export function ListingContact({ listingId, isOwner }: Props) {
   const t = useTranslations("listingDetail");
   const [error, setError] = useState<string | null>(null);
   const [phoneRevealLoading, setPhoneRevealLoading] = useState(false);
@@ -36,12 +35,6 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
       });
       return;
     }
-    if (result.reason === "login") {
-      window.location.assign(
-        `/login?next=${encodeURIComponent(`/listings/${listingId}`)}`,
-      );
-      return;
-    }
     if (result.reason === "own_listing") {
       setError(t("ownListing"));
       return;
@@ -53,20 +46,6 @@ export function ListingContact({ listingId, isOwner, isLoggedIn }: Props) {
     return (
       <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-400">
         {t("ownListingPhoneHint")}
-      </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return (
-      <div className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">{t("loginToContactPhone")}</p>
-        <Link
-          className="inline-flex w-fit rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white dark:bg-zinc-100 dark:text-zinc-900"
-          href={`/login?next=/listings/${listingId}`}
-        >
-          {t("loginToShowPhone")}
-        </Link>
       </div>
     );
   }
