@@ -67,6 +67,7 @@ alwaysApply: true
 
 ## Workflow
 - **Large features / refactors / schema changes:** start from a **plan**, then implement (align with user’s Plan Mode preference).
+- **Always ship:** do not stop at paste-ready copy. For listing rewrites, SEO posts, schema, or content in Postgres: add `supabase/migrations/*.sql`, **apply it on production** (`scp` to Hetzner `souqelmemar` then `docker exec -i supabase-db psql -U postgres -d postgres < file.sql`), **commit**, and **`git push origin HEAD`**. Rebuild the app with `npm run hetzner:deploy` when Next.js code must change; DB-only listing text does not need a rebuild.
 
 ## Never
 - Legacy Supabase cookie APIs (`get`/`set`/`remove` only) instead of **`getAll`/`setAll`** where the guide requires it.
